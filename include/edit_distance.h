@@ -42,7 +42,7 @@ template <typename ForwardRange1, typename ForwardRange2>
 inline
 unsigned int edit_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2) {
     default_cost<ForwardRange1> cost;
-    return edit_distance(seq1, seq1, cost);
+    return edit_distance(seq1, seq2, cost);
 }
 
 
