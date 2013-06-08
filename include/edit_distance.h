@@ -18,6 +18,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/concept/requires.hpp>
 #include <boost/concept/usage.hpp>
+#include <boost/concept/assert.hpp>
+#include <boost/type_traits/is_arithmetic.hpp>
 
 #include <boost/range/as_literal.hpp>
 #include <boost/range/as_array.hpp>
@@ -48,12 +50,25 @@ struct ForwardRangeConvertible {
     X x;
 };
 
-BOOST_MPL_HAS_XXX_TRAIT_DEF(cost_type)
-template <typename T>
-struct edit_distance_cost_type {
-    // in C++11 we also would have the option of introspection of the return types for cost_ins()
-    // and friends to deduce what type to use, so could add C++11 - specific logic in the future
-    typedef typename boost::mpl::if_<has_cost_type<T>, typename T::cost_type, std::vector<int>::size_type>::type type;
+// I'm a little surprised this doesn't exist already
+template <typename X>
+struct Arithmetic {
+    typedef typename boost::is_arithmetic<X>::type type;
+};
+
+template <typename X>
+struct SequenceAlignmentCost {
+    typedef typename X::cost_type cost_type;
+    typedef typename X::value_type value_type;
+    BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));    
+    BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
+        c = x.cost_ins(v);
+        c = x.cost_del(v);
+        c = x.cost_sub(v,v);
+    }
+    X x;
+    cost_type c;
+    value_type v;
 };
 
 
@@ -77,7 +92,7 @@ struct default_cost {
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
 typename Cost::cost_type 
 needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost) {
-    typedef typename edit_distance_cost_type<Cost>::type cost_t;
+    typedef typename Cost::cost_type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef typename vector<cost_t>::iterator itrc_t;
@@ -115,7 +130,8 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
 template <typename Sequence1, typename Sequence2, typename Cost>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>)),
+    ((ForwardRangeConvertible<Sequence2>))
+    ((SequenceAlignmentCost<Cost>)),
 (typename Cost::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost& cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
