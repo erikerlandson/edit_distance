@@ -16,6 +16,9 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <vector>
 
+#include <boost/concept/requires.hpp>
+#include <boost/concept/usage.hpp>
+
 #include <boost/range/as_literal.hpp>
 #include <boost/range/as_array.hpp>
 #include <boost/range/functions.hpp>
@@ -31,6 +34,28 @@ using boost::end;
 using boost::range_iterator;
 using boost::range_value;
 using boost::range_reference;
+
+
+template <typename X>
+struct ForwardRangeConvertible {
+    BOOST_CONCEPT_USAGE(ForwardRangeConvertible) {
+        // all I really want to capture here is that any sequence argument to edit_distance()
+        // and friends can be treated as a ForwardRange -- currently I'm doing this by
+        // applying as_literal() to all incoming arguments, which seems to allow me to send in
+        // null-terminated strings, ranges, sequence containers, etc, which is what I want.
+        boost::as_literal(x);
+    }
+    X x;
+};
+
+BOOST_MPL_HAS_XXX_TRAIT_DEF(cost_type)
+template <typename T>
+struct edit_distance_cost_type {
+    // in C++11 we also would have the option of introspection of the return types for cost_ins()
+    // and friends to deduce what type to use, so could add C++11 - specific logic in the future
+    typedef typename boost::mpl::if_<has_cost_type<T>, typename T::cost_type, std::vector<int>::size_type>::type type;
+};
+
 
 template <typename Range>
 struct default_cost {
@@ -48,13 +73,6 @@ struct default_cost {
     }
 };
 
-BOOST_MPL_HAS_XXX_TRAIT_DEF(cost_type)
-template <typename T>
-struct edit_distance_cost_type {
-    // in C++11 we also would have the option of introspection of the return types for cost_ins()
-    // and friends to deduce what type to use, so could add C++11 - specific logic in the future
-    typedef typename boost::mpl::if_<has_cost_type<T>, typename T::cost_type, std::vector<int>::size_type>::type type;
-};
 
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
 typename Cost::cost_type 
@@ -95,7 +113,10 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
 
 
 template <typename Sequence1, typename Sequence2, typename Cost>
-typename Cost::cost_type 
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>)),
+(typename Cost::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost& cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
@@ -106,7 +127,11 @@ edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost& cost) {
 
 
 template <typename Sequence1, typename Sequence2>
-inline typename default_cost<Sequence1>::cost_type
+inline 
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>)),
+(typename default_cost<Sequence1>::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     default_cost<Sequence1> cost;
     return edit_distance(seq1, seq2, cost);
