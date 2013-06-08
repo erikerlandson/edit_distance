@@ -14,12 +14,15 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(__edit_distance_h__)
 #define __edit_distance_h__ 1
 
+#include <vector>
+
 #include <boost/range/as_literal.hpp>
 #include <boost/range/as_array.hpp>
 #include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 
-#include <vector>
+#include <boost/mpl/has_xxx.hpp>
+#include <boost/mpl/if.hpp>
 
 using std::vector;
 using boost::distance;
@@ -28,10 +31,6 @@ using boost::end;
 using boost::range_iterator;
 using boost::range_value;
 using boost::range_reference;
-
-// I will use these locally to this #include file
-#define foreach BOOST_FOREACH
-#define reverse_foreach BOOST_REVERSE_FOREACH
 
 template <typename Range>
 struct default_cost {
@@ -49,11 +48,18 @@ struct default_cost {
     }
 };
 
+BOOST_MPL_HAS_XXX_TRAIT_DEF(cost_type)
+template <typename T>
+struct edit_distance_cost_type {
+    // in C++11 we also would have the option of introspection of the return types for cost_ins()
+    // and friends to deduce what type to use, so could add C++11 - specific logic in the future
+    typedef typename boost::mpl::if_<has_cost_type<T>, typename T::cost_type, std::vector<int>::size_type>::type type;
+};
 
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
 typename Cost::cost_type 
 needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost) {
-    typedef typename Cost::cost_type cost_t;
+    typedef typename edit_distance_cost_type<Cost>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef typename vector<cost_t>::iterator itrc_t;
@@ -105,9 +111,5 @@ edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     default_cost<Sequence1> cost;
     return edit_distance(seq1, seq2, cost);
 }
-
-// safety first
-#undef foreach
-#undef reverse_foreach
 
 #endif
