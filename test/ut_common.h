@@ -23,6 +23,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/range/as_array.hpp>
 #include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
+#include <boost/range/adaptors.hpp>
 
 #include "edit_distance.h"
 

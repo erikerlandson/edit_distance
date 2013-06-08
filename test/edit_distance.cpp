@@ -100,4 +100,9 @@ BOOST_AUTO_TEST_CASE(mixed_sequences) {
     BOOST_CHECK_EQUAL(edit_distance(ASLIST("abc"), ASVECTOR("bcd")), 2);
 }
 
+BOOST_AUTO_TEST_CASE(range_adaptors) {
+    BOOST_CHECK_EQUAL(edit_distance("abc", ASLIST("abc") | boost::adaptors::reversed), 2);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
