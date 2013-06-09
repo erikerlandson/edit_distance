@@ -104,4 +104,32 @@ BOOST_AUTO_TEST_CASE(range_adaptors) {
     BOOST_CHECK_EQUAL(edit_distance("abc", ASLIST("abc") | boost::adaptors::reversed), 2);
 }
 
+struct cost_1 {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 1; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 3; }
+};
+
+struct cost_2 {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 2; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+};
+
+BOOST_AUTO_TEST_CASE(custom_cost) {
+    // make subsitution too expensive to use, so cheapest edit sequence
+    // is to delete 'b' and insert 'x'
+    BOOST_CHECK_EQUAL(edit_distance("abc", "axc", cost_1()), 2);
+
+    // insertion costs twice as much as deletion: an example of
+    // an asymmetric cost function that causes edit distance to be
+    // asymmetric
+    BOOST_CHECK_EQUAL(edit_distance("aaaa", "aa", cost_2()), 2);
+    BOOST_CHECK_EQUAL(edit_distance("aa", "aaaa", cost_2()), 4);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

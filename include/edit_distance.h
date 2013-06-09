@@ -133,7 +133,7 @@ BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost>)),
 (typename Cost::cost_type))
-edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost& cost) {
+edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
     return needleman_wunsch_distance(boost::as_literal(seq1), boost::as_literal(seq2), cost);
@@ -149,8 +149,7 @@ BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence2>)),
 (typename default_cost<Sequence1>::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
-    default_cost<Sequence1> cost;
-    return edit_distance(seq1, seq2, cost);
+    return edit_distance(seq1, seq2, default_cost<Sequence1>());
 }
 
 #endif
