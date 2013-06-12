@@ -29,6 +29,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/mpl/has_xxx.hpp>
 #include <boost/mpl/if.hpp>
 
+#include <boost/multi_array.hpp>
+
 using std::vector;
 using boost::distance;
 using boost::begin;
@@ -95,12 +97,13 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
     typedef typename Cost::cost_type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
-    typedef typename vector<cost_t>::iterator itrc_t;
+    typedef boost::multi_array<cost_t, 1> cost_array_t;
+    typedef typename cost_array_t::iterator itrc_t;
     typename vector<cost_t>::size_type len2 = distance(seq2);
-    vector<cost_t> cv1(1+len2);
-    vector<cost_t> cv2(1+len2);
-    vector<cost_t>* cur = &cv1;
-    vector<cost_t>* prv = &cv2;
+    cost_array_t cv1(boost::extents[1+len2]);
+    cost_array_t cv2(boost::extents[1+len2]);
+    cost_array_t* cur = &cv1;
+    cost_array_t* prv = &cv2;
     itr2_t j2 = begin(seq2);
     itrc_t c00 = cur->begin();
     itrc_t c01 = c00;
