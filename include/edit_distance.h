@@ -14,8 +14,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(__edit_distance_h__)
 #define __edit_distance_h__ 1
 
-#include <vector>
-
 #include <boost/concept/requires.hpp>
 #include <boost/concept/usage.hpp>
 #include <boost/concept/assert.hpp>
@@ -31,7 +29,6 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/multi_array.hpp>
 
-using std::vector;
 using boost::distance;
 using boost::begin;
 using boost::end;
@@ -99,7 +96,7 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef boost::multi_array<cost_t, 1> cost_array_t;
     typedef typename cost_array_t::iterator itrc_t;
-    typename vector<cost_t>::size_type len2 = distance(seq2);
+    typename cost_array_t::size_type len2 = distance(seq2);
     cost_array_t cv1(boost::extents[1+len2]);
     cost_array_t cv2(boost::extents[1+len2]);
     cost_array_t* cur = &cv1;
