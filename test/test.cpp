@@ -32,7 +32,13 @@ struct union_with {
     typedef typename boost::mpl::insert<Set, Arg>::type type;
 };
 
-int f() { return 3; }
+void f_impl(int& v) { v = 3; }
+
+int f() {
+    int v;
+    f_impl(v);
+    return v;
+}
 
 template <typename F, typename Param>
 struct f_adaptor_type {
@@ -42,11 +48,27 @@ struct f_adaptor_type {
     F ff;
 };
 
+template <typename Param>
+struct f_adaptor_type_basis {
+    int operator()() {
+        int v;
+        f_impl(v);
+        return Param::value + v;
+    }
+};
+
 template <typename Param, typename F>
 f_adaptor_type<F, Param>
 f_adaptor(F func) {
     f_adaptor_type<F, Param> ff;
     ff.ff = func;
+    return ff;
+}
+
+template <typename Param>
+f_adaptor_type_basis<Param>
+f_adaptor(int (*func)()) {
+    f_adaptor_type_basis<Param> ff;
     return ff;
 }
 
