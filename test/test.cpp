@@ -75,22 +75,18 @@ struct f_adaptor_type {
         f_impl(v);
         return f_adaptor_impl<param_list>(v);
     }
-    F ff;
 };
 
 template <typename Param, typename F>
 f_adaptor_type<F, Param>
 f_adaptor(F func) {
-    f_adaptor_type<F, Param> ff;
-    ff.ff = func;
-    return ff;
+    f_adaptor_type<F, Param>();
 }
 
 template <typename Param>
 f_adaptor_type_basis<Param>
 f_adaptor(int (*func)()) {
-    f_adaptor_type_basis<Param> ff;
-    return ff;
+    f_adaptor_type_basis<Param>();
 }
 
 BOOST_AUTO_TEST_CASE(adaptor) {
