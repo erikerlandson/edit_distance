@@ -140,27 +140,52 @@ template <typename X>
 struct Concept2 {
     typedef typename X::type_2 type;
 };
+template <typename X>
+struct Concept3 {
+    typedef typename X::type_3 type;
+};
 
 struct struct_1 {
     typedef int type_1;
     int x1() const { return 2; }
+    std::string operator()() { return "struct_1 default"; }
 };
 struct struct_2 {
     typedef int type_2;
     int x2() const { return 3; }
+    std::string operator()() { return "struct_2 default"; }
 };
+struct struct_3 {
+    typedef int type_3;
+    int x3() const { return 11; }
+    std::string operator()() { return "struct_3 default"; }
+};
+
 struct struct_1_custom {
     typedef int type_1;
     int x1() const { return 5; }
+    std::string operator()() { return "struct_1 custom"; }
 };
 struct struct_2_custom {
     typedef int type_2;
     int x2() const { return 7; }
+    std::string operator()() { return "struct_2 custom"; }
 };
+struct struct_3_custom {
+    typedef int type_3;
+    int x3() const { return 13; }
+    std::string operator()() { return "struct_3 custom"; }
+};
+
 
 template <typename T1, typename T2> 
 void f_impl(T1 a1, T2 a2) {
     std::cout << "a1= " << a1.x1() << "   a2= " << a2.x2() << "\n";
+}
+
+template <typename T1, typename T2, typename T3> 
+void g_impl(T1 a1, T2 a2, T3 a3) {
+    std::cout << a1() << "   " << a2() << "   " << a3() << "\n";
 }
 
 template <typename T1, typename T2>
@@ -172,6 +197,16 @@ f (T1 a1, T2 a2) {
     f_impl(a1, a2);
 }
 
+template <typename T1, typename T2, typename T3>
+BOOST_CONCEPT_REQUIRES(
+    ((Concept1<T1>))
+    ((Concept2<T2>))
+    ((Concept3<T3>)),
+(void))
+g (T1 a1, T2 a2, T3 a3) {
+    g_impl(a1, a2, a3);
+}
+
 template <typename T1> struct f_bind_arg2 {
     void operator()(T1 a1) { f(a1, struct_2()); }
 };
@@ -180,6 +215,8 @@ template <typename T2> struct f_bind_arg1 {
 };
 
 BOOST_MPL_HAS_XXX_TRAIT_DEF(type_1)
+BOOST_MPL_HAS_XXX_TRAIT_DEF(type_2)
+BOOST_MPL_HAS_XXX_TRAIT_DEF(type_3)
 template <typename X>
 struct f_bind {
     typedef typename boost::mpl::if_<has_type_1<X>, f_bind_arg2<X>, f_bind_arg1<X> >::type ff;
@@ -191,11 +228,25 @@ void f(X x) {
     f_bind<X>()(x);
 }
 
+template <typename T1, typename T2, typename T3> 
+struct g_functor {
+    void operator()(T1 a1, T2 a2, T3 a3) { g(a1, a2, a3); }
+};
+
+template <typename F, typename T, int N>
+struct bindme {
+    bindme(const T& a_) : _a(a_) {}
+    T _a;
+};
+
+
 BOOST_AUTO_TEST_CASE(concept_check_resolution) {
     f(struct_1());
     f(struct_1_custom());
     f(struct_2());
     f(struct_2_custom());
+
+    g(struct_1(), struct_2(), struct_3());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,6 +29,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/multi_array.hpp>
 
+#include <boost/tuple/tuple.hpp>
+
 using boost::distance;
 using boost::begin;
 using boost::end;
@@ -70,6 +72,27 @@ struct SequenceAlignmentCost {
     value_type v;
 };
 
+template <typename X>
+struct SequenceAlignmentEntry {
+    typedef typename X::cost_type cost_type;
+    typedef typename X::value_type value_type;
+    typedef typename X::entry_type entry_type;
+    BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));    
+    BOOST_CONCEPT_USAGE(SequenceAlignmentEntry) {
+        e = x.entry_ins(c, v);
+        e = x.entry_del(c, v);
+        e = x.entry_sub(c, v, v);
+    }
+    X x;
+    cost_type c;
+    value_type v;
+    entry_type e;
+};
+
+typedef char edit_opcode;
+const edit_opcode ins_op = '+';
+const edit_opcode del_op = '-';
+const edit_opcode sub_op = ':';
 
 template <typename Range>
 struct default_cost {
@@ -84,6 +107,22 @@ struct default_cost {
     }
     cost_type cost_sub(value_type const& a, value_type const& b) const {
         return (a == b) ? cost_type(0) : cost_type(1);
+    }
+};
+
+template <typename Range>
+struct default_entry {
+    typedef typename boost::range_difference<Range>::type cost_type;
+    typedef typename boost::range_value<Range>::type value_type;
+    typedef boost::tuple<edit_opcode, cost_type, value_type, value_type> entry_type;
+    entry_type entry_ins(cost_type const& cost, value_type const& value) const {
+        return entry_type(ins_op, cost, value, value_type());
+    }
+    entry_type entry_del(cost_type const& cost, value_type const& value) const {
+        return entry_type(del_op, cost, value, value_type());
+    }
+    entry_type entry_sub(cost_type const& cost, value_type const& value1, value_type const& value2) const {
+        return entry_type(del_op, cost, value1, value2);
     }
 };
 
@@ -126,6 +165,98 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
     return *c01;
 }
 
+template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost, typename Entry>
+std::pair<OutputIterator, typename Cost::cost_type>
+needleman_wunsch_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost, Entry& entry) {
+    typedef typename Cost::cost_type cost_t;
+    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
+    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+    typedef boost::multi_array<cost_t, 2> cost_array_t;
+    typedef typename cost_array_t::iterator itrc_t;
+    typedef typename cost_array_t::size_type size_type;
+    size_type len1 = distance(seq1);
+    size_type len2 = distance(seq2);
+    cost_array_t ca(boost::extents[1+len1][1+len2]);
+    itr1_t beg1 = begin(seq1);
+    itr1_t end1 = end(seq1);
+    itr2_t beg2 = begin(seq2);
+    itr2_t end2 = end(seq2);
+    itrc_t c01 = ca.begin();
+    itrc_t c00 = c01+1;
+    itrc_t c11 = c01;
+    itrc_t c10 = c00;
+    *c01 = 0;
+    for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01) {
+        *c00 = *c01 + cost.cost_ins(*j2);
+    }
+    for (itr1_t j1 = beg1;  j1 != end1;  ++j1) {
+        *c01 = *c11 + cost.cost_del(*j1);
+        for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++c10, ++c11) {
+            cost_t c = *c01 + cost.cost_ins(*j2);
+            c = std::min(c, *c10 + cost.cost_del(*j1));
+            c = std::min(c, *c11 + cost.cost_sub(*j1, *j2));
+            *c00 = c;
+        }
+    }
+    const cost_t edit_cost = *c01;
+
+    // recall I'm only assuming Forward Sequences for input, and also
+    // my output is via OutputIterator.  Therefore, I need to read off my 
+    // ops, and then traverse forward for input values and write output
+    typedef boost::multi_array<edit_opcode, 1> opseq_t;
+    opseq_t ops(boost::extents[len1+len2]);
+    opseq_t::iterator opbeg = ops.end();
+    size_type k1 = len1;
+    size_type k2 = len2;
+    while (k1 > 0 && k2 > 0) {
+        --opbeg;
+        cost_t c = ca[k1][k2-1];
+        *opbeg = ins_op;
+        if (ca[k1-1][k2] < c) {
+            c = ca[k1-1][k2];   
+            *opbeg = del_op;
+        }
+        if (ca[k1-1][k2-1] < c) {
+            *opbeg = sub_op;
+        }
+    }
+    while (k1 > 0) {
+        --opbeg;
+        *opbeg = del_op;
+    }
+    while (k2 > 0) {
+        --opbeg;
+        *opbeg = ins_op;
+    }
+
+    itr1_t e1 = beg1;
+    itr2_t e2 = beg2;
+    k1 = k2 = 0;
+    for (opseq_t::iterator opj = ops.begin();  opj != ops.end();  ++opj) {
+        cost_t c = ca[k1][k2];
+        switch (*opj) {
+            case ins_op:
+                ++k2;
+                *outi = entry.entry_ins(ca[k1][k2]-c, *e2);
+                ++e2;
+                break;
+            case del_op:
+                ++k1;
+                *outi = entry.entry_del(ca[k1][k2]-c, *e1);
+                ++e1;
+                break;
+            case sub_op:
+                ++k1; ++k2;
+                *outi = entry.entry_sub(ca[k1][k2]-c, *e1, *e2);
+                ++e1; ++e2;
+                break;
+        }
+        ++outi;
+    }
+
+    return std::pair<OutputIterator, cost_t>(outi, edit_cost);
+}
+
 
 template <typename Sequence1, typename Sequence2, typename Cost>
 BOOST_CONCEPT_REQUIRES(
@@ -150,6 +281,17 @@ BOOST_CONCEPT_REQUIRES(
 (typename default_cost<Sequence1>::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     return edit_distance(seq1, seq2, default_cost<Sequence1>());
+}
+
+template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost, typename Entry>
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>))
+    ((SequenceAlignmentCost<Cost>))
+    ((SequenceAlignmentEntry<Entry>)),
+(std::pair<OutputIterator, typename Cost::cost_type>))
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost cost, Entry entry) {
+    return needleman_wunsch_alignment(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost, entry);
 }
 
 #endif
