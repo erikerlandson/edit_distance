@@ -32,13 +32,7 @@ struct union_with {
     typedef typename boost::mpl::insert<Set, Arg>::type type;
 };
 
-int f_impl() { return 3; }
-
-struct f_type {
-    int operator()() { return f_impl(); }
-};
-
-f_type f;
+int f() { return 3; }
 
 template <typename F, typename Param>
 struct f_adaptor_type {
@@ -61,7 +55,6 @@ BOOST_AUTO_TEST_CASE(adaptor) {
         //typedef boost::mpl::int_<1> n;
         //std::cout << n::value << "\n";
         //std::cout << boost::mpl::plus<n, boost::mpl::int_<1> >::value << "\n";
-    std::cout << f_adaptor_type<f_type, int_<2> >()() << "\n";
     std::cout << f_adaptor<int_<7> >(f)() << "\n";
     std::cout << f_adaptor<int_<7> >(f_adaptor<int_<7> >(f))() << "\n";
 }
