@@ -36,6 +36,10 @@ using boost::range_iterator;
 using boost::range_value;
 using boost::range_reference;
 
+typedef char edit_opcode;
+const edit_opcode ins_op = '+';
+const edit_opcode del_op = '-';
+const edit_opcode sub_op = ':';
 
 template <typename X>
 struct ForwardRangeConvertible {
@@ -127,6 +131,82 @@ needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, 
 }
 
 
+template <typename ForwardRange1, typename ForwardRange2, typename Cost>
+void
+needleman_wunsch_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost, boost::multi_array<typename Cost::cost_type, 2>& ca, boost::multi_array<edit_opcode, 1>& ops, boost::multi_array<edit_opcode, 1>::iterator& ops_begin) {
+    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
+    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+    typedef typename Cost::cost_type cost_t;
+    typedef boost::multi_array<cost_t, 2> cost_array_t;
+        //typedef typename cost_array_t::iterator itrc_t;
+    typedef typename cost_array_t::element* itrc_t;
+    typedef typename cost_array_t::size_type size_type;
+    size_type len1 = distance(seq1);
+    size_type len2 = distance(seq2);
+    ca.resize(boost::extents[1+len1][1+len2]);
+    itr1_t beg1 = begin(seq1);
+    itr1_t end1 = end(seq1);
+    itr2_t beg2 = begin(seq2);
+    itr2_t end2 = end(seq2);
+        //itrc_t c01 = ca.begin();
+    itrc_t c01 = ca.data();
+    itrc_t c00 = c01+1;
+    itrc_t c11 = c01;
+    itrc_t c10 = c00;
+    *c01 = 0;
+    for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01) {
+        *c00 = *c01 + cost.cost_ins(*j2);
+    }
+    ++c00, ++c01;
+    for (itr1_t j1 = beg1;  j1 != end1;  ++j1) {
+        *c01 = *c11 + cost.cost_del(*j1);
+        for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++c10, ++c11) {
+            cost_t c = *c01 + cost.cost_ins(*j2);
+            c = std::min(c, *c10 + cost.cost_del(*j1));
+            c = std::min(c, *c11 + cost.cost_sub(*j1, *j2));
+            *c00 = c;
+        }
+        ++c00, ++c01, ++c10, ++c11;
+    }
+
+    // recall I'm only assuming Forward Sequences for input, and also
+    // my output is via OutputIterator.  Therefore, I need to read off my 
+    // ops, and then traverse forward for input values and write output
+    ops.resize(boost::extents[len1+len2]);
+    boost::multi_array<edit_opcode, 1>::iterator opbeg = ops.end();
+    size_type k1 = len1;
+    size_type k2 = len2;
+    while (k1 > 0 && k2 > 0) {
+        --opbeg;
+        cost_t c = ca[k1][k2-1];
+        *opbeg = ins_op;
+        if (ca[k1-1][k2] < c) {
+            c = ca[k1-1][k2];   
+            *opbeg = del_op;
+        }
+        if (ca[k1-1][k2-1] < c) {
+            *opbeg = sub_op;
+        }
+        switch (*opbeg) {
+        case ins_op: --k2; break;
+        case del_op: --k1; break;
+        case sub_op: --k1; --k2; break;
+        }
+    }
+    while (k1 > 0) {
+        --opbeg;
+        *opbeg = del_op;
+        --k1;
+    }
+    while (k2 > 0) {
+        --opbeg;
+        *opbeg = ins_op;
+        --k2;
+    }
+    ops_begin = opbeg;
+}
+
+
 template <typename Sequence1, typename Sequence2, typename Cost>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
@@ -150,6 +230,39 @@ BOOST_CONCEPT_REQUIRES(
 (typename default_cost<Sequence1>::cost_type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     return edit_distance(seq1, seq2, default_cost<Sequence1>());
+}
+
+
+template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
+std::pair<OutputIterator, typename Cost::cost_type>
+edit_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
+    boost::multi_array<typename Cost::cost_type, 2> ca;
+    boost::multi_array<edit_opcode, 1> ops;
+    boost::multi_array<edit_opcode, 1>::iterator ops_begin;
+    needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
+    return std::pair<OutputIterator, typename Cost::cost_type>(std::copy(ops_begin, ops.end(), outi), ca[ca.size()-1][ca[0].size()-1]);
+}
+
+
+template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>))
+    ((SequenceAlignmentCost<Cost>)),
+(std::pair<OutputIterator, typename Cost::cost_type>))
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost cost) {
+    return edit_alignment_impl(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
+}
+
+
+template <typename Sequence1, typename Sequence2, typename OutputIterator>
+inline 
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>)),
+(std::pair<OutputIterator, typename default_cost<Sequence1>::cost_type>))
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi) {
+    return edit_alignment(seq1, seq2, outi, default_cost<Sequence1>());
 }
 
 #endif

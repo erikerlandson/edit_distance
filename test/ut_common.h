@@ -16,6 +16,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <vector>
 #include <list>
 #include <string>
+#include <iterator>
+#include <algorithm>
 
 #include <boost/foreach.hpp>
 
