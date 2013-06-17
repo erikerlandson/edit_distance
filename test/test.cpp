@@ -49,12 +49,16 @@ struct append<boost::mpl::vector<T1, T2>, X> {
 };
 
 
-void f_impl(int& v) { v = 3; }
+void f_impl(int w, int& v) { v = 3+w; }
+
+int f(int w) {
+    int v;
+    f_impl(w,v);
+    return v; 
+}
 
 int f() {
-    int v;
-    f_impl(v);
-    return v;
+    return f(0);
 }
 
 template <typename ParamList>
@@ -83,10 +87,13 @@ struct f_adaptor_type_basis {
     // param list basis case:
     typedef boost::mpl::vector<Param> param_list;
     // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
-    int operator()() {
+    int operator()(int w) {
         int v;
-        f_impl(v);
+        f_impl(w, v);
         return f_adaptor_impl<param_list>(v);
+    }
+    int operator()() {
+        return (*this)(0);
     }
 };
 
@@ -95,10 +102,13 @@ struct f_adaptor_type {
     // accumulating param_list from below:
     typedef typename append<typename F::param_list, Param>::type param_list;
     // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
-    int operator()() {
+    int operator()(int w) {
         int v;
-        f_impl(v);
+        f_impl(w,v);
         return f_adaptor_impl<param_list>(v);
+    }
+    int operator()() {
+        return (*this)(0);
     }
 };
 
@@ -110,14 +120,14 @@ f_adaptor(F func) {
 
 template <typename Param>
 f_adaptor_type_basis<Param>
-f_adaptor(int (*func)()) {
+f_adaptor(int (*func)(int)) {
     f_adaptor_type_basis<Param>();
 }
 
 BOOST_AUTO_TEST_CASE(adaptor) {
-    std::cout << f() << "\n";
-    std::cout << f_adaptor<int_<7> >(f)() << "\n";
-    std::cout << f_adaptor<int_<7> >(f_adaptor<int_<7> >(f))() << "\n";
+    std::cout << f() << " " << f(1000) <<"\n";
+    std::cout << f_adaptor<int_<7> >(f)() << " " <<  f_adaptor<int_<7> >(f)(1000)  << "\n";
+    std::cout << f_adaptor<int_<7> >(f_adaptor<int_<7> >(f))() << " " <<  f_adaptor<int_<7> >(f_adaptor<int_<7> >(f))(1000)  << "\n";
     std::cout << f_adaptor<int_<1> >(f)() << "\n";
     std::cout << f_adaptor<int_<2> >(f)() << "\n";
     std::cout << f_adaptor<int_<2> >(f_adaptor<int_<1> >(f))() << "\n";
