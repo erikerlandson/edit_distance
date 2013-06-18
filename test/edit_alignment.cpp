@@ -58,4 +58,22 @@ BOOST_AUTO_TEST_CASE(substitution) {
     BOOST_CHECK_EQUAL(s, ":::");
 }
 
+BOOST_AUTO_TEST_CASE(substitution_equal) {
+    std::string s;
+    BOOST_CHECK_EQUAL(edit_alignment("a", "a", std::back_inserter(s)).second, 0);
+    BOOST_CHECK_EQUAL(s, "=");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("ab", "ab", std::back_inserter(s)).second, 0);
+    BOOST_CHECK_EQUAL(s, "==");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("abc", "abc", std::back_inserter(s)).second, 0);
+    BOOST_CHECK_EQUAL(s, "===");
+}
+
+BOOST_AUTO_TEST_CASE(mixed_ops) {
+    std::string s;
+    BOOST_CHECK_EQUAL(edit_alignment("abcd", "bCde", std::back_inserter(s)).second, 3);
+    BOOST_CHECK_EQUAL(s, "-=:=+");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

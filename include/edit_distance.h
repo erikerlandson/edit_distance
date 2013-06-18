@@ -40,6 +40,7 @@ typedef char edit_opcode;
 const edit_opcode ins_op = '+';
 const edit_opcode del_op = '-';
 const edit_opcode sub_op = ':';
+const edit_opcode eql_op = '=';
 
 template <typename X>
 struct ForwardRangeConvertible {
@@ -178,19 +179,21 @@ needleman_wunsch_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& 
     size_type k2 = len2;
     while (k1 > 0 && k2 > 0) {
         --opbeg;
-        cost_t c = ca[k1][k2-1];
-        *opbeg = ins_op;
+        cost_t c = ca[k1-1][k2-1];
+        *opbeg = (c == ca[k1][k2]) ? eql_op : sub_op;
+        if (ca[k1][k2-1] < c) {
+            c = ca[k1][k2-1];
+            *opbeg = ins_op;
+        }
         if (ca[k1-1][k2] < c) {
-            c = ca[k1-1][k2];   
+            c = ca[k1-1][k2];
             *opbeg = del_op;
         }
-        if (ca[k1-1][k2-1] < c) {
-            *opbeg = sub_op;
-        }
         switch (*opbeg) {
-        case ins_op: --k2; break;
-        case del_op: --k1; break;
-        case sub_op: --k1; --k2; break;
+            case ins_op: --k2; break;
+            case del_op: --k1; break;
+            case sub_op:
+            case eql_op: --k1; --k2; break;
         }
     }
     while (k1 > 0) {
