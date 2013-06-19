@@ -26,6 +26,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/fold.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/mpl/sort.hpp>
+#include <boost/mpl/unique.hpp>
 
 using boost::mpl::int_;
 using boost::mpl::insert;
@@ -38,6 +40,11 @@ struct mpl_seq_sum {
 
 template <typename Vector, typename X>
 struct append {
+    // error!
+};
+template <typename X>
+struct append<boost::mpl::vector<>, X> {
+    typedef boost::mpl::vector<X> type;
 };
 template <typename T, typename X>
 struct append<boost::mpl::vector<T>, X> {
@@ -46,6 +53,19 @@ struct append<boost::mpl::vector<T>, X> {
 template <typename T1, typename T2, typename X>
 struct append<boost::mpl::vector<T1, T2>, X> {
     typedef boost::mpl::vector<T1, T2, X> type;
+};
+template <typename T1, typename T2, typename T3, typename X>
+struct append<boost::mpl::vector<T1, T2, T3>, X> {
+    typedef boost::mpl::vector<T1, T2, T3, X> type;
+};
+
+
+template <typename V, typename X>
+struct append_sorted_unique {
+    typedef typename append<V, X>::type va;
+    typedef typename boost::mpl::sort<va>::type vs;
+    typedef typename boost::mpl::unique<vs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vu;
+    typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append<boost::mpl::_1, boost::mpl::_2> >::type type;
 };
 
 
@@ -133,4 +153,21 @@ BOOST_AUTO_TEST_CASE(adaptor) {
     std::cout << f_adaptor<int_<2> >(f_adaptor<int_<1> >(f))() << "\n";
     typedef append<boost::mpl::vector<int_<1> >, int_<2> >::type result;
     BOOST_MPL_ASSERT((boost::is_same<result, boost::mpl::vector<int_<1>, int_<2> > >));
+
+    typedef boost::mpl::vector<int_<3>, int_<1>, int_<2>, int_<1>, int_<2>, int_<3> > vv;
+    typedef typename boost::mpl::sort<vv>::type vvs;
+    typedef typename boost::mpl::unique<vvs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vvu;
+    //BOOST_MPL_ASSERT((boost::is_same<vvu, boost::mpl::vector<int_<2>, int_<1>, int_<3> > >));
+    typedef append<boost::mpl::vector<>, int_<1> >::type rr;
+    BOOST_MPL_ASSERT((boost::is_same<rr, boost::mpl::vector<int_<1> > >));
+    typedef typename boost::mpl::fold<vvu, boost::mpl::vector<>, append<boost::mpl::_1, boost::mpl::_2> >::type vvuf;
+    BOOST_MPL_ASSERT((boost::is_same<vvuf, boost::mpl::vector<int_<1>, int_<2>, int_<3> > >));
+    typedef boost::mpl::vector<> v0;
+    typedef typename append_sorted_unique<v0, int_<3> >::type v1;
+    typedef typename append_sorted_unique<v1, int_<2> >::type v2;
+    typedef typename append_sorted_unique<v2, int_<1> >::type v3;
+    typedef typename append_sorted_unique<v3, int_<3> >::type v4;
+    typedef typename append_sorted_unique<v4, int_<2> >::type v5;
+    typedef typename append_sorted_unique<v5, int_<1> >::type v6;
+    BOOST_MPL_ASSERT((boost::is_same<v6, boost::mpl::vector<int_<1>, int_<2>, int_<3> > >));
 }
