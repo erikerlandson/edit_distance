@@ -93,6 +93,18 @@ struct default_cost {
 };
 
 
+template <typename T>
+void dump_matrix(const boost::multi_array<T, 2>& a) {
+    std::cout << "\n";
+    for (int r = 0;  r < a.size();  ++r) {
+        for (int c = 0;  c < a[0].size();  ++c) {
+            std::cout << "  " << a[r][c];
+        }
+        std::cout << "\n";
+    }
+}
+
+
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
 typename Cost::cost_type 
 needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost) {
@@ -139,72 +151,65 @@ needleman_wunsch_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& 
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef typename Cost::cost_type cost_t;
     typedef boost::multi_array<cost_t, 2> cost_array_t;
-        //typedef typename cost_array_t::iterator itrc_t;
     typedef typename cost_array_t::element* itrc_t;
     typedef typename cost_array_t::size_type size_type;
     size_type len1 = distance(seq1);
     size_type len2 = distance(seq2);
     ca.resize(boost::extents[1+len1][1+len2]);
+    boost::multi_array<edit_opcode, 2> opa(boost::extents[1+len1][1+len2]);
     itr1_t beg1 = begin(seq1);
     itr1_t end1 = end(seq1);
     itr2_t beg2 = begin(seq2);
     itr2_t end2 = end(seq2);
-        //itrc_t c01 = ca.begin();
     itrc_t c01 = ca.data();
     itrc_t c00 = c01+1;
     itrc_t c11 = c01;
     itrc_t c10 = c00;
+    edit_opcode* op00 = opa.data();
     *c01 = 0;
-    for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01) {
+    *op00++ = eql_op;
+    for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++op00) {
         *c00 = *c01 + cost.cost_ins(*j2);
+        *op00 = ins_op;
     }
-    ++c00, ++c01;
+    ++c00; ++c01;
     for (itr1_t j1 = beg1;  j1 != end1;  ++j1) {
         *c01 = *c11 + cost.cost_del(*j1);
-        for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++c10, ++c11) {
-            cost_t c = *c01 + cost.cost_ins(*j2);
-            c = std::min(c, *c10 + cost.cost_del(*j1));
-            c = std::min(c, *c11 + cost.cost_sub(*j1, *j2));
-            *c00 = c;
+        *op00++ = del_op;
+        for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++c10, ++c11, ++op00) {
+            *c00 = *c11 + cost.cost_sub(*j1, *j2);
+            *op00 = (*c00 == *c11) ? eql_op : sub_op;
+            cost_t t;
+            t = *c01 + cost.cost_ins(*j2);
+            if (t < *c00) {
+                *c00 = t;
+                *op00 = ins_op;
+            }
+            t = *c10 + cost.cost_del(*j1);
+            if (t < *c00) {
+                *c00 = t;
+                *op00 = del_op;
+            }
         }
         ++c00, ++c01, ++c10, ++c11;
     }
 
-    // recall I'm only assuming Forward Sequences for input, and also
-    // my output is via OutputIterator.  Therefore, I need to read off my 
-    // ops, and then traverse forward for input values and write output
+    // backtrace the cost matrix to obtain sequence of edit operations
+    //dump_matrix(ca);
+    //dump_matrix(opa);
     ops.resize(boost::extents[len1+len2]);
     boost::multi_array<edit_opcode, 1>::iterator opbeg = ops.end();
     size_type k1 = len1;
     size_type k2 = len2;
-    while (k1 > 0 && k2 > 0) {
+    while (k1 > 0 || k2 > 0) {
         --opbeg;
-        cost_t c = ca[k1-1][k2-1];
-        *opbeg = (c == ca[k1][k2]) ? eql_op : sub_op;
-        if (ca[k1][k2-1] < c) {
-            c = ca[k1][k2-1];
-            *opbeg = ins_op;
-        }
-        if (ca[k1-1][k2] < c) {
-            c = ca[k1-1][k2];
-            *opbeg = del_op;
-        }
+        *opbeg = opa[k1][k2];
         switch (*opbeg) {
             case ins_op: --k2; break;
             case del_op: --k1; break;
             case sub_op:
             case eql_op: --k1; --k2; break;
         }
-    }
-    while (k1 > 0) {
-        --opbeg;
-        *opbeg = del_op;
-        --k1;
-    }
-    while (k2 > 0) {
-        --opbeg;
-        *opbeg = ins_op;
-        --k2;
     }
     ops_begin = opbeg;
 }

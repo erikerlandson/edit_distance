@@ -29,6 +29,22 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include "edit_distance.h"
 
+struct cost_expensive_sub {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 1; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 3; }
+};
+
+struct cost_expensive_ins {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 2; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+};
+
 #define ASLIST(seq) (_aslist(boost::as_literal(seq)))
 #define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
 #define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
