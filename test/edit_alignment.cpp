@@ -83,6 +83,13 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     s = "";
     BOOST_CHECK_EQUAL(edit_alignment("abcd", "aBCd", std::back_inserter(s), cost_expensive_sub()).second, 4);
     BOOST_CHECK_EQUAL(s, "=--++=");
+
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("aa", "axax", std::back_inserter(s), cost_expensive_ins()).second, 4);
+    BOOST_CHECK_EQUAL(s, "=+=+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("axax", "aa", std::back_inserter(s), cost_expensive_ins()).second, 2);
+    BOOST_CHECK_EQUAL(s, "=-=-");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
