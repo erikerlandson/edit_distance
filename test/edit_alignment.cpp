@@ -80,6 +80,9 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     std::string s;
     BOOST_CHECK_EQUAL(edit_alignment("abcd", "bCde", std::back_inserter(s), cost_expensive_sub()).second, 4);
     BOOST_CHECK_EQUAL(s, "-=-+=+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("abcd", "aBCd", std::back_inserter(s), cost_expensive_sub()).second, 4);
+    BOOST_CHECK_EQUAL(s, "=--++=");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
