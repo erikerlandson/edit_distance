@@ -79,7 +79,7 @@ struct f_adaptor_type_basis {
 template <typename F, typename Param>
 struct f_adaptor_type {
     // accumulating param_list from below:
-    typedef typename append<typename F::param_list, Param>::type param_list;
+    typedef typename append_to_vector<typename F::param_list, Param>::type param_list;
     // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
     int operator()(int w) {
         int v;
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_CASE(adaptor) {
     std::cout << f_adaptor<int_<1> >(f)() << "\n";
     std::cout << f_adaptor<int_<2> >(f)() << "\n";
     std::cout << f_adaptor<int_<2> >(f_adaptor<int_<1> >(f))() << "\n";
-    typedef append<boost::mpl::vector<int_<1> >, int_<2> >::type result;
+    typedef append_to_vector<boost::mpl::vector<int_<1> >, int_<2> >::type result;
     BOOST_MPL_ASSERT((boost::is_same<result, boost::mpl::vector<int_<1>, int_<2> > >));
 
     typedef boost::mpl::vector<int_<3>, int_<1>, int_<2>, int_<1>, int_<2>, int_<3> > vv;
     typedef typename boost::mpl::sort<vv>::type vvs;
     typedef typename boost::mpl::unique<vvs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vvu;
     //BOOST_MPL_ASSERT((boost::is_same<vvu, boost::mpl::vector<int_<2>, int_<1>, int_<3> > >));
-    typedef append<boost::mpl::vector<>, int_<1> >::type rr;
+    typedef append_to_vector<boost::mpl::vector<>, int_<1> >::type rr;
     BOOST_MPL_ASSERT((boost::is_same<rr, boost::mpl::vector<int_<1> > >));
-    typedef typename boost::mpl::fold<vvu, boost::mpl::vector<>, append<boost::mpl::_1, boost::mpl::_2> >::type vvuf;
+    typedef typename boost::mpl::fold<vvu, boost::mpl::vector<>, append_to_vector<boost::mpl::_1, boost::mpl::_2> >::type vvuf;
     BOOST_MPL_ASSERT((boost::is_same<vvuf, boost::mpl::vector<int_<1>, int_<2>, int_<3> > >));
     typedef boost::mpl::vector<> v0;
     typedef typename append_sorted_unique<v0, int_<3> >::type v1;

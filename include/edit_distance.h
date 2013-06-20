@@ -280,33 +280,33 @@ edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi
 
 
 template <typename Vector, typename X>
-struct append {
+struct append_to_vector {
     // error!
 };
 template <typename X>
-struct append<boost::mpl::vector<>, X> {
+struct append_to_vector<boost::mpl::vector<>, X> {
     typedef boost::mpl::vector<X> type;
 };
 template <typename T, typename X>
-struct append<boost::mpl::vector<T>, X> {
+struct append_to_vector<boost::mpl::vector<T>, X> {
     typedef boost::mpl::vector<T, X> type;
 };
 template <typename T1, typename T2, typename X>
-struct append<boost::mpl::vector<T1, T2>, X> {
+struct append_to_vector<boost::mpl::vector<T1, T2>, X> {
     typedef boost::mpl::vector<T1, T2, X> type;
 };
 template <typename T1, typename T2, typename T3, typename X>
-struct append<boost::mpl::vector<T1, T2, T3>, X> {
+struct append_to_vector<boost::mpl::vector<T1, T2, T3>, X> {
     typedef boost::mpl::vector<T1, T2, T3, X> type;
 };
 
 
 template <typename V, typename X>
 struct append_sorted_unique {
-    typedef typename append<V, X>::type va;
+    typedef typename append_to_vector<V, X>::type va;
     typedef typename boost::mpl::sort<va>::type vs;
     typedef typename boost::mpl::unique<vs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vu;
-    typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append<boost::mpl::_1, boost::mpl::_2> >::type type;
+    typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append_to_vector<boost::mpl::_1, boost::mpl::_2> >::type type;
 };
 
 #endif
