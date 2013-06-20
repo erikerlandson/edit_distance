@@ -14,6 +14,14 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(__edit_distance_h__)
 #define __edit_distance_h__ 1
 
+#include <boost/mpl/has_xxx.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/int.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/sort.hpp>
+#include <boost/mpl/unique.hpp>
+
 #include <boost/concept/requires.hpp>
 #include <boost/concept/usage.hpp>
 #include <boost/concept/assert.hpp>
@@ -23,9 +31,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/range/as_array.hpp>
 #include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
-
-#include <boost/mpl/has_xxx.hpp>
-#include <boost/mpl/if.hpp>
 
 #include <boost/multi_array.hpp>
 
@@ -272,5 +277,36 @@ BOOST_CONCEPT_REQUIRES(
 edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi) {
     return edit_alignment(seq1, seq2, outi, default_cost<Sequence1>());
 }
+
+
+template <typename Vector, typename X>
+struct append {
+    // error!
+};
+template <typename X>
+struct append<boost::mpl::vector<>, X> {
+    typedef boost::mpl::vector<X> type;
+};
+template <typename T, typename X>
+struct append<boost::mpl::vector<T>, X> {
+    typedef boost::mpl::vector<T, X> type;
+};
+template <typename T1, typename T2, typename X>
+struct append<boost::mpl::vector<T1, T2>, X> {
+    typedef boost::mpl::vector<T1, T2, X> type;
+};
+template <typename T1, typename T2, typename T3, typename X>
+struct append<boost::mpl::vector<T1, T2, T3>, X> {
+    typedef boost::mpl::vector<T1, T2, T3, X> type;
+};
+
+
+template <typename V, typename X>
+struct append_sorted_unique {
+    typedef typename append<V, X>::type va;
+    typedef typename boost::mpl::sort<va>::type vs;
+    typedef typename boost::mpl::unique<vs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vu;
+    typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append<boost::mpl::_1, boost::mpl::_2> >::type type;
+};
 
 #endif
