@@ -70,6 +70,63 @@ BOOST_AUTO_TEST_CASE(substitution_equal) {
     BOOST_CHECK_EQUAL(s, "===");
 }
 
+BOOST_AUTO_TEST_CASE(sequence_variations) {
+    std::string s;
+    BOOST_CHECK_EQUAL(edit_alignment("abc", "axc", std::back_inserter(s)).second, 1);
+    BOOST_CHECK_EQUAL(s, "=:=");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASSTRING("abc"), ASSTRING("axc"), std::back_inserter(s)).second, 1);
+    BOOST_CHECK_EQUAL(s, "=:=");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASLIST("abc"), ASLIST("axc"), std::back_inserter(s)).second, 1);
+    BOOST_CHECK_EQUAL(s, "=:=");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASVECTOR("abc"), ASVECTOR("axc"), std::back_inserter(s)).second, 1);
+    BOOST_CHECK_EQUAL(s, "=:=");
+}
+
+BOOST_AUTO_TEST_CASE(mixed_sequences) {
+    std::string s;
+    BOOST_CHECK_EQUAL(edit_alignment("abc", "bcd", std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("abc", ASSTRING("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("abc", ASLIST("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment("abc", ASVECTOR("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASSTRING("abc"), "bcd", std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASLIST("abc"), "bcd", std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASVECTOR("abc"), "bcd", std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASSTRING("abc"), ASLIST("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASVECTOR("abc"), ASLIST("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+    s = "";
+    BOOST_CHECK_EQUAL(edit_alignment(ASLIST("abc"), ASVECTOR("bcd"), std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, "-==+");
+}
+
+BOOST_AUTO_TEST_CASE(range_adaptors) {
+    std::string s;
+    BOOST_CHECK_EQUAL(edit_alignment("abc", ASLIST("abc") | boost::adaptors::reversed, std::back_inserter(s)).second, 2);
+    BOOST_CHECK_EQUAL(s, ":=:");
+}
+
 BOOST_AUTO_TEST_CASE(mixed_ops) {
     std::string s;
     BOOST_CHECK_EQUAL(edit_alignment("abcd", "bCde", std::back_inserter(s)).second, 3);
