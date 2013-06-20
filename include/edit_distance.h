@@ -315,4 +315,57 @@ typedef boost::mpl::int_<3> elements;
 
 typedef boost::mpl::int_<4> split_eql_sub;
 
+
+template <typename ParamList>
+struct edit_alignment_adaptor_impl {
+    // invoking this is an error
+};
+
+template <>
+struct edit_alignment_adaptor_impl<boost::mpl::vector<scores> > {
+    template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
+    std::pair<OutputIterator, typename Cost::cost_type>
+    operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
+        boost::multi_array<typename Cost::cost_type, 2> ca;
+        boost::multi_array<edit_opcode, 1> ops;
+        boost::multi_array<edit_opcode, 1>::iterator ops_begin;
+        needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
+        std::cout << "specialization for scores\n";
+        return std::pair<OutputIterator, typename Cost::cost_type>(std::copy(ops_begin, ops.end(), outi), ca[ca.size()-1][ca[0].size()-1]);
+    }
+};
+
+template <typename Param>
+struct edit_alignment_adaptor_basis_type {
+    // param list basis case:
+    typedef boost::mpl::vector<Param> param_list;
+    // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
+    template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
+    std::pair<OutputIterator, typename Cost::cost_type>
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost& cost) {
+        return edit_alignment_adaptor_impl<param_list>()(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
+    }
+    template <typename Sequence1, typename Sequence2, typename OutputIterator>
+    std::pair<OutputIterator, typename default_cost<Sequence1>::cost_type>
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi) {
+        return (*this)(seq1, seq2, outi, default_cost<Sequence1>());
+    }
+};
+
+template <typename F, typename Param>
+struct edit_alignment_adaptor_type {
+    typedef typename append_sorted_unique<typename F::param_list, Param>::type param_list;
+    // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
+    template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
+    std::pair<OutputIterator, typename Cost::cost_type>
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost& cost) {
+        return edit_alignment_adaptor_impl<param_list>()(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
+    }
+    template <typename Sequence1, typename Sequence2, typename OutputIterator>
+    std::pair<OutputIterator, typename default_cost<Sequence1>::cost_type>
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi) {
+        return (*this)(seq1, seq2, outi, default_cost<Sequence1>());
+    }
+};
+
 #endif
