@@ -50,6 +50,25 @@ struct cost_expensive_ins {
     cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
 };
 
+
+#define CHECK_EDIT_ALIGNMENT_COST(fun, seq1, seq2, cost, vtype, dist, output) \
+{ \
+    std::stringstream ss; \
+    ss << boost::tuples::set_delimiter(','); \
+    BOOST_CHECK_EQUAL(fun(seq1, seq2, std::ostream_iterator<vtype>(ss, ""), cost).second, dist); \
+    BOOST_CHECK_EQUAL(ss.str(), output); \
+}
+
+#define CHECK_EDIT_ALIGNMENT(fun, seq1, seq2, vtype, dist, output) \
+{ \
+    std::stringstream ss; \
+    ss << boost::tuples::set_delimiter(','); \
+    BOOST_CHECK_EQUAL(fun(seq1, seq2, std::ostream_iterator<vtype>(ss, "")).second, dist); \
+    BOOST_CHECK_EQUAL(ss.str(), output); \
+}
+
+
+
 #define ASLIST(seq) (_aslist(boost::as_literal(seq)))
 #define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
 #define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
