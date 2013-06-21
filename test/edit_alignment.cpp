@@ -101,4 +101,10 @@ BOOST_AUTO_TEST_CASE(acquire_elements) {
     CHECK_EDIT_ALIGNMENT(acquire<elements>(edit_alignment), "abcd", "bCde", val_t, 3, "(-,a,@)(=,b,b)(:,c,C)(=,d,d)(+,e,@)");
 }
 
+BOOST_AUTO_TEST_CASE(acquire_costs_indexes) {
+    typedef boost::tuple<char, int, int, int> val_t;
+    CHECK_EDIT_ALIGNMENT(acquire<costs>(acquire<indexes>(edit_alignment)), "abc", "axc", val_t, 1, "(=,0,0,0)(:,1,1,1)(=,0,2,2)");
+    CHECK_EDIT_ALIGNMENT(acquire<costs>(acquire<indexes>(edit_alignment)), "abcd", "bCde", val_t, 3, "(-,1,0,0)(=,0,1,0)(:,1,2,1)(=,0,3,2)(+,1,3,0)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
