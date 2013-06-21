@@ -18,6 +18,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <string>
 #include <iterator>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 
 #include <boost/foreach.hpp>
 
@@ -26,6 +28,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 #include <boost/range/adaptors.hpp>
+
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
 
 #include "edit_distance.h"
 

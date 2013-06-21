@@ -149,4 +149,12 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     BOOST_CHECK_EQUAL(s, "=-=-");
 }
 
+BOOST_AUTO_TEST_CASE(adaptor) {
+    std::stringstream ss;
+    ss << boost::tuples::set_delimiter(',');
+    typedef boost::tuple<char, int> val_t;
+    BOOST_CHECK_EQUAL(acquire<scores>(edit_alignment)("abc", "axc", std::ostream_iterator<val_t>(ss, "")).second, 1);
+    BOOST_CHECK_EQUAL(ss.str(), "(=,0)(:,1)(=,0)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

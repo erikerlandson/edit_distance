@@ -26,6 +26,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/concept/usage.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include <boost/range/as_literal.hpp>
 #include <boost/range/as_array.hpp>
@@ -245,40 +246,6 @@ edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     return edit_distance(seq1, seq2, default_cost<Sequence1>());
 }
 
-
-template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
-std::pair<OutputIterator, typename Cost::cost_type>
-edit_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
-    boost::multi_array<typename Cost::cost_type, 2> ca;
-    boost::multi_array<edit_opcode, 1> ops;
-    boost::multi_array<edit_opcode, 1>::iterator ops_begin;
-    needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
-    return std::pair<OutputIterator, typename Cost::cost_type>(std::copy(ops_begin, ops.end(), outi), ca[ca.size()-1][ca[0].size()-1]);
-}
-
-
-template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>))
-    ((SequenceAlignmentCost<Cost>)),
-(std::pair<OutputIterator, typename Cost::cost_type>))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost cost) {
-    return edit_alignment_impl(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
-}
-
-
-template <typename Sequence1, typename Sequence2, typename OutputIterator>
-inline 
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>)),
-(std::pair<OutputIterator, typename default_cost<Sequence1>::cost_type>))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi) {
-    return edit_alignment(seq1, seq2, outi, default_cost<Sequence1>());
-}
-
-
 template <typename Vector, typename X>
 struct append_to_vector {
     // error!
@@ -318,8 +285,24 @@ typedef boost::mpl::int_<4> split_eql_sub;
 
 template <typename ParamList>
 struct edit_alignment_adaptor_impl {
-    // invoking this is an error
+    // ideally, I use some boost magic to induce an informative compiler error
+    // that says "edit alignment for <ParamList> not implemented"
 };
+
+
+template <>
+struct edit_alignment_adaptor_impl<boost::mpl::vector<> > {
+    template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
+    std::pair<OutputIterator, typename Cost::cost_type>
+    operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
+        boost::multi_array<typename Cost::cost_type, 2> ca;
+        boost::multi_array<edit_opcode, 1> ops;
+        boost::multi_array<edit_opcode, 1>::iterator ops_begin;
+        needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
+        return std::pair<OutputIterator, typename Cost::cost_type>(std::copy(ops_begin, ops.end(), outi), ca[ca.size()-1][ca[0].size()-1]);
+    }
+};
+
 
 template <>
 struct edit_alignment_adaptor_impl<boost::mpl::vector<scores> > {
@@ -330,19 +313,27 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<scores> > {
         boost::multi_array<edit_opcode, 1> ops;
         boost::multi_array<edit_opcode, 1>::iterator ops_begin;
         needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
-        std::cout << "specialization for scores\n";
-        return std::pair<OutputIterator, typename Cost::cost_type>(std::copy(ops_begin, ops.end(), outi), ca[ca.size()-1][ca[0].size()-1]);
+        boost::multi_array<edit_opcode, 1>::size_type k1=0, k2=0;
+        for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
+            typename Cost::cost_type c = ca[k1][k2];
+            switch (*jo) {
+                case ins_op: ++k2; break;
+                case del_op: ++k1; break;
+                case sub_op: case eql_op: ++k1; ++k2; break;
+            }
+            *outi++ = boost::make_tuple(*jo, ca[k1][k2]-c);
+        }
+        return std::pair<OutputIterator, typename Cost::cost_type>(outi, ca[k1][k2]);
     }
 };
 
-template <typename Param>
 struct edit_alignment_adaptor_basis_type {
     // param list basis case:
-    typedef boost::mpl::vector<Param> param_list;
+    typedef boost::mpl::vector<> param_list;
     // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
     template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
     std::pair<OutputIterator, typename Cost::cost_type>
-    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost& cost) {
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost cost) {
         return edit_alignment_adaptor_impl<param_list>()(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
     }
     template <typename Sequence1, typename Sequence2, typename OutputIterator>
@@ -351,6 +342,8 @@ struct edit_alignment_adaptor_basis_type {
         return (*this)(seq1, seq2, outi, default_cost<Sequence1>());
     }
 };
+
+static edit_alignment_adaptor_basis_type edit_alignment;
 
 template <typename F, typename Param>
 struct edit_alignment_adaptor_type {
@@ -358,7 +351,7 @@ struct edit_alignment_adaptor_type {
     // note, if this adaptor is composed with another, this operator is ignored, only the accumulated param_list matters
     template <typename Sequence1, typename Sequence2, typename OutputIterator, typename Cost>
     std::pair<OutputIterator, typename Cost::cost_type>
-    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost& cost) {
+    operator()(Sequence1 const& seq1, Sequence2 const& seq2, OutputIterator outi, Cost cost) {
         return edit_alignment_adaptor_impl<param_list>()(boost::as_literal(seq1), boost::as_literal(seq2), outi, cost);
     }
     template <typename Sequence1, typename Sequence2, typename OutputIterator>
@@ -367,5 +360,18 @@ struct edit_alignment_adaptor_type {
         return (*this)(seq1, seq2, outi, default_cost<Sequence1>());
     }
 };
+
+template <typename Param>
+edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>
+acquire(edit_alignment_adaptor_basis_type) {
+    return edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>();
+}
+
+template <typename Param, typename F>
+edit_alignment_adaptor_type<F, Param>
+acquire(F) {
+    return edit_alignment_adaptor_type<F, Param>();
+}
+
 
 #endif
