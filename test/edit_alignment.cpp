@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
 
 BOOST_AUTO_TEST_CASE(acquire_costs) {
     typedef boost::tuple<char, int> val_t;
-    CHECK_EDIT_ALIGNMENT(acquire<scores>(edit_alignment), "abc", "axc", val_t, 1, "(=,0)(:,1)(=,0)");
+    CHECK_EDIT_ALIGNMENT(acquire<costs>(edit_alignment), "abc", "axc", val_t, 1, "(=,0)(:,1)(=,0)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

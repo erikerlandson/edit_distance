@@ -276,7 +276,7 @@ struct append_sorted_unique {
     typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append_to_vector<boost::mpl::_1, boost::mpl::_2> >::type type;
 };
 
-typedef boost::mpl::int_<1> scores;
+typedef boost::mpl::int_<1> costs;
 typedef boost::mpl::int_<2> indexes;
 typedef boost::mpl::int_<3> elements;
 
@@ -305,7 +305,7 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<> > {
 
 
 template <>
-struct edit_alignment_adaptor_impl<boost::mpl::vector<scores> > {
+struct edit_alignment_adaptor_impl<boost::mpl::vector<costs> > {
     template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
     std::pair<OutputIterator, typename Cost::cost_type>
     operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
