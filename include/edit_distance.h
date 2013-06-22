@@ -422,6 +422,32 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<costs, indexes> > {
     }
 };
 
+template <>
+struct edit_alignment_adaptor_impl<boost::mpl::vector<costs, elements> > {
+    template <typename ForwardRange1, typename ForwardRange2, typename OutputIterator, typename Cost>
+    std::pair<OutputIterator, typename Cost::cost_type>
+    operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, OutputIterator outi, Cost& cost) {
+        boost::multi_array<typename Cost::cost_type, 2> ca;
+        boost::multi_array<edit_opcode, 1> ops;
+        boost::multi_array<edit_opcode, 1>::iterator ops_begin;
+        needleman_wunsch_alignment_impl(seq1, seq2, cost, ca, ops, ops_begin);
+        typename range_iterator<ForwardRange1 const>::type e1 = begin(seq1);
+        typename range_iterator<ForwardRange2 const>::type e2 = begin(seq2);
+        typedef typename boost::range_value<ForwardRange1 const>::type vtype1;
+        typedef typename boost::range_value<ForwardRange2 const>::type vtype2;
+        boost::multi_array<edit_opcode, 1>::size_type k1=0, k2=0;
+        for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
+            typename Cost::cost_type c = ca[k1][k2];
+            switch (*jo) {
+                case ins_op: *outi++ = boost::make_tuple(*jo, ca[k1][k2+1]-c, *e2, default_value<vtype2>()); ++e2; ++k2; break;
+                case del_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2]-c, *e1,  default_value<vtype1>()); ++e1; ++k1; break;
+                case sub_op: case eql_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2+1]-c, *e1, *e2); ++e1; ++e2; ++k1; ++k2; break;
+            }
+        }
+        return std::pair<OutputIterator, typename Cost::cost_type>(outi, ca[k1][k2]);
+    }
+};
+
 
 
 struct edit_alignment_adaptor_basis_type {
