@@ -37,6 +37,10 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
 
+namespace boost {
+namespace algorithm {
+namespace sequence_alignment {
+
 using boost::distance;
 using boost::begin;
 using boost::end;
@@ -407,5 +411,7 @@ acquire(F) {
     return edit_alignment_adaptor_type<F, Param>();
 }
 
+
+}}} // boost::algorithm::sequence_alignment
 
 #endif

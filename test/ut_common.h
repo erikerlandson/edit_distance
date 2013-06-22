@@ -37,6 +37,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #define BOOST_CHAR_DEFAULT_OVERRIDE '@'
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
 
+using namespace boost::algorithm::sequence_alignment;
+
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;
