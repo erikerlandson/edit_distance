@@ -20,7 +20,8 @@ int main(int argc, char** argv) {
     char const* str1 = "Oh, hello world.";
     char const* str2 = "Hello world!!";
 
-    // obtain the cost of minimal edit sequence to transform str1 --> str2
+    // Obtain the cost of minimal edit sequence to transform str1 --> str2.
+    // The default cost function defines the cost of insertion, deletion and substitution to be 1.  Elements that are equal cost 0.
     // The distance should be 7: 
     // delete 4: "Oh, "
     // substitute 1: "h"->"H",

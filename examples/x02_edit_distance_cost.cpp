@@ -26,6 +26,7 @@ struct cost_free_space {
     // inserting or deleting a space is free:
     cost_type cost_ins(value_type c) { return (c == ' ') ? 0 : 1; }
     cost_type cost_del(value_type c) { return (c == ' ') ? 0 : 1; }
+    // note that substitution cost also encompasses the definition of equality
     cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
 };
 
