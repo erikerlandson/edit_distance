@@ -28,6 +28,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/type_traits/is_same.hpp>
 
 #include <boost/range/metafunctions.hpp>
+#include <boost/range/as_literal.hpp>
 
 namespace boost {
 namespace algorithm {

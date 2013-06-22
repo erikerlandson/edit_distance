@@ -13,6 +13,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_TYPES_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_TYPES_HPP
 
+#include <boost/range/metafunctions.hpp>
+
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
