@@ -305,8 +305,6 @@ typedef boost::mpl::int_<1> costs;
 typedef boost::mpl::int_<2> indexes;
 typedef boost::mpl::int_<3> elements;
 
-typedef boost::mpl::int_<4> split_eql_sub;
-
 struct parameter_list_is_unimplemented {};
 
 template <typename ParamList>
