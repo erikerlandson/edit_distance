@@ -307,11 +307,13 @@ typedef boost::mpl::int_<3> elements;
 
 typedef boost::mpl::int_<4> split_eql_sub;
 
+struct parameter_list_is_unimplemented {};
 
 template <typename ParamList>
 struct edit_alignment_adaptor_impl {
     // ideally, I use some boost magic to induce an informative compiler error
     // that says "edit alignment for <ParamList> not implemented"
+    BOOST_MPL_ASSERT((boost::is_same<ParamList, parameter_list_is_unimplemented>));
 };
 
 
