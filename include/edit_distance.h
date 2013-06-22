@@ -388,7 +388,6 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<elements> > {
         typename range_iterator<ForwardRange2 const>::type e2 = begin(seq2);
         typedef typename boost::range_value<ForwardRange1 const>::type vtype1;
         typedef typename boost::range_value<ForwardRange2 const>::type vtype2;
-        boost::multi_array<edit_opcode, 1>::size_type k1=0, k2=0;
         for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
             switch (*jo) {
                 case ins_op: *outi++ = boost::make_tuple(*jo, *e2, default_value<vtype2>()); ++e2; break;
