@@ -10,94 +10,33 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
+#if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP
 
-#if !defined(__edit_distance_h__)
-#define __edit_distance_h__ 1
-
-#include <boost/mpl/has_xxx.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/sort.hpp>
-#include <boost/mpl/unique.hpp>
 
 #include <boost/concept/requires.hpp>
-#include <boost/concept/usage.hpp>
-#include <boost/concept/assert.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/is_same.hpp>
 
 #include <boost/range/as_literal.hpp>
-#include <boost/range/as_array.hpp>
-#include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 
 #include <boost/multi_array.hpp>
+
+#include <boost/algorithm/sequence_alignment/edit_types.hpp>
+#include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
+
+namespace boost {
+namespace algorithm {
+namespace sequence_alignment {
+namespace detail {
 
 using boost::distance;
 using boost::begin;
 using boost::end;
 using boost::range_iterator;
-using boost::range_value;
-using boost::range_reference;
 
-typedef char edit_opcode;
-const edit_opcode ins_op = '+';
-const edit_opcode del_op = '-';
-const edit_opcode sub_op = ':';
-const edit_opcode eql_op = '=';
-
-template <typename X>
-struct ForwardRangeConvertible {
-    BOOST_CONCEPT_USAGE(ForwardRangeConvertible) {
-        // all I really want to capture here is that any sequence argument to edit_distance()
-        // and friends can be treated as a ForwardRange -- currently I'm doing this by
-        // applying as_literal() to all incoming arguments, which seems to allow me to send in
-        // null-terminated strings, ranges, sequence containers, etc, which is what I want.
-        boost::as_literal(x);
-    }
-    X x;
-};
-
-// I'm a little surprised this doesn't exist already
-template <typename X>
-struct Arithmetic {
-    typedef typename boost::is_arithmetic<X>::type type;
-};
-
-template <typename X>
-struct SequenceAlignmentCost {
-    typedef typename X::cost_type cost_type;
-    typedef typename X::value_type value_type;
-    BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));    
-    BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
-        c = x.cost_ins(v);
-        c = x.cost_del(v);
-        c = x.cost_sub(v,v);
-    }
-    X x;
-    cost_type c;
-    value_type v;
-};
-
-
-template <typename Range>
-struct default_cost {
-    // interesting that these appear to work correctly when Range = char*
-    typedef typename boost::range_difference<Range>::type cost_type;
-    typedef typename boost::range_value<Range>::type value_type;
-    cost_type cost_ins(value_type const& a) const {
-        return cost_type(1);
-    }
-    cost_type cost_del(value_type const& a) const {
-        return cost_type(1);
-    }
-    cost_type cost_sub(value_type const& a, value_type const& b) const {
-        return (a == b) ? cost_type(0) : cost_type(1);
-    }
-};
-
+using detail::SequenceAlignmentCost;
+using detail::ForwardRangeConvertible;
 
 template <typename T>
 void dump_matrix(const boost::multi_array<T, 2>& a) {
@@ -109,46 +48,6 @@ void dump_matrix(const boost::multi_array<T, 2>& a) {
         std::cout << "\n";
     }
 }
-
-
-template <typename ForwardRange1, typename ForwardRange2, typename Cost>
-typename Cost::cost_type 
-needleman_wunsch_distance(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost) {
-    typedef typename Cost::cost_type cost_t;
-    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
-    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
-    typedef boost::multi_array<cost_t, 1> cost_array_t;
-    typedef typename cost_array_t::iterator itrc_t;
-    typename cost_array_t::size_type len2 = distance(seq2);
-    cost_array_t cv1(boost::extents[1+len2]);
-    cost_array_t cv2(boost::extents[1+len2]);
-    cost_array_t* cur = &cv1;
-    cost_array_t* prv = &cv2;
-    itr2_t j2 = begin(seq2);
-    itrc_t c00 = cur->begin();
-    itrc_t c01 = c00;
-    *c01 = 0;
-    for (++c00;  c00 != cur->end();  ++c00, ++c01, ++j2) {
-        *c00 = *c01 + cost.cost_ins(*j2);
-    }
-    for (itr1_t j1 = begin(seq1);  j1 != end(seq1);  ++j1) {
-        std::swap(cur, prv);
-        j2 = begin(seq2);
-        c00 = cur->begin();
-        c01 = c00;
-        itrc_t c10 = prv->begin();
-        itrc_t c11 = c10;
-        *c01 = *c11 + cost.cost_del(*j1);
-        for (++c00, ++c10;  c00 != cur->end();  ++c00, ++c01, ++c10, ++c11, ++j2) {
-            cost_t c = *c01 + cost.cost_ins(*j2);
-            c = std::min(c, *c10 + cost.cost_del(*j1));
-            c = std::min(c, *c11 + cost.cost_sub(*j1, *j2));
-            *c00 = c;
-        }
-    }
-    return *c01;
-}
-
 
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
 void
@@ -220,100 +119,12 @@ needleman_wunsch_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& 
     ops_begin = opbeg;
 }
 
-
-template <typename Sequence1, typename Sequence2, typename Cost>
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>))
-    ((SequenceAlignmentCost<Cost>)),
-(typename Cost::cost_type))
-edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost) {
-    // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
-    // handle char* transparently, which seems to be working correctly
-    return needleman_wunsch_distance(boost::as_literal(seq1), boost::as_literal(seq2), cost);
-    // note to self - in the general case edit distance isn't a symmetric function, depending on
-    // the cost matrix
-}
-
-
-template <typename Sequence1, typename Sequence2>
-inline 
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>)),
-(typename default_cost<Sequence1>::cost_type))
-edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
-    return edit_distance(seq1, seq2, default_cost<Sequence1>());
-}
-
-template <typename Vector, typename X>
-struct append_to_vector {
-    // error!
-};
-template <typename X>
-struct append_to_vector<boost::mpl::vector<>, X> {
-    typedef boost::mpl::vector<X> type;
-};
-template <typename T, typename X>
-struct append_to_vector<boost::mpl::vector<T>, X> {
-    typedef boost::mpl::vector<T, X> type;
-};
-template <typename T1, typename T2, typename X>
-struct append_to_vector<boost::mpl::vector<T1, T2>, X> {
-    typedef boost::mpl::vector<T1, T2, X> type;
-};
-template <typename T1, typename T2, typename T3, typename X>
-struct append_to_vector<boost::mpl::vector<T1, T2, T3>, X> {
-    typedef boost::mpl::vector<T1, T2, T3, X> type;
-};
-
-
-template <typename V, typename X>
-struct append_sorted_unique {
-    typedef typename append_to_vector<V, X>::type va;
-    typedef typename boost::mpl::sort<va>::type vs;
-    typedef typename boost::mpl::unique<vs, boost::is_same<boost::mpl::_1, boost::mpl::_2> >::type vu;
-    typedef typename boost::mpl::fold<vu, boost::mpl::vector<>, append_to_vector<boost::mpl::_1, boost::mpl::_2> >::type type;
-};
-
-template <typename T>
-struct zero {
-    T operator()() { return T(0); }
-};
-
-// I created this for replacing '\0' with something printable for unit testing.
-// Library users might also find uses for their own testing or output purposes.
-#if defined(BOOST_CHAR_DEFAULT_OVERRIDE)
-template<>
-struct zero<char> {
-    char operator()() { return BOOST_CHAR_DEFAULT_OVERRIDE; }
-};
-#endif
-
-template <typename T>
-struct default_ctor {
-    T operator()() { return T(); }
-};
-
-template <typename T>
-T default_value() {
-    typename boost::mpl::if_<typename boost::is_arithmetic<T>::type, zero<T>, default_ctor<T> >::type dv;
-    return dv();
-}
-
-typedef boost::mpl::int_<1> costs;
-typedef boost::mpl::int_<2> indexes;
-typedef boost::mpl::int_<3> elements;
-
-struct parameter_list_is_unimplemented {};
-
 template <typename ParamList>
 struct edit_alignment_adaptor_impl {
     // ideally, I use some boost magic to induce an informative compiler error
     // that says "edit alignment for <ParamList> not implemented"
     BOOST_MPL_ASSERT((boost::is_same<ParamList, parameter_list_is_unimplemented>));
 };
-
 
 template <>
 struct edit_alignment_adaptor_impl<boost::mpl::vector<> > {
@@ -446,7 +257,6 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<costs, elements> > {
 };
 
 
-
 struct edit_alignment_adaptor_basis_type {
     // param list basis case:
     typedef boost::mpl::vector<> param_list;
@@ -462,8 +272,6 @@ struct edit_alignment_adaptor_basis_type {
         return (*this)(seq1, seq2, outi, default_cost<Sequence1>());
     }
 };
-
-static edit_alignment_adaptor_basis_type edit_alignment;
 
 template <typename F, typename Param>
 struct edit_alignment_adaptor_type {
@@ -481,17 +289,6 @@ struct edit_alignment_adaptor_type {
     }
 };
 
-template <typename Param>
-edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>
-acquire(edit_alignment_adaptor_basis_type) {
-    return edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>();
-}
-
-template <typename Param, typename F>
-edit_alignment_adaptor_type<F, Param>
-acquire(F) {
-    return edit_alignment_adaptor_type<F, Param>();
-}
-
+}}}}
 
 #endif

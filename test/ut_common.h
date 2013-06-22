@@ -35,7 +35,10 @@ http://www.boost.org/LICENSE_1_0.txt
 // Define this flag to make char values default to '@' instead of zero '\0'
 // So default values are printable, which is much easier to work with in testing.
 #define BOOST_CHAR_DEFAULT_OVERRIDE '@'
-#include "edit_distance.h"
+#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
+
+using namespace boost::algorithm::sequence_alignment;
 
 struct cost_expensive_sub {
     typedef int cost_type;
