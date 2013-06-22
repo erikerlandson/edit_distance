@@ -28,4 +28,6 @@ int main(int argc, char** argv) {
     // insert 1: "!"
     unsigned dist = edit_distance(str1, str2);
     std::cout << "The edit distance between \"" << str1 << "\" and \"" << str2 << "\" = " << dist << "\n";
+
+    return 0;
 }
