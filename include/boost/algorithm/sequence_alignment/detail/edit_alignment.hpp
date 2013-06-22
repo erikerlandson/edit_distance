@@ -175,7 +175,7 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<indexes> > {
         boost::multi_array<edit_opcode, 1>::size_type k1=0, k2=0;
         for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
             switch (*jo) {
-                case ins_op: *outi++ = boost::make_tuple(*jo, k2, 0); ++k2; break;
+                case ins_op: *outi++ = boost::make_tuple(*jo, 0, k2); ++k2; break;
                 case del_op: *outi++ = boost::make_tuple(*jo, k1, 0); ++k1; break;
                 case sub_op: case eql_op: *outi++ = boost::make_tuple(*jo, k1, k2); ++k1; ++k2; break;
             }
@@ -199,8 +199,8 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<elements> > {
         typedef typename boost::range_value<ForwardRange2 const>::type vtype2;
         for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
             switch (*jo) {
-                case ins_op: *outi++ = boost::make_tuple(*jo, *e2, default_value<vtype2>()); ++e2; break;
-                case del_op: *outi++ = boost::make_tuple(*jo, *e1, default_value<vtype1>()); ++e1; break;
+                case ins_op: *outi++ = boost::make_tuple(*jo, default_value<vtype1>(), *e2); ++e2; break;
+                case del_op: *outi++ = boost::make_tuple(*jo, *e1, default_value<vtype2>()); ++e1; break;
                 case sub_op: case eql_op: *outi++ = boost::make_tuple(*jo, *e1, *e2); ++e1; ++e2; break;
             }
         }
@@ -221,7 +221,7 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<costs, indexes> > {
         for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
             typename Cost::cost_type c = ca[k1][k2];
             switch (*jo) {
-                case ins_op: *outi++ = boost::make_tuple(*jo, ca[k1][k2+1]-c, k2, 0); ++k2; break;
+                case ins_op: *outi++ = boost::make_tuple(*jo, ca[k1][k2+1]-c, 0, k2); ++k2; break;
                 case del_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2]-c, k1, 0); ++k1; break;
                 case sub_op: case eql_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2+1]-c, k1, k2); ++k1; ++k2; break;
             }
@@ -247,8 +247,8 @@ struct edit_alignment_adaptor_impl<boost::mpl::vector<costs, elements> > {
         for (boost::multi_array<edit_opcode, 1>::iterator jo = ops_begin;  jo != ops.end();  ++jo) {
             typename Cost::cost_type c = ca[k1][k2];
             switch (*jo) {
-                case ins_op: *outi++ = boost::make_tuple(*jo, ca[k1][k2+1]-c, *e2, default_value<vtype2>()); ++e2; ++k2; break;
-                case del_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2]-c, *e1,  default_value<vtype1>()); ++e1; ++k1; break;
+                case ins_op: *outi++ = boost::make_tuple(*jo, ca[k1][k2+1]-c, default_value<vtype1>(), *e2); ++e2; ++k2; break;
+                case del_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2]-c, *e1, default_value<vtype2>()); ++e1; ++k1; break;
                 case sub_op: case eql_op: *outi++ = boost::make_tuple(*jo, ca[k1+1][k2+1]-c, *e1, *e2); ++e1; ++e2; ++k1; ++k2; break;
             }
         }
