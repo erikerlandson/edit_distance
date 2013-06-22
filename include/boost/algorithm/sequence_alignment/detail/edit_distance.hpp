@@ -14,28 +14,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP
 
-#include <boost/mpl/has_xxx.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/sort.hpp>
-#include <boost/mpl/unique.hpp>
-
-#include <boost/concept/requires.hpp>
-#include <boost/concept/usage.hpp>
-#include <boost/concept/assert.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/is_same.hpp>
-
-#include <boost/range/as_literal.hpp>
-#include <boost/range/as_array.hpp>
-#include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 
 #include <boost/multi_array.hpp>
-
-#include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
 
 namespace boost {
 namespace algorithm {
