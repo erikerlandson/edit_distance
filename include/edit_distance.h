@@ -281,10 +281,12 @@ struct zero {
     T operator()() { return T(0); }
 };
 
-#if defined(SPECIAL_CHAR_DEFAULT_VALUE)
+// I created this for replacing '\0' with something printable for unit testing.
+// Library users might also find uses for their own testing or output purposes.
+#if defined(BOOST_CHAR_DEFAULT_OVERRIDE)
 template<>
 struct zero<char> {
-    char operator()() { return SPECIAL_CHAR_DEFAULT_VALUE; }
+    char operator()() { return BOOST_CHAR_DEFAULT_OVERRIDE; }
 };
 #endif
 

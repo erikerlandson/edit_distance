@@ -32,8 +32,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-// define this flag to allow char values to default to '@' instead of zero '\0'
-#define SPECIAL_CHAR_DEFAULT_VALUE '@'
+// Define this flag to make char values default to '@' instead of zero '\0'
+// So default values are printable, which is much easier to work with in testing.
+#define BOOST_CHAR_DEFAULT_OVERRIDE '@'
 #include "edit_distance.h"
 
 struct cost_expensive_sub {
