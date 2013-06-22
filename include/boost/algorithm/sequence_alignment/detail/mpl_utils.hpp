@@ -17,30 +17,22 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/mpl/has_xxx.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/int.hpp>
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/sort.hpp>
 #include <boost/mpl/unique.hpp>
 
-#include <boost/concept/requires.hpp>
-#include <boost/concept/usage.hpp>
 #include <boost/concept/assert.hpp>
+#include <boost/concept/usage.hpp>
+
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-#include <boost/range/as_literal.hpp>
-#include <boost/range/as_array.hpp>
-#include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 
-#include <boost/multi_array.hpp>
-
-using boost::distance;
-using boost::begin;
-using boost::end;
-using boost::range_iterator;
-using boost::range_value;
-using boost::range_reference;
+namespace boost {
+namespace algorithm {
+namespace sequence_alignment {
+namespace detail {
 
 template <typename X>
 struct ForwardRangeConvertible {
@@ -129,5 +121,7 @@ T default_value() {
     typename boost::mpl::if_<typename boost::is_arithmetic<T>::type, zero<T>, default_ctor<T> >::type dv;
     return dv();
 }
+
+}}}}
 
 #endif

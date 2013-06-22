@@ -13,23 +13,11 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP
 
-#include <boost/mpl/has_xxx.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/sort.hpp>
-#include <boost/mpl/unique.hpp>
 
 #include <boost/concept/requires.hpp>
-#include <boost/concept/usage.hpp>
-#include <boost/concept/assert.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/is_same.hpp>
 
 #include <boost/range/as_literal.hpp>
-#include <boost/range/as_array.hpp>
-#include <boost/range/functions.hpp>
 #include <boost/range/metafunctions.hpp>
 
 #include <boost/multi_array.hpp>
@@ -46,8 +34,9 @@ using boost::distance;
 using boost::begin;
 using boost::end;
 using boost::range_iterator;
-using boost::range_value;
-using boost::range_reference;
+
+using detail::SequenceAlignmentCost;
+using detail::ForwardRangeConvertible;
 
 template <typename T>
 void dump_matrix(const boost::multi_array<T, 2>& a) {
