@@ -43,17 +43,18 @@ int main(int argc, char** argv) {
     char const* str2 = "axc";
     unsigned dist;
 
-    // compare two null-terminated strings that differ by one substitution
+    // Compare two null-terminated strings that differ by one substitution
     // (distance should be 1)
     std::cout << "dist= " << edit_distance(str1, str2) << "\n";
 
-    // however, any two sequences or ranges can be compared, even differing types, provided
-    // that the sequence element types are compatible
+    // Any two sequences or ranges can be compared, even differing types, provided
+    // that the sequence element types are compatible.  Sequence element types do not have
+    // to be identical, as long as they can be accepted by the cost function.
     std::cout << "dist= " << edit_distance(str1, as_list(str2)) << "\n";
     std::cout << "dist= " << edit_distance(as_vector(str1), str2) << "\n";
     std::cout << "dist= " << edit_distance(as_string(str1), as_list(str2)) << "\n";    
 
-    // range adaptors work as expected (here distance should be 3)
+    // Range adaptors work as expected (here distance should be 3)
     std::cout << "dist= " << edit_distance(as_vector(str1), as_list(str2) | boost::adaptors::reversed) << "\n";
 
     return 0;
