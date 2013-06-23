@@ -41,7 +41,6 @@ using boost::algorithm::sequence_alignment::edit_distance;
 int main(int argc, char** argv) {
     char const* str1 = "abc";
     char const* str2 = "axc";
-    unsigned dist;
 
     // Compare two null-terminated strings that differ by one substitution
     // (distance should be 1)
