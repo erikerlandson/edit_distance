@@ -25,6 +25,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/algorithm/sequence_alignment/edit_types.hpp>
 #include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
 
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
+
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
