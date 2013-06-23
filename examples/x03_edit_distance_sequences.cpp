@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     // that the sequence element types are compatible
     std::cout << "dist= " << edit_distance(str1, as_list(str2)) << "\n";
     std::cout << "dist= " << edit_distance(as_vector(str1), str2) << "\n";
-    std::cout << "dist= " << edit_distance(as_vector(str1), as_list(str2)) << "\n";    
+    std::cout << "dist= " << edit_distance(as_string(str1), as_list(str2)) << "\n";    
 
     // range adaptors work as expected (here distance should be 3)
     std::cout << "dist= " << edit_distance(as_vector(str1), as_list(str2) | boost::adaptors::reversed) << "\n";
