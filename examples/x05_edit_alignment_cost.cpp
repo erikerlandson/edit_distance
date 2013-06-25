@@ -11,6 +11,7 @@ http://www.boost.org/LICENSE_1_0.txt
 *******/
 
 #include <ctype.h>
+#include <sstream>
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
