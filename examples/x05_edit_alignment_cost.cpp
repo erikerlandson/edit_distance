@@ -17,11 +17,6 @@ http://www.boost.org/LICENSE_1_0.txt
 using boost::algorithm::sequence_alignment::edit_alignment;
 using boost::algorithm::sequence_alignment::edit_opcode;
 
-using boost::algorithm::sequence_alignment::ins_op;
-using boost::algorithm::sequence_alignment::del_op;
-using boost::algorithm::sequence_alignment::sub_op;
-using boost::algorithm::sequence_alignment::eql_op;
-
 
 // define a custom cost function where case changes cost less
 struct cost_case_less {
