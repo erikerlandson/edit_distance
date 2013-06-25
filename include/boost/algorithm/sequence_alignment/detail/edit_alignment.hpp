@@ -85,13 +85,13 @@ needleman_wunsch_alignment_impl(ForwardRange1 const& seq1, ForwardRange2 const& 
         *c01 = *c11 + cost.cost_del(*j1);
         *op00++ = del_op;
         for (itr2_t j2 = beg2;  j2 != end2;  ++j2, ++c00, ++c01, ++c10, ++c11, ++op00) {
-            *c00 = *c11 + cost.cost_sub(*j1, *j2);
-            *op00 = (*c00 == *c11) ? eql_op : sub_op;
             cost_t t;
-            t = *c01 + cost.cost_ins(*j2);
+            *c00 = *c01 + cost.cost_ins(*j2);
+            *op00 = ins_op;
+            t = *c11 + cost.cost_sub(*j1, *j2);
             if (t < *c00) {
                 *c00 = t;
-                *op00 = ins_op;
+                *op00 = (*c00 == *c11) ? eql_op : sub_op;
             }
             t = *c10 + cost.cost_del(*j1);
             if (t < *c00) {
