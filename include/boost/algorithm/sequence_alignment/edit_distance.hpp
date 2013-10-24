@@ -26,7 +26,7 @@ namespace sequence_alignment {
 
 using detail::SequenceAlignmentCost;
 using detail::ForwardRangeConvertible;
-using detail::needleman_wunsch_distance;
+using detail::dijkstra_sssp_cost;
 
 template <typename Sequence1, typename Sequence2, typename Cost>
 BOOST_CONCEPT_REQUIRES(
@@ -37,7 +37,7 @@ BOOST_CONCEPT_REQUIRES(
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
-    return needleman_wunsch_distance(boost::as_literal(seq1), boost::as_literal(seq2), cost);
+    return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost);
     // note to self - in the general case edit distance isn't a symmetric function, depending on
     // the cost matrix
 }
