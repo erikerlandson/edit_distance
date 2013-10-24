@@ -1,5 +1,5 @@
 # unit testing is built on the boost unit testing package
-find_package(Boost 1.50 COMPONENTS unit_test_framework)
+find_package(Boost 1.50 COMPONENTS unit_test_framework system)
 
 # include path
 include_directories(${edit_distance_SOURCE_DIR}/include)
