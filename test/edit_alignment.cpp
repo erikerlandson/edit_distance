@@ -16,6 +16,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 BOOST_AUTO_TEST_SUITE(edit_alignment_suite)
 
+#if 0
+
 BOOST_AUTO_TEST_CASE(both_empty) {
     CHECK_EDIT_ALIGNMENT(edit_alignment, "", "", char, 0, "");
 }
@@ -118,5 +120,7 @@ BOOST_AUTO_TEST_CASE(acquire_costs_elements) {
     CHECK_EDIT_ALIGNMENT(acquire<elements>(acquire<costs>(edit_alignment)), "abc", "axc", val_t, 1, "(=,0,a,a)(:,1,b,x)(=,0,c,c)");
     CHECK_EDIT_ALIGNMENT(acquire<elements>(acquire<costs>(edit_alignment)), "abcd", "bCde", val_t, 3, "(-,1,a,@)(=,0,b,b)(:,1,c,C)(=,0,d,d)(+,1,@,e)");
 }
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

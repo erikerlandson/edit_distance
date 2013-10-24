@@ -20,6 +20,7 @@ using boost::tuple;
 // define a printable default value for char
 #define BOOST_CHAR_DEFAULT_OVERRIDE '_'
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
+#if 0
 using boost::algorithm::sequence_alignment::edit_alignment;
 using boost::algorithm::sequence_alignment::edit_opcode;
 
@@ -30,12 +31,13 @@ using boost::algorithm::sequence_alignment::acquire;
 using boost::algorithm::sequence_alignment::costs;
 using boost::algorithm::sequence_alignment::indexes;
 using boost::algorithm::sequence_alignment::elements;
-
+#endif
 
 int main(int argc, char** argv) {
     char const* str1 = "Oh, hello world.";
     char const* str2 = "Hello world!!";
 
+#if 0
     std::stringstream ss;
     ss << boost::tuples::set_delimiter(',');
 
@@ -62,6 +64,7 @@ int main(int argc, char** argv) {
     ss.str("");
     dist = acquire<indexes>(acquire<costs>(edit_alignment))(str1, str2, std::ostream_iterator<tuple<edit_opcode, unsigned, unsigned, unsigned> >(ss, "")).second;
     std::cout << "dist= " << dist << "   edit operations= " << ss.str() << "\n";    
+#endif
 
     return 0;
 }

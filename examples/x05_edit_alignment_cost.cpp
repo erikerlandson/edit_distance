@@ -15,8 +15,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
-using boost::algorithm::sequence_alignment::edit_opcode;
+//using boost::algorithm::sequence_alignment::edit_alignment;
+//using boost::algorithm::sequence_alignment::edit_opcode;
 
 
 // define a custom cost function where case changes cost less
@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
     char const* str1 = "Try to find XXX capitalized";
     char const* str2 = "xxx";
 
+#if 0
     // Match the substring 'xxx' against the larger string, with cheap case changes,
     // identifies the correct location of 'XXX' in the larger string
     std::stringstream ss;
@@ -51,6 +52,7 @@ int main(int argc, char** argv) {
     ss.str("");
     dist = edit_alignment(str1, str2, std::ostream_iterator<edit_opcode>(ss, "")).second;
     std::cout << "dist= " << dist << "   edit operations=  \"" << ss.str() << "\"\n";    
+#endif
 
     return 0;
 }

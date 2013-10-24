@@ -14,13 +14,14 @@ http://www.boost.org/LICENSE_1_0.txt
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
-using boost::algorithm::sequence_alignment::edit_opcode;
+//using boost::algorithm::sequence_alignment::edit_alignment;
+//using boost::algorithm::sequence_alignment::edit_opcode;
 
 int main(int argc, char** argv) {
     char const* str1 = "Oh, hello world.";
     char const* str2 = "Hello world!!";
 
+#if 0
     // collect the sequence of edit operations into an output iterator.
     // return value is a pair (O, D), where O is the value of the output iterator
     // after output of the edit operation sequence, and D is the corresponding
@@ -34,6 +35,7 @@ int main(int argc, char** argv) {
     // substitution where the subsitution cost was zero.  Note, a zero subsitution
     // cost does *not* always imply that two elements are identical, although that
     // is often the case.
+#endif
 
     return 0;
 }

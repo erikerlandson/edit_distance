@@ -35,13 +35,14 @@ std::string as_string(char const* str) {
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
-using boost::algorithm::sequence_alignment::edit_opcode;
+//using boost::algorithm::sequence_alignment::edit_alignment;
+//using boost::algorithm::sequence_alignment::edit_opcode;
 
 int main(int argc, char** argv) {
     char const* str1 = "abc";
     char const* str2 = "axc";
 
+#if 0
     // Compare two null-terminated strings that differ by one substitution
     // (distance should be 1)
     std::stringstream ss;
@@ -53,6 +54,7 @@ int main(int argc, char** argv) {
     ss.str("");
     dist = edit_alignment(as_vector(str1), as_list(str2) | boost::adaptors::reversed, std::ostream_iterator<edit_opcode>(ss, "")).second;
     std::cout << "dist= " << dist << "   edit operations= " << ss.str() << "\n";
+#endif
 
     return 0;
 }

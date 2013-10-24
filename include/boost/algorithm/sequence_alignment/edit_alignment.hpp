@@ -20,6 +20,7 @@ namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 
+#if 0
 using detail::edit_alignment_adaptor_basis_type;
 using detail::edit_alignment_adaptor_type;
 
@@ -37,6 +38,8 @@ acquire(F) {
 
 
 static edit_alignment_adaptor_basis_type edit_alignment;
+
+#endif
 
 }}}
 
