@@ -25,6 +25,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/multi_array.hpp>
 
+#include <boost/algorithm/sequence_alignment/detail/types.hpp>
+
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
