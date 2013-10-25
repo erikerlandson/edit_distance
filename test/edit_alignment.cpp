@@ -16,11 +16,12 @@ http://www.boost.org/LICENSE_1_0.txt
 
 BOOST_AUTO_TEST_SUITE(edit_alignment_suite)
 
-#if 0
-
 BOOST_AUTO_TEST_CASE(both_empty) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "", "", char, 0, "");
+        //CHECK_EDIT_ALIGNMENT(edit_alignment, "", "", char, 0, "");
+    int c = edit_alignment("", "", int(0));
 }
+
+#if 0
 
 BOOST_AUTO_TEST_CASE(insertion) {
     CHECK_EDIT_ALIGNMENT(edit_alignment, "", "a", char, 1, "+");

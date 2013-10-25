@@ -13,33 +13,43 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_ALIGNMENT_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_ALIGNMENT_HPP
 
+#include <boost/concept/requires.hpp>
+
 #include <boost/algorithm/sequence_alignment/edit_types.hpp>
+#include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
 #include <boost/algorithm/sequence_alignment/detail/edit_alignment.hpp>
 
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 
-#if 0
-using detail::edit_alignment_adaptor_basis_type;
-using detail::edit_alignment_adaptor_type;
+using detail::SequenceAlignmentCost;
+using detail::ForwardRangeConvertible;
+using detail::dijkstra_sssp_alignment;
 
-template <typename Param>
-edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>
-acquire(edit_alignment_adaptor_basis_type) {
-    return edit_alignment_adaptor_type<edit_alignment_adaptor_basis_type, Param>();
+template <typename Sequence1, typename Sequence2, typename Output, typename Cost>
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>))
+    ((SequenceAlignmentCost<Cost>)),
+(typename Cost::cost_type))
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output output, Cost cost) {
+    // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
+    // handle char* transparently, which seems to be working correctly
+    return dijkstra_sssp_alignment(boost::as_literal(seq1), boost::as_literal(seq2), output, cost);
+    // note to self - in the general case edit distance isn't a symmetric function, depending on
+    // the cost matrix
 }
 
-template <typename Param, typename F>
-edit_alignment_adaptor_type<F, Param>
-acquire(F) {
-    return edit_alignment_adaptor_type<F, Param>();
+template <typename Sequence1, typename Sequence2, typename Output>
+inline 
+BOOST_CONCEPT_REQUIRES(
+    ((ForwardRangeConvertible<Sequence1>))
+    ((ForwardRangeConvertible<Sequence2>)),
+(typename default_cost<Sequence1>::cost_type))
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output output) {
+    return edit_alignment(seq1, seq2, output, default_cost<Sequence1>());
 }
-
-
-static edit_alignment_adaptor_basis_type edit_alignment;
-
-#endif
 
 }}}
 
