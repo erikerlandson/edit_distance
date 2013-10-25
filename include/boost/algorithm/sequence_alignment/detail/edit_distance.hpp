@@ -65,19 +65,19 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
             // if we are at end of both sequences, then we have our final cost: 
             if (h->j2 == end2) return h->cost;
             // sequence 1 is at end, so only consider insertion from seq2
-            itr2_t j2 = h->j2;  ++(h->j2);
-            heap.push(pool.construct(h->j1, h->j2, h->cost + cost.cost_ins(*j2)));
+            itr2_t j2 = h->j2;  ++j2;
+            heap.push(pool.construct(h->j1, j2, h->cost + cost.cost_ins(*(h->j2))));
         } else if (h->j2 == end2) {
             // sequence 2 is at end, so only consider deletion from seq1
-            itr1_t j1 = h->j1;  ++(h->j1);
-            heap.push(pool.construct(h->j1, h->j2, h->cost + cost.cost_del(*j1)));            
+            itr1_t j1 = h->j1;  ++j1;
+            heap.push(pool.construct(j1, h->j2, h->cost + cost.cost_del(*(h->j1))));            
         } else {
             // interior of both sequences: consider insertion deletion and sub/eql:
-            itr1_t j1 = h->j1;  ++(h->j1);
-            itr2_t j2 = h->j2;  ++(h->j2);
+            itr1_t j1 = h->j1;  ++j1;
+            itr2_t j2 = h->j2;  ++j2;
             while (true) {
-                cost_t csub = cost.cost_sub(*j1, *j2);
-                if (csub > cost_t(0)  ||  h->j1 == end1  ||  h->j2 == end2) {
+                cost_t csub = cost.cost_sub(*(h->j1), *(h->j2));
+                if (csub > cost_t(0)  ||  j1 == end1  ||  j2 == end2) {
                     // Only push end-points of long runs of 'equal'
                     // On sequences where most most elements are same, this saves a ton
                     // of cost from 'pool' and 'heap'.
@@ -86,9 +86,9 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
                     // by Eugene W. Myers
                     // Dept of Computer Science, University of Arizona, Tucscon
                     // NSF Grant MCS82-10096
-                    heap.push(pool.construct(h->j1, h->j2, h->cost + csub));
-                    heap.push(pool.construct(j1, h->j2, h->cost + cost.cost_ins(*j2)));
-                    heap.push(pool.construct(h->j1, j2, h->cost + cost.cost_del(*j1)));      
+                    heap.push(pool.construct(j1, j2, h->cost + csub));
+                    heap.push(pool.construct(h->j1, j2, h->cost + cost.cost_ins(*(h->j2))));
+                    heap.push(pool.construct(j1, h->j2, h->cost + cost.cost_del(*(h->j1))));
                     break;
                 }
                 ++j1;  ++j2;  ++(h->j1);  ++(h->j2);
