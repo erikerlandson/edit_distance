@@ -17,73 +17,71 @@ http://www.boost.org/LICENSE_1_0.txt
 BOOST_AUTO_TEST_SUITE(edit_alignment_suite)
 
 BOOST_AUTO_TEST_CASE(both_empty) {
-        //CHECK_EDIT_ALIGNMENT(edit_alignment, "", "", char, 0, "");
-    int c = edit_alignment("", "", int(0));
+    CHECK_EDIT_ALIGNMENT("", "", 0, "");
 }
 
-#if 0
-
 BOOST_AUTO_TEST_CASE(insertion) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "", "a", char, 1, "+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "", "aa", char, 2, "++");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "", "aaa", char, 3, "+++");
+    CHECK_EDIT_ALIGNMENT("", "a", 1, "(+ a)");
+    CHECK_EDIT_ALIGNMENT("", "aa", 2, "(+ a)(+ a)");
+    CHECK_EDIT_ALIGNMENT("", "aaa", 3, "(+ a)(+ a)(+ a)");
 }
 
 BOOST_AUTO_TEST_CASE(deletion) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "a", "", char, 1, "-");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "aa", "", char, 2, "--");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "aaa", "", char, 3, "---");
+    CHECK_EDIT_ALIGNMENT("a", "", 1, "(- a)");
+    CHECK_EDIT_ALIGNMENT("aa", "", 2, "(- a)(- a)");
+    CHECK_EDIT_ALIGNMENT("aaa", "", 3, "(- a)(- a)(- a)");
 }
 
 BOOST_AUTO_TEST_CASE(substitution) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "a", "x", char, 1, ":");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "ab", "xy", char, 2, "::");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", "xyz", char, 3, ":::");
+    CHECK_EDIT_ALIGNMENT("a", "x", 1, "(a : x)");
+    CHECK_EDIT_ALIGNMENT("ab", "xy", 2, "(a : x)(b : y)");
+    CHECK_EDIT_ALIGNMENT("abc", "xyz", 3, "(a : x)(b : y)(c : z)");
 }
 
 BOOST_AUTO_TEST_CASE(substitution_equal) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "a", "a", char, 0, "=");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "aa", "aa", char, 0, "==");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "aaa", "aaa", char, 0, "===");
+    CHECK_EDIT_ALIGNMENT("a", "a", 0, "(a = a)");
+    CHECK_EDIT_ALIGNMENT("aa", "aa", 0, "(a = a)(a = a)");
+    CHECK_EDIT_ALIGNMENT("aaa", "aaa", 0, "(a = a)(a = a)(a = a)");
 }
 
 BOOST_AUTO_TEST_CASE(sequence_variations) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", "axc", char, 1, "=:=");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASSTRING("abc"), ASSTRING("axc"), char, 1, "=:=");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASLIST("abc"), ASLIST("axc"), char, 1, "=:=");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASVECTOR("abc"), ASVECTOR("axc"), char, 1, "=:=");
+    CHECK_EDIT_ALIGNMENT("abc", "axc", 1, "(a = a)(b : x)(c = c)");
+    CHECK_EDIT_ALIGNMENT(ASSTRING("abc"), ASSTRING("axc"), 1, "(a = a)(b : x)(c = c)");
+    CHECK_EDIT_ALIGNMENT(ASLIST("abc"), ASLIST("axc"), 1, "(a = a)(b : x)(c = c)");
+    CHECK_EDIT_ALIGNMENT(ASVECTOR("abc"), ASVECTOR("axc"), 1, "(a = a)(b : x)(c = c)");
 }
 
 BOOST_AUTO_TEST_CASE(mixed_sequences) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", "bcd", char, 2, "-==+");
+    CHECK_EDIT_ALIGNMENT("abc", "bcd", 2, "(- a)(b = b)(c = c)(+ d)");
 
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", ASSTRING("bcd"), char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", ASLIST("bcd"), char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", ASVECTOR("bcd"), char, 2, "-==+");
+    CHECK_EDIT_ALIGNMENT("abc", ASSTRING("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT("abc", ASLIST("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT("abc", ASVECTOR("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
 
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASSTRING("abc"), "bcd", char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASLIST("abc"), "bcd", char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASVECTOR("abc"), "bcd", char, 2, "-==+");
+    CHECK_EDIT_ALIGNMENT(ASSTRING("abc"), "bcd", 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT(ASLIST("abc"), "bcd", 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT(ASVECTOR("abc"), "bcd", 2, "(- a)(b = b)(c = c)(+ d)");
 
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASSTRING("abc"), ASLIST("bcd"), char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASVECTOR("abc"), ASLIST("bcd"), char, 2, "-==+");
-    CHECK_EDIT_ALIGNMENT(edit_alignment, ASLIST("abc"), ASVECTOR("bcd"), char, 2, "-==+");
+    CHECK_EDIT_ALIGNMENT(ASSTRING("abc"), ASLIST("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT(ASVECTOR("abc"), ASLIST("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
+    CHECK_EDIT_ALIGNMENT(ASLIST("abc"), ASVECTOR("bcd"), 2, "(- a)(b = b)(c = c)(+ d)");
 }
 
 BOOST_AUTO_TEST_CASE(range_adaptors) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abc", ASLIST("abc") | boost::adaptors::reversed, char, 2, ":=:");
+    CHECK_EDIT_ALIGNMENT("abc", ASLIST("abc") | boost::adaptors::reversed, 2, "(a : c)(b = b)(c : a)");
 }
 
 BOOST_AUTO_TEST_CASE(mixed_ops) {
-    CHECK_EDIT_ALIGNMENT(edit_alignment, "abcd", "bCde", char, 3, "-=:=+");
+    CHECK_EDIT_ALIGNMENT("abcd", "bCde", 3, "(- a)(b = b)(c : C)(d = d)(+ e)");
 }
 
+#if 0
 BOOST_AUTO_TEST_CASE(custom_cost) {
-    CHECK_EDIT_ALIGNMENT_COST(edit_alignment, "abcd", "bCde", cost_expensive_sub(), char, 4, "-=-+=+");
-    CHECK_EDIT_ALIGNMENT_COST(edit_alignment, "abcd", "aBCd", cost_expensive_sub(), char, 4, "=--++=");
+    CHECK_EDIT_ALIGNMENT_COST("abcd", "bCde", cost_expensive_sub, 4, "(- a 1)(= b b)(- c 1)(+ C 1)(= d d)(+ e 1)");
+    CHECK_EDIT_ALIGNMENT_COST("abcd", "aBCd", cost_expensive_sub, 4, "(= a a)(- b 1)(- c 1)(+ B 1)(+ C 1)(= d d)");
 
-    CHECK_EDIT_ALIGNMENT_COST(edit_alignment, "aa", "axax", cost_expensive_ins(), char, 4, "=+=+");
-    CHECK_EDIT_ALIGNMENT_COST(edit_alignment, "axax", "aa", cost_expensive_ins(), char, 2, "=-=-");
+        //CHECK_EDIT_ALIGNMENT_COST("aa", "axax", cost_expensive_ins(), 4, "=+=+");
+        //CHECK_EDIT_ALIGNMENT_COST("axax", "aa", cost_expensive_ins(), 2, "=-=-");
 }
 
 BOOST_AUTO_TEST_CASE(acquire_costs) {
@@ -99,7 +97,7 @@ BOOST_AUTO_TEST_CASE(acquire_indexes) {
 }
 
 BOOST_AUTO_TEST_CASE(acquire_elements) {
-    typedef boost::tuple<char, char, char> val_t;
+    typedef boost::tuple<char> val_t;
     CHECK_EDIT_ALIGNMENT(acquire<elements>(edit_alignment), "abc", "axc", val_t, 1, "(=,a,a)(:,b,x)(=,c,c)");
     CHECK_EDIT_ALIGNMENT(acquire<elements>(edit_alignment), "abcd", "bCde", val_t, 3, "(-,a,@)(=,b,b)(:,c,C)(=,d,d)(+,@,e)");
 }
@@ -114,7 +112,7 @@ BOOST_AUTO_TEST_CASE(acquire_costs_indexes) {
 }
 
 BOOST_AUTO_TEST_CASE(acquire_costs_elements) {
-    typedef boost::tuple<char, int, char, char> val_t;
+    typedef boost::tuple<char, int> val_t;
     CHECK_EDIT_ALIGNMENT(acquire<costs>(acquire<elements>(edit_alignment)), "abc", "axc", val_t, 1, "(=,0,a,a)(:,1,b,x)(=,0,c,c)");
     CHECK_EDIT_ALIGNMENT(acquire<costs>(acquire<elements>(edit_alignment)), "abcd", "bCde", val_t, 3, "(-,1,a,@)(=,0,b,b)(:,1,c,C)(=,0,d,d)(+,1,@,e)");
 

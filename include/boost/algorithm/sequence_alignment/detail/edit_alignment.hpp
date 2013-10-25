@@ -13,6 +13,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP
 
+#include <boost/assert.hpp>
+
 #include <boost/pool/object_pool.hpp>
 
 #include <boost/heap/fibonacci_heap.hpp>
@@ -54,6 +56,8 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     // is fibonacci heap best here?  O(1) insertion seems well suited.
     boost::heap::fibonacci_heap<head_t*, boost::heap::compare<path_lessthan> > heap;
 
+    head_t* path_head = hnull;
+
     // kick off graph path frontier with initial node:
     heap.push(construct(pool, begin(seq1), begin(seq2), cost_t(0), hnull));
 
@@ -62,8 +66,11 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         head_t* h = heap.top();
         heap.pop();
         if (h->j1 == end1) {
-            // if we are at end of both sequences, then we have our final edit path:
-            if (h->j2 == end2) break;
+            if (h->j2 == end2) {
+                // if we are at end of both sequences, then we have our final edit path:
+                path_head = h;
+                break;
+            }
             // sequence 1 is at end, so only consider insertion from seq2
             itr2_t j2 = h->j2;  ++j2;
             heap.push(construct(pool, h->j1, j2, h->cost + cost.cost_ins(*(h->j2)), h));
@@ -98,7 +105,78 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         }
     }
 
-    return cost_t(0);
+    const cost_t edit_cost = path_head->cost;
+
+    // trace back from the head, reversing as we go
+    head_t* ncur = path_head;
+    head_t* nprv = hnull;
+    while (true) {
+        head_t* nnxt = ncur->edge;
+        ncur->edge = nprv;
+        if (nnxt == hnull) {
+            // now path head points to edit sequence beginning
+            path_head = ncur;
+            break;
+        }
+        nprv = ncur;
+        ncur = nnxt;
+    }
+
+    BOOST_ASSERT(path_head->j1 == begin(seq1)  &&  path_head->j2 == begin(seq2));
+
+    // now traverse the edit path, from the beginning forward
+    for (head_t* n = path_head;  n->edge != hnull;  n = n->edge) {
+        itr1_t j1 = n->j1;
+        itr1_t j1end = n->edge->j1;
+        itr2_t j2 = n->j2;
+        itr2_t j2end = n->edge->j2;
+
+        if (j1 == j1end) {
+            // seq1 didn't advance, this is an insertion from seq2
+            BOOST_ASSERT(j2 != j2end);
+            output.output_ins(*j2, n->edge->cost - n->cost);
+            continue;
+        }    
+        if (j2 == j2end) {
+            // seq2 didn't advance, this is a deletion from seq1
+            BOOST_ASSERT(j1 != j1end);
+            output.output_del(*j1, n->edge->cost - n->cost);
+            continue;
+        }
+
+        // if we arrived here, this is either:
+        // 1) a subsitution
+        // 2) 1 or more 'equal'
+        // 3) 1 or more 'equal', followed by a sub, ins or del
+        
+        itr1_t j1x = j1;  ++j1x;
+        itr2_t j2x = j2;  ++j2x;
+
+        while (j1x != j1end  &&  j2x != j2end) {
+            // unpack any compressed runs of 'eql'
+            output.output_eql(*j1, *j2);
+            ++j1;  ++j2;  ++j1x;  ++j2x;
+        }
+        if (j1x == j1end) {
+            if (j2x == j2end) {
+                cost_t c = n->edge->cost - n->cost;
+                if (c > cost_t(0)) {
+                    output.output_sub(*j1, *j2, c);
+                } else {
+                    output.output_eql(*j1, *j2);
+                }
+            } else {
+                output.output_eql(*j1, *j2);
+                output.output_ins(*j2x, n->edge->cost - n->cost);
+            }
+        } else {
+            // j1x != j1end  and  j2x == j2end
+            output.output_eql(*j1, *j2);
+            output.output_del(*j1x, n->edge->cost - n->cost);
+        }
+    }
+
+    return edit_cost;
 }
 
 }}}}

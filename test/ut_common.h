@@ -32,9 +32,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-// Define this flag to make char values default to '@' instead of zero '\0'
-// So default values are printable, which is much easier to work with in testing.
-#define BOOST_CHAR_DEFAULT_OVERRIDE '@'
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
 
@@ -57,22 +54,57 @@ struct cost_expensive_ins {
 };
 
 
-#define CHECK_EDIT_ALIGNMENT_COST(fun, seq1, seq2, cost, vtype, dist, output) \
+template <typename ValueType, typename CostType = long>
+struct output_basic {
+    typedef ValueType value_type;
+    typedef CostType cost_type;
+
+    output_basic(std::stringstream& ss_) : ss(&ss_) {
+        *ss << boost::tuples::set_delimiter(' ');
+    }
+
+    void output_ins(const value_type& c, cost_type s) { *ss << boost::make_tuple('+', c); }
+    void output_del(const value_type& c, cost_type s) { *ss << boost::make_tuple('-', c); }
+    void output_sub(const value_type& c, const value_type& d, cost_type s) { *ss << boost::make_tuple(c, ':', d); }
+    void output_eql(const value_type& c, const value_type& d) { *ss << boost::make_tuple(c, '=', d); }
+
+    std::stringstream* ss;
+};
+
+
+template <typename ValueType, typename CostType = long>
+struct output_with_cost {
+    typedef ValueType value_type;
+    typedef CostType cost_type;
+
+    output_with_cost(std::stringstream& ss_) : ss(&ss_) {
+        *ss << boost::tuples::set_delimiter(' ');
+    }
+
+    void output_ins(const value_type& c, cost_type s) { *ss << boost::make_tuple('+', c, s); }
+    void output_del(const value_type& c, cost_type s) { *ss << boost::make_tuple('-', c, s); }
+    void output_sub(const value_type& c, const value_type& d, cost_type s) { *ss << boost::make_tuple(':', c, d, s); }
+    void output_eql(const value_type& c, const value_type& d) { *ss << boost::make_tuple('=', c, d); }
+
+    std::stringstream* ss;
+};
+
+
+#define CHECK_EDIT_ALIGNMENT(seq1, seq2, dist, output) \
 { \
     std::stringstream ss; \
-    ss << boost::tuples::set_delimiter(','); \
-    BOOST_CHECK_EQUAL(fun(seq1, seq2, std::ostream_iterator<vtype>(ss, ""), cost).second, dist); \
+    output_basic<char> ob(ss); \
+    BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob), dist); \
     BOOST_CHECK_EQUAL(ss.str(), output); \
 }
 
-#define CHECK_EDIT_ALIGNMENT(fun, seq1, seq2, vtype, dist, output) \
+#define CHECK_EDIT_ALIGNMENT_COST(seq1, seq2, cost, dist, output) \
 { \
     std::stringstream ss; \
-    ss << boost::tuples::set_delimiter(','); \
-    BOOST_CHECK_EQUAL(fun(seq1, seq2, std::ostream_iterator<vtype>(ss, "")).second, dist); \
+    output_with_cost<char, cost::cost_type> ob(ss); \
+    BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob, cost ()), dist);   \
     BOOST_CHECK_EQUAL(ss.str(), output); \
 }
-
 
 
 #define ASLIST(seq) (_aslist(boost::as_literal(seq)))
