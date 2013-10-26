@@ -36,17 +36,6 @@ struct default_cost {
     }
 };
 
-typedef char edit_opcode;
-const edit_opcode ins_op = '+';
-const edit_opcode del_op = '-';
-const edit_opcode sub_op = ':';
-const edit_opcode eql_op = '=';
-
-typedef boost::mpl::int_<1> costs;
-typedef boost::mpl::int_<2> indexes;
-typedef boost::mpl::int_<3> elements;
-
-struct parameter_list_is_unimplemented {};
 
 }}}
 

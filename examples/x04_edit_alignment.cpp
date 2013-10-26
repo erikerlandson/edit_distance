@@ -10,32 +10,31 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#include <sstream>
+#include "x_common.hpp"
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-//using boost::algorithm::sequence_alignment::edit_alignment;
-//using boost::algorithm::sequence_alignment::edit_opcode;
+using boost::algorithm::sequence_alignment::edit_alignment;
+using boost::algorithm::sequence_alignment::default_cost;
 
 int main(int argc, char** argv) {
     char const* str1 = "Oh, hello world.";
     char const* str2 = "Hello world!!";
 
-#if 0
-    // collect the sequence of edit operations into an output iterator.
-    // return value is a pair (O, D), where O is the value of the output iterator
-    // after output of the edit operation sequence, and D is the corresponding
-    // edit distance
-    std::stringstream ss;
-    unsigned dist = edit_alignment(str1, str2, std::ostream_iterator<edit_opcode>(ss, "")).second;
-    std::cout << "dist= " << dist << "   edit operations= " << ss.str() << "\n";
-
-    // the edit_opcode type can take on values: ins_op, del_op, sub_op, eql_op,
-    // encoding insertion, deletion, substitution and equality.  Equality encodes a
-    // substitution where the subsitution cost was zero.  Note, a zero subsitution
-    // cost does *not* always imply that two elements are identical, although that
-    // is often the case.
-#endif
+    // Generate the edit script from str1 to str2.
+    // The output object 'out' processes the edit script operations in sequence
+    // An output class must define types value_type and cost_type (similar to 
+    // the cost function object for edit_distance), and the methods:
+    //   output_ins(v, c)        // element v inserted, with insertion cost c
+    //   output_del(v, c)        // element v deleted, with deletion cost c
+    //   output_sub(v1, v2, c)   // v1 subsituted with v2, subst cost c
+    //   output_eql(v1, v2)      // v1 equivalent to value v2
+    // Note, 'equivalent' means v2 replaced v1 with cost of zero, which does 
+    // *not* necessarily mean v1 was identical to v2, although that is 
+    // frequently the case.
+    stringstream_tuple_output<default_cost<char const*> > out;
+    unsigned dist = edit_alignment(str1, str2, out);
+    std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 
     return 0;
 }

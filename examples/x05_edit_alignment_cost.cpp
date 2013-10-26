@@ -11,12 +11,14 @@ http://www.boost.org/LICENSE_1_0.txt
 *******/
 
 #include <ctype.h>
-#include <sstream>
+
+#include "x_common.hpp"
+
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-//using boost::algorithm::sequence_alignment::edit_alignment;
-//using boost::algorithm::sequence_alignment::edit_opcode;
+using boost::algorithm::sequence_alignment::edit_alignment;
+using boost::algorithm::sequence_alignment::default_cost;
 
 
 // define a custom cost function where case changes cost less
@@ -41,18 +43,16 @@ int main(int argc, char** argv) {
     char const* str1 = "Try to find XXX capitalized";
     char const* str2 = "xxx";
 
-#if 0
     // Match the substring 'xxx' against the larger string, with cheap case changes,
     // identifies the correct location of 'XXX' in the larger string
-    std::stringstream ss;
-    float dist = edit_alignment(str1, str2, std::ostream_iterator<edit_opcode>(ss, ""), cost_case_less()).second;
-    std::cout << "dist= " << dist << "   edit operations=  \"" << ss.str() << "\"\n";    
+    stringstream_tuple_output<default_cost<char const*> > out;
+    float dist = edit_alignment(str1, str2, out, cost_case_less());
+    std::cout << "dist= " << dist << "   edit operations=  \"" << out.ss.str() << "\"\n";    
 
     // compare to the behavior with the default cost function:
-    ss.str("");
-    dist = edit_alignment(str1, str2, std::ostream_iterator<edit_opcode>(ss, "")).second;
-    std::cout << "dist= " << dist << "   edit operations=  \"" << ss.str() << "\"\n";    
-#endif
+    out.ss.str("");
+    dist = edit_alignment(str1, str2, out);
+    std::cout << "dist= " << dist << "   edit operations=  \"" << out.ss.str() << "\"\n";    
 
     return 0;
 }
