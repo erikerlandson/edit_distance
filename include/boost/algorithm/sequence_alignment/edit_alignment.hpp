@@ -33,7 +33,7 @@ BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost>)),
 (typename Cost::cost_type))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output output, Cost cost) {
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, Cost cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
     return dijkstra_sssp_alignment(boost::as_literal(seq1), boost::as_literal(seq2), output, cost);
@@ -47,7 +47,7 @@ BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>)),
 (typename default_cost<Sequence1>::cost_type))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output output) {
+edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output& output) {
     return edit_alignment(seq1, seq2, output, default_cost<Sequence1>());
 }
 
