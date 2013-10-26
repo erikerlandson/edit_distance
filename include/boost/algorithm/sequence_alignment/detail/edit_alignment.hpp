@@ -18,6 +18,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/pool/object_pool.hpp>
 
 #include <boost/heap/fibonacci_heap.hpp>
+#include <boost/heap/binomial_heap.hpp>
 
 #include <boost/range/metafunctions.hpp>
 
@@ -37,6 +38,7 @@ using detail::ForwardRangeConvertible;
 using boost::algorithm::sequence_alignment::detail::path_node;
 using boost::algorithm::sequence_alignment::detail::construct;
 using boost::algorithm::sequence_alignment::detail::path_lessthan;
+using boost::algorithm::sequence_alignment::detail::visited_lessthan;
 
 template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost>
 typename Cost::cost_type
@@ -45,10 +47,14 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef path_node<itr1_t, itr2_t, cost_t> head_t;
+    typedef typename head_t::idx_t idx_t;
+
     head_t* const hnull = static_cast<head_t*>(NULL);
 
     const itr1_t end1 = end(seq1);
     const itr2_t end2 = end(seq2);
+
+    std::set<head_t*, visited_lessthan> visited;
 
     // pool allocators are born for node allocations in graph algorithms
     boost::object_pool<head_t> pool;
@@ -58,13 +64,16 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
 
     head_t* path_head = hnull;
 
+    long npop = 0;
+
     // kick off graph path frontier with initial node:
-    heap.push(construct(pool, begin(seq1), begin(seq2), cost_t(0), hnull));
+    heap.push(construct(pool, visited, begin(seq1), begin(seq2), cost_t(0), hnull, 0, 0));
 
     // update frontier from least-cost node at each iteration, until we hit sequence end
     while (true) {
         head_t* h = heap.top();
         heap.pop();
+        ++npop;
         if (h->j1 == end1) {
             if (h->j2 == end2) {
                 // if we are at end of both sequences, then we have our final edit path:
@@ -73,37 +82,37 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
             }
             // sequence 1 is at end, so only consider insertion from seq2
             itr2_t j2 = h->j2;  ++j2;
-            heap.push(construct(pool, h->j1, j2, h->cost + cost.cost_ins(*(h->j2)), h));
+            head_t* t = construct(pool, visited, h->j1, j2, h->cost + cost.cost_ins(*(h->j2)), h, h->idx1, 1+h->idx2);
+            if (t != hnull) heap.push(t);
        } else if (h->j2 == end2) {
             // sequence 2 is at end, so only consider deletion from seq1
             itr1_t j1 = h->j1;  ++j1;
-            heap.push(construct(pool, j1, h->j2, h->cost + cost.cost_del(*(h->j1)), h));            
+            head_t* t = construct(pool, visited, j1, h->j2, h->cost + cost.cost_del(*(h->j1)), h, 1+h->idx1, h->idx2);
+            if (t != hnull) heap.push(t);
         } else {
             // interior of both sequences: consider insertion deletion and sub/eql:
             itr1_t j1p = h->j1;
             itr1_t j1 = h->j1;  ++j1;
             itr2_t j2p = h->j2;
             itr2_t j2 = h->j2;  ++j2;
+            idx_t n = 0;
             while (true) {
                 cost_t csub = cost.cost_sub(*j1p, *j2p);
+                head_t* t = construct(pool, visited, j1, j2, h->cost + csub, h, 1+n+h->idx1, 1+n+h->idx2);
                 if (csub > cost_t(0)  ||  j1 == end1  ||  j2 == end2) {
-                    // Only push end-points of long runs of 'equal'
-                    // On sequences where most most elements are same, this saves a ton
-                    // of cost from 'pool' and 'heap'.
-                    // This clever trick is adapted from:
-                    // "An O(ND) Difference Algorithm and Its Variations"
-                    // by Eugene W. Myers
-                    // Dept of Computer Science, University of Arizona, Tucscon
-                    // NSF Grant MCS82-10096
-                    heap.push(construct(pool, j1, j2, h->cost + csub, h));
-                    heap.push(construct(pool, j1p, j2, h->cost + cost.cost_ins(*j2p), h));
-                    heap.push(construct(pool, j1, j2p, h->cost + cost.cost_del(*j1p), h));      
+                    if (t != hnull) heap.push(t);
+                    t = construct(pool, visited, j1p, j2, h->cost + cost.cost_ins(*j2p), h, n+h->idx1, 1+n+h->idx2);
+                    if (t != hnull) heap.push(t);
+                    t = construct(pool, visited, j1, j2p, h->cost + cost.cost_del(*j1p), h, 1+n+h->idx1, n+h->idx2);
+                    if (t != hnull) heap.push(t);
                     break;
                 }
-                ++j1;  ++j2;  ++j1p;  ++j2p;
+                ++j1;  ++j2;  ++j1p;  ++j2p;  ++n;
             }
         }
     }
+
+    std::cout << "heap size= " << heap.size() << "  npop= " << npop << "\n";
 
     const cost_t edit_cost = path_head->cost;
 
@@ -122,7 +131,7 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         ncur = nnxt;
     }
 
-    BOOST_ASSERT(path_head->j1 == begin(seq1)  &&  path_head->j2 == begin(seq2));
+        //BOOST_ASSERT(path_head->j1 == begin(seq1)  &&  path_head->j2 == begin(seq2));
 
     // now traverse the edit path, from the beginning forward
     for (head_t* n = path_head;  n->edge != hnull;  n = n->edge) {
@@ -133,13 +142,13 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
 
         if (j1 == j1end) {
             // seq1 didn't advance, this is an insertion from seq2
-            BOOST_ASSERT(j2 != j2end);
+            //BOOST_ASSERT(j2 != j2end);
             output.output_ins(*j2, n->edge->cost - n->cost);
             continue;
         }    
         if (j2 == j2end) {
             // seq2 didn't advance, this is a deletion from seq1
-            BOOST_ASSERT(j1 != j1end);
+            //BOOST_ASSERT(j1 != j1end);
             output.output_del(*j1, n->edge->cost - n->cost);
             continue;
         }

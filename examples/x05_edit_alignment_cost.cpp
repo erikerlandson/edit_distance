@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     // Match the substring 'xxx' against the larger string, with cheap case changes,
     // identifies the correct location of 'XXX' in the larger string
-    stringstream_tuple_output<default_cost<char const*> > out;
+    stringstream_tuple_output<cost_case_less> out;
     float dist = edit_alignment(str1, str2, out, cost_case_less());
     std::cout << "dist= " << dist << "   edit operations=  \"" << out.ss.str() << "\"\n";    
 

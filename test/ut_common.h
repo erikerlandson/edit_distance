@@ -104,7 +104,7 @@ struct output_check_script {
         if (seq1[++j1] != v1) correct=false; 
     }
     void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
-        ss << boost::make_tuple(':', v1, v2); 
+        ss << boost::make_tuple(':', v1, v2, c); 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         // cost should be > zero: otherwise we should be in output_eql()
         if (c <= cost_type(0)) correct=false;
