@@ -37,79 +37,6 @@ http://www.boost.org/LICENSE_1_0.txt
 
 using namespace boost::algorithm::sequence_alignment;
 
-struct cost_expensive_sub {
-    typedef int cost_type;
-    typedef char value_type;
-    cost_type cost_ins(value_type c) { return 1; }
-    cost_type cost_del(value_type c) { return 1; }
-    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 3; }
-};
-
-struct cost_expensive_ins {
-    typedef int cost_type;
-    typedef char value_type;
-    cost_type cost_ins(value_type c) { return 2; }
-    cost_type cost_del(value_type c) { return 1; }
-    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
-};
-
-
-template <typename ValueType, typename CostType = long>
-struct output_basic {
-    typedef ValueType value_type;
-    typedef CostType cost_type;
-
-    output_basic(std::stringstream& ss_) : ss(&ss_) {
-        *ss << boost::tuples::set_delimiter(' ');
-    }
-
-    void output_ins(const value_type& c, cost_type s) { *ss << boost::make_tuple('+', c); }
-    void output_del(const value_type& c, cost_type s) { *ss << boost::make_tuple('-', c); }
-    void output_sub(const value_type& c, const value_type& d, cost_type s) { *ss << boost::make_tuple(c, ':', d); }
-    void output_eql(const value_type& c, const value_type& d) { *ss << boost::make_tuple(c, '=', d); }
-
-    std::stringstream* ss;
-};
-
-
-template <typename ValueType, typename CostType = long>
-struct output_with_cost {
-    typedef ValueType value_type;
-    typedef CostType cost_type;
-
-    output_with_cost(std::stringstream& ss_) : ss(&ss_) {
-        *ss << boost::tuples::set_delimiter(' ');
-    }
-
-    void output_ins(const value_type& c, cost_type s) { *ss << boost::make_tuple('+', c, s); }
-    void output_del(const value_type& c, cost_type s) { *ss << boost::make_tuple('-', c, s); }
-    void output_sub(const value_type& c, const value_type& d, cost_type s) { *ss << boost::make_tuple(':', c, d, s); }
-    void output_eql(const value_type& c, const value_type& d) { *ss << boost::make_tuple('=', c, d); }
-
-    std::stringstream* ss;
-};
-
-
-#define CHECK_EDIT_ALIGNMENT(seq1, seq2, dist, output) \
-{ \
-    std::stringstream ss; \
-    output_basic<char> ob(ss); \
-    BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob), dist); \
-    BOOST_CHECK_EQUAL(ss.str(), output); \
-}
-
-#define CHECK_EDIT_ALIGNMENT_COST(seq1, seq2, cost, dist, output) \
-{ \
-    std::stringstream ss; \
-    output_with_cost<char, cost::cost_type> ob(ss); \
-    BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob, cost ()), dist);   \
-    BOOST_CHECK_EQUAL(ss.str(), output); \
-}
-
-
-#define ASLIST(seq) (_aslist(boost::as_literal(seq)))
-#define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
-#define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
 
 template <typename Range>
 std::list<typename boost::range_value<Range>::type>
@@ -136,6 +63,96 @@ _asstring(const Range& s) {
     std::string r;
     BOOST_FOREACH(val_t e, s) r += e;
     return r;
+}
+
+#define ASLIST(seq) (_aslist(boost::as_literal(seq)))
+#define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
+#define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
+
+struct cost_expensive_sub {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 1; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 3; }
+};
+
+struct cost_expensive_ins {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 2; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+};
+
+
+template <typename ValueType, typename CostType = long>
+struct output_check_script {
+    typedef ValueType value_type;
+    typedef CostType cost_type;
+
+    output_check_script(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1) {
+        ss << boost::tuples::set_delimiter(' ');
+    }
+
+    void output_ins(const value_type& v2, cost_type c) { 
+        ss << boost::make_tuple('+', v2, c);
+        if (seq2[++j2] != v2) correct=false;
+    }
+    void output_del(const value_type& v1, cost_type c) { 
+        ss << boost::make_tuple('-', v1, c); 
+        if (seq1[++j1] != v1) correct=false; 
+    }
+    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+        ss << boost::make_tuple(':', v1, v2); 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
+        // cost should be > zero: otherwise we should be in output_eql()
+        if (c <= cost_type(0)) correct=false;
+    }
+    void output_eql(const value_type& v1, const value_type& v2) { 
+        ss << boost::make_tuple('=', v1, v2); 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
+        // this condition is not necessarily true in general, since a cost function
+        // can define two elements as equivalent even if they are not identical, but
+        // I expect it to be true for my testing examples, and it helps make the
+        // test checking stronger
+        if (seq1[j1] != seq2[j2]) correct=false;
+    }
+
+    void finalize() {
+        if (j1 != long(seq1.size())-1) correct = false;
+        if (j2 != long(seq2.size())-1) correct = false;
+    }
+
+    std::stringstream ss;
+    long j1;
+    long j2;
+    std::vector<value_type> seq1;
+    std::vector<value_type> seq2;
+    bool correct;
+};
+
+
+#define CHECK_EDIT_ALIGNMENT(seq1, seq2, dist) \
+{ \
+    BOOST_TEST_CHECKPOINT("testing seq1='" << ASSTRING(seq1) << "'  seq2= '" << ASSTRING(seq2) << "'"); \
+    boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
+    output_check_script<char> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
+    long d = edit_alignment(seq1, seq2, ob); \
+    ob.finalize(); \
+    BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
+    BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
+}
+
+#define CHECK_EDIT_ALIGNMENT_COST(seq1, seq2, cost, dist) \
+{ \
+    BOOST_TEST_CHECKPOINT("testing seq1='" << ASSTRING(seq1) << "'  seq2= '" << ASSTRING(seq2) << "'"); \
+    boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
+    output_check_script<char, cost::cost_type> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
+    long d = edit_alignment(seq1, seq2, ob, cost ()); \
+    ob.finalize(); \
+    BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
+    BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
 }
 
 #endif
