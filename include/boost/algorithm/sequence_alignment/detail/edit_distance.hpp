@@ -95,14 +95,6 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
                 cost_t csub = cost.cost_sub(*(h->j1), *(h->j2));
                 head_t* t = construct(pool, visited, j1, j2, h->cost + csub, 1+n+h->idx1, 1+n+h->idx2);
                 if (csub > cost_t(0)  ||  j1 == end1  ||  j2 == end2) {
-                    // Only push end-points of long runs of 'equal'
-                    // On sequences where most most elements are same, this saves a ton
-                    // of cost from 'pool' and 'heap'.
-                    // This clever trick is adapted from:
-                    // "An O(ND) Difference Algorithm and Its Variations"
-                    // by Eugene W. Myers
-                    // Dept of Computer Science, University of Arizona, Tucscon
-                    // NSF Grant MCS82-10096
                     if (t != hnull) heap.push(t);
                     t = construct(pool, visited, h->j1, j2, h->cost + cost.cost_ins(*h->j2), n+h->idx1, 1+n+h->idx2);
                     if (t != hnull) heap.push(t);
@@ -113,8 +105,6 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
                 ++j1;  ++j2;  ++(h->j1);  ++(h->j2);  ++n;
             }
         }
-        // this node can be reused
-        //pool.destroy(h);
     }
 
     // control should not reach here
