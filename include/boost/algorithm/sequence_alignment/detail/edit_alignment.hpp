@@ -13,12 +13,11 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP
 
-#include <boost/assert.hpp>
+#include <set>
 
 #include <boost/pool/object_pool.hpp>
 
 #include <boost/heap/fibonacci_heap.hpp>
-#include <boost/heap/binomial_heap.hpp>
 
 #include <boost/range/metafunctions.hpp>
 
@@ -64,8 +63,6 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
 
     head_t* path_head = hnull;
 
-    long npop = 0;
-
     // maintain an envelope where we have a known-best cost that
     // offers strong path pruning potential.  Runs of 'equal' 
     // provide this kind of opportunity.
@@ -80,7 +77,6 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     while (true) {
         head_t* h = heap.top();
         heap.pop();
-        ++npop;
         if (h->idx1 < env1  &&  h->idx2 < env2  &&  h->cost >= env_best_cost) {
             // no edit path from this node can do better than the current
             // known best path, so we can drop this line of exploration
@@ -136,8 +132,6 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         }
     }
 
-    std::cout << "heap size= " << heap.size() << "  visited size= " << visited.size() << "  npop= " << npop << "\n";
-
     const cost_t edit_cost = path_head->cost;
 
     // trace back from the head, reversing as we go
@@ -155,8 +149,6 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         ncur = nnxt;
     }
 
-        //BOOST_ASSERT(path_head->j1 == begin(seq1)  &&  path_head->j2 == begin(seq2));
-
     // now traverse the edit path, from the beginning forward
     for (head_t* n = path_head;  n->edge != hnull;  n = n->edge) {
         itr1_t j1 = n->j1;
@@ -166,13 +158,11 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
 
         if (j1 == j1end) {
             // seq1 didn't advance, this is an insertion from seq2
-            //BOOST_ASSERT(j2 != j2end);
             output.output_ins(*j2, n->edge->cost - n->cost);
             continue;
         }    
         if (j2 == j2end) {
             // seq2 didn't advance, this is a deletion from seq1
-            //BOOST_ASSERT(j1 != j1end);
             output.output_del(*j1, n->edge->cost - n->cost);
             continue;
         }

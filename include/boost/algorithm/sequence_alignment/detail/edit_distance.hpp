@@ -61,8 +61,6 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
     // is fibonacci heap best here?  O(1) insertion seems well suited.
     boost::heap::fibonacci_heap<head_t*, boost::heap::compare<path_lessthan> > heap;
 
-    long npop = 0;
-
     // maintain an envelope where we have a known-best cost that
     // offers strong path pruning potential.  Runs of 'equal' 
     // provide this kind of opportunity.
@@ -77,7 +75,6 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
     while (true) {
         head_t* h = heap.top();
         heap.pop();
-        ++npop;
         if (h->idx1 < env1  &&  h->idx2 < env2  &&  h->cost >= env_best_cost) {
             // no edit path from this node can do better than the current
             // known best path, so we can drop this line of exploration
@@ -85,10 +82,7 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
         }
         if (h->j1 == end1) {
             // if we are at end of both sequences, then we have our final cost: 
-            if (h->j2 == end2) {
-                std::cout << "heap size= " << heap.size() << "  npop= " << npop << "\n";
-                return h->cost;
-            }
+            if (h->j2 == end2) return h->cost;
             // sequence 1 is at end, so only consider insertion from seq2
             itr2_t j2 = h->j2;  ++j2;
             head_t* t = construct(pool, visited, h->j1, j2, h->cost + cost.cost_ins(*(h->j2)), h->idx1, 1+h->idx2);
