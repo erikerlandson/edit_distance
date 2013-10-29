@@ -41,21 +41,21 @@ inline
 path_head<Itr1, Itr2, Cost>*
 construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const Cost& cost_, 
           typename path_head<Itr1, Itr2, Cost>::idx_t idx1_, typename path_head<Itr1, Itr2, Cost>::idx_t idx2_) {
-    // pool.construct evidently can't handle more than three parameters, hence this kludge:
-    path_head<Itr1, Itr2, Cost>* r = pool.construct(j1_, j2_, cost_);
+    typedef path_head<Itr1, Itr2, Cost> head_t;
+    head_t w;
+    w.idx1 = idx1_;
+    w.idx2 = idx2_;
+    typename Visited::iterator f(visited.find(&w));
+    if (visited.end() != f   &&   cost_ >= (*f)->cost) return static_cast<head_t*>(NULL);
+    head_t* r = pool.construct(j1_, j2_, cost_);
     r->idx1 = idx1_;
     r->idx2 = idx2_;
-    typename Visited::iterator f(visited.find(r));
     if (visited.end() == f) {
         visited.insert(r);
-        return r;
+    } else if (cost_ < (*f)->cost) {
+        (*f)->cost = cost_;
     }
-    if (r->cost < (*f)->cost) {
-        (*f)->cost = r->cost;
-        return r;
-    }
-    pool.destroy(r);
-    return static_cast<path_head<Itr1, Itr2, Cost>*>(NULL);
+    return r;
 }
 
 template <typename Itr1, typename Itr2, typename Cost>
@@ -80,22 +80,22 @@ inline
 path_node<Itr1, Itr2, Cost>*
 construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const Cost& cost_, path_node<Itr1, Itr2, Cost>* const& edge_, 
           typename path_node<Itr1, Itr2, Cost>::idx_t idx1_, typename path_node<Itr1, Itr2, Cost>::idx_t idx2_) {
-    // pool.construct evidently can't handle more than three parameters, hence this kludge:
-    path_node<Itr1, Itr2, Cost>* r = pool.construct(j1_, j2_, cost_);
+    typedef path_node<Itr1, Itr2, Cost> head_t;
+    head_t w;
+    w.idx1 = idx1_;
+    w.idx2 = idx2_;
+    typename Visited::iterator f(visited.find(&w));
+    if (visited.end() != f   &&   cost_ >= (*f)->cost) return static_cast<head_t*>(NULL);
+    head_t* r = pool.construct(j1_, j2_, cost_);
     r->edge = edge_;
     r->idx1 = idx1_;
     r->idx2 = idx2_;
-    typename Visited::iterator f(visited.find(r));
     if (visited.end() == f) {
         visited.insert(r);
-        return r;
+    } else if (cost_ < (*f)->cost) {
+        (*f)->cost = cost_;
     }
-    if (r->cost < (*f)->cost) {
-        (*f)->cost = r->cost;
-        return r;
-    }
-    pool.destroy(r);
-    return static_cast<path_node<Itr1, Itr2, Cost>*>(NULL);
+    return r;
 }
 
 struct path_lessthan {
