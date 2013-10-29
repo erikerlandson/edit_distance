@@ -116,4 +116,37 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     BOOST_CHECK_EQUAL(edit_distance("aa", "aaaa", cost_expensive_ins()), 4);
 }
 
+
+BOOST_AUTO_TEST_CASE(timing_1) {
+    char data[] = "abcdefghij0123456789";
+    const unsigned int data_size = sizeof(data)-1;
+    srand(42);
+    const unsigned int LEN = 10000;
+    const unsigned int D = 10;
+    const unsigned int K = 10;
+    const unsigned int R = LEN/D;
+    char seq1[1+LEN];
+    char seq2[1+LEN];
+    seq1[LEN] = char(0);
+    seq2[LEN] = char(0);
+    double t0 = time(0);
+    for (int n=0;  n < 50;  ++n) {
+        memset(seq1, 'x', LEN);
+        memset(seq2, 'x', LEN);
+        for (int d = 0;  d < D;  ++d) {
+            unsigned int b1 = d*R;
+            unsigned int l1 =  rand() % (R/K);
+            unsigned int b2 = d*R + (rand() % (R/K));
+            unsigned int l2 =  rand() % (R/K);
+            for (unsigned int j = b1;  j < b1+l1;  ++j) seq1[j] = data[rand()%data_size];
+            for (unsigned int j = b2;  j < b2+l2;  ++j) seq2[j] = data[rand()%data_size];
+        }
+        unsigned int d = edit_distance(seq1, seq2, cost_mixed_ops());
+        BOOST_CHECK(d <= 2*LEN);
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

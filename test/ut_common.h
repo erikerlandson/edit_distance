@@ -13,6 +13,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(__ut_common_h__)
 #define __ut_common_h__ 1
 
+#include <cstdlib>
+
 #include <vector>
 #include <list>
 #include <string>
@@ -83,6 +85,19 @@ struct cost_expensive_ins {
     cost_type cost_ins(value_type c) { return 2; }
     cost_type cost_del(value_type c) { return 1; }
     cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+};
+
+struct cost_mixed_ops {
+    typedef int cost_type;
+    typedef char value_type;
+    cost_type cost_ins(value_type c) { return 1; }
+    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_sub(value_type c, value_type d) {
+        if (c == d) return 0;
+        // allow substitution between alphabetics
+        if (isalpha(c) && isalpha(d)) return 1;
+        return 10;
+    }
 };
 
 
