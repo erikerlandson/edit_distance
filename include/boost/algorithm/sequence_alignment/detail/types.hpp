@@ -18,9 +18,11 @@ namespace algorithm {
 namespace sequence_alignment {
 namespace detail {
 
+#include <cstddef>
+
 template <typename Itr1, typename Itr2, typename Cost>
 struct path_head {
-    typedef long idx_t;
+    typedef size_t idx_t;
 
     Itr1 j1;
     Itr2 j2;
@@ -58,7 +60,7 @@ construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const 
 
 template <typename Itr1, typename Itr2, typename Cost>
 struct path_node {
-    typedef long idx_t;
+    typedef size_t idx_t;
 
     Itr1 j1;
     Itr2 j2;
