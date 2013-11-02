@@ -25,6 +25,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
+#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
+
 
 std::list<char> as_list(char const* str) {
     std::list<char> r;
@@ -37,26 +40,28 @@ std::vector<char> as_vector(char const* str) {
     return r;
 }
 
+using boost::algorithm::sequence_alignment::detail::cost_type;
+using boost::algorithm::sequence_alignment::detail::value_type;
 
 template <typename Cost>
 struct stringstream_tuple_output {
-    typedef typename Cost::cost_type cost_type;
-    typedef typename Cost::value_type value_type;
+    typedef typename cost_type<Cost>::type cost_type;
+    typedef typename value_type<Cost>::type value_type;
 
     stringstream_tuple_output() {
         ss << boost::tuples::set_delimiter(' ');
     }
 
-    inline void output_ins(const value_type& v2, const cost_type& c) {
+    inline void output_ins(const value_type v2, const cost_type c) {
         ss << boost::make_tuple('+', v2, c);
     }
-    inline void output_del(const value_type& v1, const cost_type& c) {
+    inline void output_del(const value_type v1, const cost_type c) {
         ss << boost::make_tuple('-', v1, c);
     }
-    inline void output_sub(const value_type& v1, const value_type& v2, const cost_type& c) {
+    inline void output_sub(const value_type v1, const value_type v2, const cost_type c) {
         ss << boost::make_tuple(':', v1, v2, c);
     }
-    inline void output_eql(const value_type& v1, const value_type& v2) {
+    inline void output_eql(const value_type v1, const value_type v2) {
         ss << boost::make_tuple('=', v1, v2);
     }
 

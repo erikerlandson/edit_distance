@@ -15,19 +15,49 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <cstddef>
 
-#include <boost/concept/assert.hpp>
-#include <boost/concept/usage.hpp>
-
+#include <boost/type_traits.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/is_same.hpp>
+
+#include <boost/utility/enable_if.hpp>
+#include <boost/typeof/std/utility.hpp>
+
+#include <boost/function_types/result_type.hpp>
+#include <boost/function_types/function_arity.hpp>
+#include <boost/function_types/parameter_types.hpp>
+
+#include <boost/tti/has_type.hpp>
+#include <boost/tti/has_member_function.hpp>
 
 #include <boost/range/metafunctions.hpp>
 #include <boost/range/as_literal.hpp>
+
+#include <boost/mpl/at.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/logical.hpp>
+#include <boost/mpl/equal_to.hpp>
+
+#include <boost/concept/assert.hpp>
+#include <boost/concept/usage.hpp>
 
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 namespace detail {
+
+using boost::is_same;
+using boost::is_member_function_pointer;
+using boost::integral_constant;
+using boost::false_type;
+using boost::true_type;
+using boost::function_types::result_type;
+using boost::function_types::parameter_types;
+using boost::function_types::function_arity;
+using boost::mpl::at_c;
+using boost::mpl::and_;
+using boost::mpl::not_;
+using boost::mpl::equal_to;
+using boost::enable_if;
 
 template <typename Itr1, typename Itr2, typename Cost>
 struct path_head {
@@ -121,6 +151,32 @@ struct visited_lessthan {
     }
 };
 
+
+#define TTI_HAS_MEMBER(name) \
+namespace __has_member_##name { \
+template <typename T, typename U> struct ambig : public T, public U {}; \
+template <typename T, typename U, typename Enable = void> \
+struct test : public true_type {}; \
+template <typename T, typename U> \
+struct test<T, U, typename enable_if<boost::is_same<BOOST_TYPEOF(&T:: name), BOOST_TYPEOF(&U:: name)> >::type> : public false_type {}; \
+struct seed { char name ; }; \
+} \
+template <typename T> struct has_member_##name : public __has_member_##name::test<__has_member_##name::ambig<T, __has_member_##name::seed>, __has_member_##name::seed> {};
+
+
+#define TTI_HAS_MEMBER_FUNCTION_ANYSIG(name) \
+namespace __has_member_function_anysig_##name { \
+TTI_HAS_MEMBER(name) \
+BOOST_TTI_HAS_TYPE(name) \
+template <typename T> \
+struct fptest : public is_member_function_pointer<BOOST_TYPEOF(&T::name)> {}; \
+template <typename T, typename Enable=void> struct test : public false_type {}; \
+template <typename T> \
+struct test<T, typename enable_if<and_<has_member_##name<T>, not_<has_type_##name<T> > >  >::type> : public fptest<T> {}; \
+} \
+template <typename T> struct has_member_function_anysig_##name : public __has_member_function_anysig_##name::test<T> {};
+
+
 template <typename X>
 struct ForwardRangeConvertible {
     BOOST_CONCEPT_USAGE(ForwardRangeConvertible) {
@@ -139,11 +195,58 @@ struct Arithmetic {
     typedef typename boost::is_arithmetic<X>::type type;
 };
 
+BOOST_TTI_HAS_TYPE(cost_type)
+
+TTI_HAS_MEMBER_FUNCTION_ANYSIG(cost_ins)
+BOOST_TTI_HAS_MEMBER_FUNCTION(cost_ins)
+BOOST_TTI_HAS_MEMBER_FUNCTION(cost_del)
+BOOST_TTI_HAS_MEMBER_FUNCTION(cost_sub)
+
+template <typename X, typename Enable=void>
+struct cost_type {
+    typedef typename result_type< BOOST_TYPEOF(&X::cost_ins) >::type type;
+};
 template <typename X>
-struct SequenceAlignmentCost {
-    typedef typename X::cost_type cost_type;
-    typedef typename X::value_type value_type;
-    BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));    
+struct cost_type<X, typename enable_if<has_type_cost_type<X> >::type> {
+    typedef typename X::cost_type type;
+};
+
+template <typename X>
+struct value_type {
+    typedef typename at_c<typename parameter_types< BOOST_TYPEOF(&X::cost_ins) >::type, 1>::type type;
+};
+
+template <typename X>
+struct Satisfies {
+    BOOST_CONCEPT_USAGE(Satisfies) {
+        //  handles a form like either integral_constant<bool, true>, or bool_<true>:
+        BOOST_STATIC_ASSERT(X::value == true);
+    };
+    X x;
+};
+
+template <typename X, typename Enabled=void>
+struct cost_ins_arity : public integral_constant<int, 0> {};
+template <typename X>
+struct cost_ins_arity<X, typename enable_if<has_member_function_anysig_cost_ins<X> >::type> : public function_arity<BOOST_TYPEOF(&X::cost_ins)> {};
+
+template <typename X> struct SequenceAlignmentCost {
+    // check that some member function named 'cost_ins' exists, and it has arity of 1:
+    BOOST_CONCEPT_ASSERT((Satisfies<has_member_function_anysig_cost_ins<X> >));
+    BOOST_CONCEPT_ASSERT((Satisfies<equal_to<cost_ins_arity<X>, integral_constant<int, 2> > >));
+
+    // we now know these will exist:
+    typedef typename cost_type<X>::type cost_type;
+    typedef typename result_type< BOOST_TYPEOF(&X::cost_ins) >::type result_type;
+    typedef typename value_type<X>::type value_type;
+
+    BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));
+
+    // check for specific signatures of cost_ins(), cost_del() and cost_sub()
+    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_ins<result_type (X::*)(value_type) const>::type>));
+    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_del<result_type (X::*)(value_type) const>::type>));
+    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_sub<result_type (X::*)(value_type, value_type) const>::type>));
+
     BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
         c = x.cost_ins(v);
         c = x.cost_del(v);

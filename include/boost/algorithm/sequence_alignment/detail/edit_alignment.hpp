@@ -38,11 +38,12 @@ using boost::algorithm::sequence_alignment::detail::path_node;
 using boost::algorithm::sequence_alignment::detail::construct;
 using boost::algorithm::sequence_alignment::detail::path_lessthan;
 using boost::algorithm::sequence_alignment::detail::visited_lessthan;
+using boost::algorithm::sequence_alignment::detail::cost_type;
 
 template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost>
-typename Cost::cost_type
+typename cost_type<Cost>::type
 dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, Cost& cost) {
-    typedef typename Cost::cost_type cost_t;
+    typedef typename cost_type<Cost>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef path_node<itr1_t, itr2_t, cost_t> head_t;

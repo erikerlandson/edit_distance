@@ -24,14 +24,13 @@ using boost::algorithm::sequence_alignment::default_cost;
 // define a custom cost function where case changes cost less
 struct cost_case_less {
     typedef float cost_type;     // edit costs may be fractional
-    typedef char value_type;     // sequence elements must be assignable to value_type
 
-    cost_type cost_ins(value_type c) { return 1; }
-    cost_type cost_del(value_type c) { return 1; }
+    cost_type cost_ins(char c) const { return 1; }
+    cost_type cost_del(char c) const { return 1; }
 
     // changes in case cost less than other edit operations:
     // note that substitution cost also encompasses the definition of equality
-    cost_type cost_sub(value_type c, value_type d) { 
+    cost_type cost_sub(char c, char d) const { 
         if (c == d) return 0;
         if (toupper(c) == toupper(d)) return 0.5;
         return 1;

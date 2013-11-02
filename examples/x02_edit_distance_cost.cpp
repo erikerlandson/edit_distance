@@ -19,19 +19,19 @@ using boost::algorithm::sequence_alignment::edit_distance;
 
 // define a custom cost function where insertion or deletion of space costs nothing
 struct cost_free_space {
-    // note, these types are required for a cost function:
-    typedef unsigned cost_type;  // edit_distance uses cost_type to store cost values internally
-                                 // you can define it smaller to save space, or define it as
-                                 // floating point to support non-integer costs, etc.
-    typedef char value_type;     // sequence elements must be assignable to value_type
+    // edit_distance uses cost_type to store cost values internally
+    // you can define it smaller to save space, or define it as
+    // floating point to support non-integer costs, etc.
+
+    // cost_type is inferred from the return values of cost functions if not defined explicitly
+    //typedef unsigned cost_type;
 
     // inserting or deleting a space is free:
-    cost_type cost_ins(value_type c) { return (c == ' ') ? 0 : 1; }
-    cost_type cost_del(value_type c) { return (c == ' ') ? 0 : 1; }
+    unsigned cost_ins(char c) const { return (c == ' ') ? 0 : 1; }
+    unsigned cost_del(char c) const { return (c == ' ') ? 0 : 1; }
     // note that substitution cost also encompasses the definition of equality
-    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+    unsigned cost_sub(char c, char d) const { return (c == d) ? 0 : 1; }
 };
-
 
 int main(int argc, char** argv) {
     char const* str1 = " so   many spaces     ";

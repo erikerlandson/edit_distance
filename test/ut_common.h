@@ -74,25 +74,25 @@ _asstring(const Range& s) {
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) { return 1; }
-    cost_type cost_del(value_type c) { return 1; }
-    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 3; }
+    cost_type cost_ins(value_type c) const { return 1; }
+    cost_type cost_del(value_type c) const { return 1; }
+    cost_type cost_sub(value_type c, value_type d) const { return (c == d) ? 0 : 3; }
 };
 
 struct cost_expensive_ins {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) { return 2; }
-    cost_type cost_del(value_type c) { return 1; }
-    cost_type cost_sub(value_type c, value_type d) { return (c == d) ? 0 : 1; }
+    cost_type cost_ins(value_type c) const { return 2; }
+    cost_type cost_del(value_type c) const { return 1; }
+    cost_type cost_sub(value_type c, value_type d) const { return (c == d) ? 0 : 1; }
 };
 
 struct cost_mixed_ops {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) { return 1; }
-    cost_type cost_del(value_type c) { return 1; }
-    cost_type cost_sub(value_type c, value_type d) {
+    cost_type cost_ins(value_type c) const { return 1; }
+    cost_type cost_del(value_type c) const { return 1; }
+    cost_type cost_sub(value_type c, value_type d) const {
         if (c == d) return 0;
         // allow substitution between alphabetics
         if (isalpha(c) && isalpha(d)) return 1;
