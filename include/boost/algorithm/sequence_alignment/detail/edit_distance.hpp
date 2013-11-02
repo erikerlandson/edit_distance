@@ -41,9 +41,9 @@ using boost::algorithm::sequence_alignment::detail::path_lessthan;
 using boost::algorithm::sequence_alignment::detail::cost_type;
 
 template <typename ForwardRange1, typename ForwardRange2, typename Cost>
-typename cost_type<Cost>::type 
+typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type 
 dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& cost) {
-    typedef typename cost_type<Cost>::type cost_t;
+    typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef path_head<itr1_t, itr2_t, cost_t> head_t;

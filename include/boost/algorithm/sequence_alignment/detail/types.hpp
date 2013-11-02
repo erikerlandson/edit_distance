@@ -200,61 +200,33 @@ struct Arithmetic {
 
 BOOST_TTI_HAS_TYPE(cost_type)
 
-TTI_HAS_MEMBER_FUNCTION_ANYSIG(cost_ins)
-BOOST_TTI_HAS_MEMBER_FUNCTION(cost_ins)
-BOOST_TTI_HAS_MEMBER_FUNCTION(cost_del)
-BOOST_TTI_HAS_MEMBER_FUNCTION(cost_sub)
-
-template <typename X, typename Enable=void>
+template <typename X, typename V, typename Enable=void>
 struct cost_type {
-    typedef typename result_type< BOOST_TYPEOF(&X::cost_ins) >::type type;
+    X x;
+    V v;
+    // by default, we infer cost_type from the return value of cost functions
+    typedef BOOST_TYPEOF(x.cost_ins(v)) type;
 };
-template <typename X>
-struct cost_type<X, typename enable_if<has_type_cost_type<X> >::type> {
+
+template <typename X, typename V>
+struct cost_type<X, V, typename enable_if<has_type_cost_type<X> >::type> {
+    // if the class explicitly defines a cost_type, then that is what we use
     typedef typename X::cost_type type;
 };
 
-template <typename X>
-struct value_type {
-    typedef typename at_c<typename parameter_types< BOOST_TYPEOF(&X::cost_ins) >::type, 1>::type type;
-};
+template <typename X, typename Sequence> struct SequenceAlignmentCost {
+    BOOST_CONCEPT_ASSERT((ForwardRangeConvertible<Sequence>));
 
-template <typename X>
-struct Satisfies {
-    BOOST_CONCEPT_USAGE(Satisfies) {
-        //  handles a form like either integral_constant<bool, true>, or bool_<true>:
-        BOOST_STATIC_ASSERT(X::value == true);
-    };
-    X x;
-};
-
-template <typename X, typename Enabled=void>
-struct cost_ins_arity : public integral_constant<int, 0> {};
-template <typename X>
-struct cost_ins_arity<X, typename enable_if<has_member_function_anysig_cost_ins<X> >::type> : public function_arity<BOOST_TYPEOF(&X::cost_ins)> {};
-
-template <typename X> struct SequenceAlignmentCost {
-    // check that some member function named 'cost_ins' exists, and it has arity of 1:
-    BOOST_CONCEPT_ASSERT((Satisfies<has_member_function_anysig_cost_ins<X> >));
-    BOOST_CONCEPT_ASSERT((Satisfies<equal_to<cost_ins_arity<X>, integral_constant<int, 2> > >));
-
-    // we now know these will exist:
-    typedef typename cost_type<X>::type cost_type;
-    typedef typename result_type< BOOST_TYPEOF(&X::cost_ins) >::type result_type;
-    typedef typename value_type<X>::type value_type;
-
+    typedef typename boost::range_value<Sequence>::type value_type;
+    typedef typename cost_type<X, value_type>::type cost_type;
     BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));
-
-    // check for specific signatures of cost_ins(), cost_del() and cost_sub()
-    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_ins<result_type (X::*)(value_type) const>::type>));
-    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_del<result_type (X::*)(value_type) const>::type>));
-    BOOST_CONCEPT_ASSERT((Satisfies<typename has_member_function_cost_sub<result_type (X::*)(value_type, value_type) const>::type>));
 
     BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
         c = x.cost_ins(v);
         c = x.cost_del(v);
         c = x.cost_sub(v,v);
     }
+
     X x;
     cost_type c;
     value_type v;

@@ -41,12 +41,11 @@ std::vector<char> as_vector(char const* str) {
 }
 
 using boost::algorithm::sequence_alignment::detail::cost_type;
-using boost::algorithm::sequence_alignment::detail::value_type;
 
-template <typename Cost>
+template <typename Cost, typename Sequence>
 struct stringstream_tuple_output {
-    typedef typename cost_type<Cost>::type cost_type;
-    typedef typename value_type<Cost>::type value_type;
+    typedef typename boost::range_value<Sequence>::type value_type;
+    typedef typename cost_type<Cost, value_type>::type cost_type;
 
     stringstream_tuple_output() {
         ss << boost::tuples::set_delimiter(' ');

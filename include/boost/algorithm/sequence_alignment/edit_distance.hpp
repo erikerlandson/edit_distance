@@ -33,8 +33,8 @@ template <typename Sequence1, typename Sequence2, typename Cost>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
-    ((SequenceAlignmentCost<Cost>)),
-(typename cost_type<Cost>::type))
+    ((SequenceAlignmentCost<Cost, Sequence1>)),
+(typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
@@ -48,7 +48,7 @@ inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>)),
-(typename cost_type<default_cost<Sequence1> >::type))
+(typename cost_type<default_cost<Sequence1>, typename boost::range_value<Sequence1>::type>::type))
 edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
     return edit_distance(seq1, seq2, default_cost<Sequence1>());
 }
