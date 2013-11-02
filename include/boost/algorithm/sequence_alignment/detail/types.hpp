@@ -192,7 +192,10 @@ struct ForwardRangeConvertible {
 // I'm a little surprised this doesn't exist already
 template <typename X>
 struct Arithmetic {
-    typedef typename boost::is_arithmetic<X>::type type;
+    BOOST_CONCEPT_USAGE(Arithmetic) {   
+        BOOST_STATIC_ASSERT(boost::is_arithmetic<X>::value);
+    }
+    X x;
 };
 
 BOOST_TTI_HAS_TYPE(cost_type)
