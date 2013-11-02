@@ -16,7 +16,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/concept/requires.hpp>
 
 #include <boost/algorithm/sequence_alignment/edit_types.hpp>
-#include <boost/algorithm/sequence_alignment/detail/mpl_utils.hpp>
+#include <boost/algorithm/sequence_alignment/detail/types.hpp>
 #include <boost/algorithm/sequence_alignment/detail/edit_alignment.hpp>
 
 namespace boost {
