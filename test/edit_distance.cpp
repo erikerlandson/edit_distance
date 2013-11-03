@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     const unsigned int data_size = sizeof(data)-1;
     srand(42);
     const unsigned int N = 50;
-    const unsigned int LEN = 10000;
+    const unsigned int LEN = 100000;
     const unsigned int D = 10;
-    const unsigned int K = 10;
+    const unsigned int K = 100;
     const unsigned int R = LEN/D;
     char seq1[1+LEN];
     char seq2[1+LEN];
