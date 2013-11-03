@@ -102,7 +102,7 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
             pos2_t p2p = h->pos2;
             while (true) {
                 cost_t csub = cost.cost_sub(*p1p, *p2p);
-                head_t* t = construct(pool, visited, p1, p2, h->cost + csub);
+                head_t* t = construct(pool, visited, p1, p2, h->cost + csub, csub>cost_t(0) || (p1-h->pos1)<5);
                 if (t != hnull  &&  csub <= 0) {
                     // on a run of 'eql', updating the 'best path' envelope will help prune
                     // edit paths that cannot improve on it, for potentially big savings

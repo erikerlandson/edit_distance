@@ -119,7 +119,7 @@ struct path_node : public path_head<Itr1, Itr2, Cost> {
 template <typename Pool, typename Visited, typename Pos1, typename Pos2, typename Cost>
 inline
 path_head<typename Pos1::itr_type, typename Pos2::itr_type, Cost>*
-construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, const Cost& cost_) {
+construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, const Cost& cost_, bool record=true) {
     typedef path_head<typename Pos1::itr_type, typename Pos2::itr_type, Cost> head_t;
     head_t w;
     w.pos1 = pos1_;
@@ -131,7 +131,7 @@ construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, co
     r->pos2 = pos2_;
     r->cost = cost_;
     if (visited.end() == f) {
-        visited.insert(r);
+        if (record) visited.insert(r);
     } else if (cost_ < (*f)->cost) {
         (*f)->cost = cost_;
     }
