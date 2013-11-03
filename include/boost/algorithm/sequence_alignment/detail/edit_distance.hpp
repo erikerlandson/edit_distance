@@ -47,7 +47,8 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
     typedef path_head<itr1_t, itr2_t, cost_t> head_t;
-    typedef typename head_t::idx_t idx_t;
+    typedef typename head_t::pos1_type pos1_t;
+    typedef typename head_t::pos2_type pos2_t;
 
     head_t* const hnull = static_cast<head_t*>(NULL);
 
@@ -65,63 +66,64 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Cost& c
     // maintain an envelope where we have a known-best cost that
     // offers strong path pruning potential.  Runs of 'equal' 
     // provide this kind of opportunity.
-    idx_t env1 = 0;
-    idx_t env2 = 0;
+    pos1_t env1;  env1.beg(begin(seq1));
+    pos2_t env2;  env2.beg(begin(seq2));
     cost_t env_best_cost = 0;
 
     // kick off graph path frontier with initial node:
-    heap.push(construct(pool, visited, begin(seq1), begin(seq2), cost_t(0), 0, 0));
+    heap.push(construct(pool, visited, env1, env2, cost_t(0)));
 
     // update frontier from least-cost node at each iteration, until we hit sequence end
     while (true) {
         head_t* h = heap.top();
         heap.pop();
-        if (h->idx1 < env1  &&  h->idx2 < env2  &&  h->cost >= env_best_cost) {
+        if (h->pos1 < env1  &&  h->pos2 < env2  &&  h->cost >= env_best_cost) {
             // no edit path from this node can do better than the current
             // known best path, so we can drop this line of exploration
             continue;
         }
-        if (h->j1 == end1) {
+        if (h->pos1 == end1) {
             // if we are at end of both sequences, then we have our final cost: 
-            if (h->j2 == end2) return h->cost;
+            if (h->pos2 == end2) return h->cost;
             // sequence 1 is at end, so only consider insertion from seq2
-            itr2_t j2 = h->j2;  ++j2;
-            head_t* t = construct(pool, visited, h->j1, j2, h->cost + cost.cost_ins(*(h->j2)), h->idx1, 1+h->idx2);
+            pos2_t p2 = h->pos2;
+            head_t* t = construct(pool, visited, h->pos1, ++p2, h->cost + cost.cost_ins(*(h->pos2)));
             if (t != hnull) heap.push(t);
-        } else if (h->j2 == end2) {
+        } else if (h->pos2 == end2) {
             // sequence 2 is at end, so only consider deletion from seq1
-            itr1_t j1 = h->j1;  ++j1;
-            head_t* t = construct(pool, visited, j1, h->j2, h->cost + cost.cost_del(*(h->j1)), 1+h->idx1, h->idx2);
+            pos1_t p1 = h->pos1;
+            head_t* t = construct(pool, visited, ++p1, h->pos2, h->cost + cost.cost_del(*(h->pos1)));
             if (t != hnull) heap.push(t);
         } else {
             // interior of both sequences: consider insertion deletion and sub/eql:
-            itr1_t j1 = h->j1;  ++j1;
-            itr2_t j2 = h->j2;  ++j2;
-            idx_t n = 0;
+            pos1_t p1 = h->pos1;  ++p1;
+            pos1_t p1p = h->pos1;
+            pos2_t p2 = h->pos2;  ++p2;
+            pos2_t p2p = h->pos2;
             while (true) {
-                cost_t csub = cost.cost_sub(*(h->j1), *(h->j2));
-                head_t* t = construct(pool, visited, j1, j2, h->cost + csub, 1+n+h->idx1, 1+n+h->idx2);
+                cost_t csub = cost.cost_sub(*p1p, *p2p);
+                head_t* t = construct(pool, visited, p1, p2, h->cost + csub);
                 if (t != hnull  &&  csub <= 0) {
                     // on a run of 'eql', updating the 'best path' envelope will help prune
                     // edit paths that cannot improve on it, for potentially big savings
-                    if (t->idx1 > env1) {
-                        env1 = t->idx1;
+                    if (env1 < t->pos1) {
+                        env1 = t->pos1;
                         env_best_cost = t->cost;
                     }
-                    if (t->idx2 > env2) {
-                        env2 = t->idx2;
+                    if (env2 < t->pos2) {
+                        env2 = t->pos2;
                         env_best_cost = t->cost;
                     }
                 }
-                if (csub > cost_t(0)  ||  j1 == end1  ||  j2 == end2) {
+                if (csub > cost_t(0)  ||  p1 == end1  ||  p2 == end2) {
                     if (t != hnull) heap.push(t);
-                    t = construct(pool, visited, h->j1, j2, h->cost + cost.cost_ins(*h->j2), n+h->idx1, 1+n+h->idx2);
+                    t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p));
                     if (t != hnull) heap.push(t);
-                    t = construct(pool, visited, j1, h->j2, h->cost + cost.cost_del(*h->j1), 1+n+h->idx1, n+h->idx2);
+                    t = construct(pool, visited, p1, p2p, h->cost + cost.cost_del(*p1p));
                     if (t != hnull) heap.push(t);
                     break;
                 }
-                ++j1;  ++j2;  ++(h->j1);  ++(h->j2);  ++n;
+                ++p1;  ++p2;  ++p1p;  ++p2p;
             }
         }
     }

@@ -14,6 +14,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_TYPES_HPP
 
 #include <cstddef>
+#include <iterator>
 
 #include <boost/type_traits.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
@@ -59,76 +60,76 @@ using boost::mpl::not_;
 using boost::mpl::equal_to;
 using boost::enable_if;
 
+template <typename Itr, typename Enabled=void>
+struct position {
+    typedef Itr itr_type;
+    typedef typename std::iterator_traits<Itr>::difference_type idx_type;
+    typedef typename std::iterator_traits<Itr>::difference_type difference_type;
+    typedef typename std::iterator_traits<Itr>::value_type value_type;
+    typedef typename std::iterator_traits<Itr>::reference reference;
+
+    itr_type j;
+    idx_type idx;
+
+    inline void beg(const itr_type& src) { j = src;  idx = 0; }
+
+    inline reference operator*() { return *j; }
+    inline bool operator==(const itr_type& rhs) const { return j == rhs; }
+    inline bool operator!=(const itr_type& rhs) const { return j != rhs; }
+    inline bool operator<(const position& rhs) const { return idx < rhs.idx; }
+    inline position& operator++() { ++j; ++idx; return *this; }
+    inline difference_type operator-(const position& rhs) const { return idx - rhs.idx; }
+};
+
+template <typename Itr>
+struct position<Itr, typename enable_if<is_same<typename std::iterator_traits<Itr>::iterator_category, std::random_access_iterator_tag> >::type> {
+    typedef Itr itr_type;
+    typedef typename std::iterator_traits<Itr>::difference_type idx_type;
+    typedef typename std::iterator_traits<Itr>::difference_type difference_type;
+    typedef typename std::iterator_traits<Itr>::value_type value_type;
+    typedef typename std::iterator_traits<Itr>::reference reference;
+
+    itr_type j;
+
+    inline void beg(const itr_type& src) { j = src; }
+
+    inline reference operator*() { return *j; }
+    inline bool operator==(const itr_type& rhs) const { return j == rhs; }
+    inline bool operator!=(const itr_type& rhs) const { return j != rhs; }
+    inline bool operator<(const position& rhs) const { return j < rhs.j; }
+    inline position& operator++() { ++j; return *this; }    
+    inline difference_type operator-(const position& rhs) const { return j - rhs.j; }
+};
+
 template <typename Itr1, typename Itr2, typename Cost>
 struct path_head {
-    typedef size_t idx_t;
+    typedef position<Itr1> pos1_type;
+    typedef position<Itr2> pos2_type;
 
-    Itr1 j1;
-    Itr2 j2;
-    idx_t idx1;
-    idx_t idx2;
+    pos1_type pos1;
+    pos2_type pos2;
     Cost cost;
-
-    path_head() {}
-    ~path_head() {}
-    path_head(const path_head& src) : j1(src.j1), j2(src.j2), cost(src.cost) {}
-    path_head(const Itr1& j1_, const Itr2& j2_, const Cost& cost_) : j1(j1_), j2(j2_), cost(cost_) {}
 };
-
-template <typename Pool, typename Visited, typename Itr1, typename Itr2, typename Cost>
-inline
-path_head<Itr1, Itr2, Cost>*
-construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const Cost& cost_, 
-          typename path_head<Itr1, Itr2, Cost>::idx_t idx1_, typename path_head<Itr1, Itr2, Cost>::idx_t idx2_) {
-    typedef path_head<Itr1, Itr2, Cost> head_t;
-    head_t w;
-    w.idx1 = idx1_;
-    w.idx2 = idx2_;
-    typename Visited::iterator f(visited.find(&w));
-    if (visited.end() != f   &&   cost_ >= (*f)->cost) return static_cast<head_t*>(NULL);
-    head_t* r = pool.construct(j1_, j2_, cost_);
-    r->idx1 = idx1_;
-    r->idx2 = idx2_;
-    if (visited.end() == f) {
-        visited.insert(r);
-    } else if (cost_ < (*f)->cost) {
-        (*f)->cost = cost_;
-    }
-    return r;
-}
 
 template <typename Itr1, typename Itr2, typename Cost>
-struct path_node {
-    typedef size_t idx_t;
-
-    Itr1 j1;
-    Itr2 j2;
-    idx_t idx1;
-    idx_t idx2;
-    Cost cost;
+struct path_node : public path_head<Itr1, Itr2, Cost> {
     struct path_node* edge;
-
-    path_node() {}
-    ~path_node() {}
-    path_node(const path_node& src) : j1(src.j1), j2(src.j2), cost(src.cost), edge(src.edge) {}
-    path_node(const Itr1& j1_, const Itr2& j2_, const Cost& cost_) : j1(j1_), j2(j2_), cost(cost_) {}
 };
 
-template <typename Pool, typename Visited, typename Itr1, typename Itr2, typename Cost>
+template <typename Pool, typename Visited, typename Pos1, typename Pos2, typename Cost>
 inline
-path_node<Itr1, Itr2, Cost>*
-construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const Cost& cost_, path_node<Itr1, Itr2, Cost>* const& edge_, 
-          typename path_node<Itr1, Itr2, Cost>::idx_t idx1_, typename path_node<Itr1, Itr2, Cost>::idx_t idx2_) {
-    typedef path_node<Itr1, Itr2, Cost> head_t;
+path_head<typename Pos1::itr_type, typename Pos2::itr_type, Cost>*
+construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, const Cost& cost_) {
+    typedef path_head<typename Pos1::itr_type, typename Pos2::itr_type, Cost> head_t;
     head_t w;
-    w.idx1 = idx1_;
-    w.idx2 = idx2_;
+    w.pos1 = pos1_;
+    w.pos2 = pos2_;
     typename Visited::iterator f(visited.find(&w));
     if (visited.end() != f   &&   cost_ >= (*f)->cost) return static_cast<head_t*>(NULL);
-    head_t* r = pool.construct(j1_, j2_, cost_);
-    r->edge = edge_;
-    r->idx1 = idx1_;
-    r->idx2 = idx2_;
+    head_t* r = pool.construct();
+    r->pos1 = pos1_;
+    r->pos2 = pos2_;
+    r->cost = cost_;
     if (visited.end() == f) {
         visited.insert(r);
     } else if (cost_ < (*f)->cost) {
@@ -136,6 +137,30 @@ construct(Pool& pool, Visited& visited, const Itr1& j1_, const Itr2& j2_, const 
     }
     return r;
 }
+
+template <typename Pool, typename Visited, typename Pos1, typename Pos2, typename Cost>
+inline
+path_node<typename Pos1::itr_type, typename Pos2::itr_type, Cost>*
+construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, const Cost& cost_, path_node<typename Pos1::itr_type, typename Pos2::itr_type, Cost>* const& edge_) {
+    typedef path_node<typename Pos1::itr_type, typename Pos2::itr_type, Cost> head_t;
+    head_t w;
+    w.pos1 = pos1_;
+    w.pos2 = pos2_;
+    typename Visited::iterator f(visited.find(&w));
+    if (visited.end() != f   &&   cost_ >= (*f)->cost) return static_cast<head_t*>(NULL);
+    head_t* r = pool.construct();
+    r->pos1 = pos1_;
+    r->pos2 = pos2_;
+    r->cost = cost_;
+    r->edge = edge_;
+    if (visited.end() == f) {
+        visited.insert(r);
+    } else if (cost_ < (*f)->cost) {
+        (*f)->cost = cost_;
+    }
+    return r;
+}
+
 
 struct path_lessthan {
     template <typename T> bool operator()(T const* a, T const* b) const {
@@ -145,9 +170,9 @@ struct path_lessthan {
 
 struct visited_lessthan {
     template <typename T> bool operator()(T const* a, T const* b) const {
-        if (a->idx1 < b->idx1) return true;
-        if (a->idx1 > b->idx1) return false;
-        return a->idx2 < b->idx2;
+        if (a->pos1 < b->pos1) return true;
+        if (b->pos1 < a->pos1) return false;
+        return a->pos2 < b->pos2;
     }
 };
 
