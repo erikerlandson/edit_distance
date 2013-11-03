@@ -176,32 +176,6 @@ struct visited_lessthan {
     }
 };
 
-
-#define TTI_HAS_MEMBER(name) \
-namespace __has_member_##name { \
-template <typename T, typename U> struct ambig : public T, public U {}; \
-template <typename T, typename U, typename Enable = void> \
-struct test : public true_type {}; \
-template <typename T, typename U> \
-struct test<T, U, typename enable_if<boost::is_same<BOOST_TYPEOF(&T:: name), BOOST_TYPEOF(&U:: name)> >::type> : public false_type {}; \
-struct seed { char name ; }; \
-} \
-template <typename T> struct has_member_##name : public __has_member_##name::test<__has_member_##name::ambig<T, __has_member_##name::seed>, __has_member_##name::seed> {};
-
-
-#define TTI_HAS_MEMBER_FUNCTION_ANYSIG(name) \
-namespace __has_member_function_anysig_##name { \
-TTI_HAS_MEMBER(name) \
-BOOST_TTI_HAS_TYPE(name) \
-template <typename T> \
-struct fptest : public is_member_function_pointer<BOOST_TYPEOF(&T::name)> {}; \
-template <typename T, typename Enable=void> struct test : public false_type {}; \
-template <typename T> \
-struct test<T, typename enable_if<and_<has_member_##name<T>, not_<has_type_##name<T> > >  >::type> : public fptest<T> {}; \
-} \
-template <typename T> struct has_member_function_anysig_##name : public __has_member_function_anysig_##name::test<T> {};
-
-
 template <typename X>
 struct ForwardRangeConvertible {
     BOOST_CONCEPT_USAGE(ForwardRangeConvertible) {
