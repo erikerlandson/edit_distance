@@ -121,6 +121,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     char data[] = "abcdefghij0123456789";
     const unsigned int data_size = sizeof(data)-1;
     srand(42);
+    const unsigned int N = 50;
     const unsigned int LEN = 10000;
     const unsigned int D = 10;
     const unsigned int K = 10;
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     seq1[LEN] = char(0);
     seq2[LEN] = char(0);
     double t0 = time(0);
-    for (int n=0;  n < 50;  ++n) {
+    for (int n=0;  n < N;  ++n) {
         memset(seq1, 'x', LEN);
         memset(seq2, 'x', LEN);
         for (int d = 0;  d < D;  ++d) {
@@ -145,7 +146,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
         BOOST_CHECK(d <= 2*LEN);
     }
     double tt = time(0) - t0;
-    BOOST_TEST_MESSAGE("time= " << tt << " sec");
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   mean= " << tt/double(N) << "\n" );
 }
 
 
