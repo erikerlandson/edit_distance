@@ -107,20 +107,20 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
             pos2_t p2p = h->pos2;
             while (true) {
                 cost_t csub = cost.cost_sub(*p1p, *p2p);
-                head_t* t = construct(pool, visited, p1, p2, h->cost + csub, h);
-                if (t != hnull  &&  csub <= 0) {
+                if (csub <= 0) {
                     // on a run of 'eql', updating the 'best path' envelope will help prune
                     // edit paths that cannot improve on it, for potentially big savings
-                    if (env1 < t->pos1) {
-                        env1 = t->pos1;
-                        env_best_cost = t->cost;
+                    if (env1 < p1) {
+                        env1 = p1;
+                        env_best_cost = h->cost;
                     }
-                    if (env2 < t->pos2) {
-                        env2 = t->pos2;
-                        env_best_cost = t->cost;
+                    if (env2 < p2) {
+                        env2 = p2;
+                        env_best_cost = h->cost;
                     }
                 }
                 if (csub > cost_t(0)  ||  p1 == end1  ||  p2 == end2) {
+                    head_t* t = construct(pool, visited, p1, p2, h->cost + csub, h);
                     if (t != hnull) heap.push(t);
                     t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p), h);
                     if (t != hnull) heap.push(t);
