@@ -122,28 +122,28 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     const unsigned int data_size = sizeof(data)-1;
     srand(42);
     const unsigned int N = 50;
-    const unsigned int LEN = 100000;
+    const unsigned int LEN = 1000000;
     const unsigned int D = 10;
-    const unsigned int K = 100;
     const unsigned int R = LEN/D;
-    char seq1[1+LEN];
-    char seq2[1+LEN];
-    seq1[LEN] = char(0);
-    seq2[LEN] = char(0);
-    double t0 = time(0);
-    for (int n=0;  n < N;  ++n) {
-        memset(seq1, 'x', LEN);
-        memset(seq2, 'x', LEN);
+    const unsigned int K = 100;
+    vector<std::string> seqdata(20);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        seqdata[i].resize(LEN, 'x');
         for (int d = 0;  d < D;  ++d) {
-            unsigned int b1 = d*R;
-            unsigned int l1 =  rand() % (R/K);
-            unsigned int b2 = d*R + (rand() % (R/K));
-            unsigned int l2 =  rand() % (R/K);
-            for (unsigned int j = b1;  j < b1+l1;  ++j) seq1[j] = data[rand()%data_size];
-            for (unsigned int j = b2;  j < b2+l2;  ++j) seq2[j] = data[rand()%data_size];
+            unsigned int b1 = d*R + (rand() % K);
+            unsigned int l1 =  rand() % K;
+            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
         }
-        unsigned int d = edit_distance(seq1, seq2, cost_mixed_ops());
-        BOOST_CHECK(d <= 2*LEN);
+    }
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n > N) break;
+        for (int j = 0;  j < i;  ++j) {
+            if (++n > N) break;
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], cost_mixed_ops());
+            BOOST_CHECK(d <= 2*LEN);
+        }
     }
     double tt = time(0) - t0;
     BOOST_TEST_MESSAGE("time= " << tt << " sec   mean= " << tt/double(N) << "\n" );
