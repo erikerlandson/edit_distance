@@ -27,30 +27,47 @@ using detail::SequenceAlignmentCost;
 using detail::ForwardRangeConvertible;
 using detail::dijkstra_sssp_alignment;
 using detail::cost_type;
+using detail::none;
 
-template <typename Sequence1, typename Sequence2, typename Output, typename Cost>
+template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename Beam>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, Cost cost) {
+edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, Cost cost, Beam beam) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
-    return dijkstra_sssp_alignment(boost::as_literal(seq1), boost::as_literal(seq2), output, cost);
+    return dijkstra_sssp_alignment(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, beam);
     // note to self - in the general case edit distance isn't a symmetric function, depending on
     // the cost matrix
 }
 
-template <typename Sequence1, typename Sequence2, typename Output>
-inline 
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>)),
-(typename cost_type<default_cost<Sequence1>, typename boost::range_value<Sequence1>::type>::type))
-edit_alignment(Sequence1 const& seq1, Sequence2 const& seq2, Output& output) {
-    return edit_alignment(seq1, seq2, output, default_cost<Sequence1>());
+namespace edit_alignment_params {
+BOOST_PARAMETER_NAME(seq1)
+BOOST_PARAMETER_NAME(seq2)
+BOOST_PARAMETER_NAME(output)
+BOOST_PARAMETER_NAME(cost)
+BOOST_PARAMETER_NAME(beam)
 }
+
+BOOST_PARAMETER_FUNCTION(
+(typename cost_type<typename boost::parameter::value_type<Args, edit_alignment_params::tag::cost, default_cost>::type, 
+                    typename boost::range_value<typename boost::parameter::value_type<Args, edit_alignment_params::tag::seq1>::type>::type>::type),
+    edit_alignment,
+    edit_alignment_params::tag,
+    (required
+        (seq1, *)
+        (seq2, *)
+        (in_out(output), *))
+    (optional
+        (cost, *, default_cost())
+        (beam, *, none()))
+)
+{
+    return edit_alignment_check(seq1, seq2, output, cost, beam);
+}
+
 
 }}}
 

@@ -13,24 +13,32 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_TYPES_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_TYPES_HPP
 
+#include <cstddef>
+
 #include <boost/range/metafunctions.hpp>
+
+#include <boost/parameter/name.hpp>
+#include <boost/parameter/preprocessor.hpp>
 
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 
 
-template <typename Range>
 struct default_cost {
-    // interesting that these appear to work correctly when Range = char*
-    typedef typename boost::range_difference<Range>::type cost_type;
-    typedef typename boost::range_value<Range>::type value_type;
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
     cost_type cost_ins(value_type const& a) const {
         return cost_type(1);
     }
+
+    template <typename value_type> inline
     cost_type cost_del(value_type const& a) const {
         return cost_type(1);
     }
+
+    template <typename value_type> inline
     cost_type cost_sub(value_type const& a, value_type const& b) const {
         return (a == b) ? cost_type(0) : cost_type(1);
     }

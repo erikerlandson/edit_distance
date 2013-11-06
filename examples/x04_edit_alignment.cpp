@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     // Note, 'equivalent' means v2 replaced v1 with cost of zero, which does 
     // *not* necessarily mean v1 was identical to v2, although that is 
     // frequently the case.
-    stringstream_tuple_output<default_cost<char const*>, char const*> out;
+    stringstream_tuple_output<default_cost, char const*> out;
     unsigned dist = edit_alignment(str1, str2, out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 

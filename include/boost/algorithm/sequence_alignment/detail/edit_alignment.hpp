@@ -32,17 +32,10 @@ using boost::begin;
 using boost::end;
 using boost::range_iterator;
 
-using detail::ForwardRangeConvertible;
 
-using boost::algorithm::sequence_alignment::detail::path_node;
-using boost::algorithm::sequence_alignment::detail::construct;
-using boost::algorithm::sequence_alignment::detail::path_lessthan;
-using boost::algorithm::sequence_alignment::detail::visited_lessthan;
-using boost::algorithm::sequence_alignment::detail::cost_type;
-
-template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost>
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Beam>
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, Cost& cost) {
+dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, Cost& cost, Beam beam) {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -72,6 +65,9 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     pos2_t env2; env2.beg(begin(seq2));
     cost_t env_best_cost = 0;
 
+    // support beam-width pruning, if asked for
+    beam_checker<head_t, Beam> on_beam(env1, env2, beam);
+
     // kick off graph path frontier with initial node:
     heap.push(construct(pool, visited, env1, env2, cost_t(0), hnull));
 
@@ -79,6 +75,10 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     while (true) {
         head_t* h = heap.top();
         heap.pop();
+        if (!on_beam(h)) {
+            // prune all paths that move off the beam
+            continue;
+        }
         if (h->pos1 < env1  &&  h->pos2 < env2  &&  h->cost >= env_best_cost) {
             // no edit path from this node can do better than the current
             // known best path, so we can drop this line of exploration

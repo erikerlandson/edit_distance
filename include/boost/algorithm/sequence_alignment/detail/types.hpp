@@ -60,6 +60,21 @@ using boost::mpl::not_;
 using boost::mpl::equal_to;
 using boost::enable_if;
 
+struct none {};
+
+template <typename Node, typename Beam, typename Enabled=void>
+struct beam_checker {
+    // some kind of compile-time error here
+};
+
+// default beam checker is no-op: no beam checking at all
+template <typename Node, typename Beam>
+struct beam_checker<Node, Beam, typename enable_if<is_same<Beam, none> >::type> {
+    beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) {}
+    inline bool operator()(Node*) { return true; }
+};
+
+
 template <typename Itr, typename Enabled=void>
 struct position {
     typedef Itr itr_type;

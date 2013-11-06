@@ -28,30 +28,46 @@ using detail::SequenceAlignmentCost;
 using detail::ForwardRangeConvertible;
 using detail::dijkstra_sssp_cost;
 using detail::cost_type;
+using detail::none;
 
-template <typename Sequence1, typename Sequence2, typename Cost>
+
+template <typename Sequence1, typename Sequence2, typename Cost, typename Beam>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
-edit_distance(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost) {
+edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost, Beam beam) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
-    return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost);
+    return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost, beam);
     // note to self - in the general case edit distance isn't a symmetric function, depending on
     // the cost matrix
 }
 
-template <typename Sequence1, typename Sequence2>
-inline 
-BOOST_CONCEPT_REQUIRES(
-    ((ForwardRangeConvertible<Sequence1>))
-    ((ForwardRangeConvertible<Sequence2>)),
-(typename cost_type<default_cost<Sequence1>, typename boost::range_value<Sequence1>::type>::type))
-edit_distance(Sequence1 const& seq1, Sequence2 const& seq2) {
-    return edit_distance(seq1, seq2, default_cost<Sequence1>());
+namespace edit_distance_params {
+BOOST_PARAMETER_NAME(seq1)
+BOOST_PARAMETER_NAME(seq2)
+BOOST_PARAMETER_NAME(cost)
+BOOST_PARAMETER_NAME(beam)
 }
+
+BOOST_PARAMETER_FUNCTION(
+(typename cost_type<typename boost::parameter::value_type<Args, edit_distance_params::tag::cost, default_cost>::type,
+                    typename boost::range_value<typename boost::parameter::value_type<Args, edit_distance_params::tag::seq1>::type>::type>::type),
+    edit_distance,
+    edit_distance_params::tag,
+    (required
+        (seq1, *)
+        (seq2, *))
+    (optional
+        (cost, *, default_cost())
+        (beam, *, none()))
+)
+{
+    return edit_distance_check(seq1, seq2, cost, beam);
+}
+
 
 }}} // boost::algorithm::sequence_alignment
 

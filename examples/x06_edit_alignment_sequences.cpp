@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
     // Compare two null-terminated strings that differ by one substitution
     // (distance should be 1)
-    stringstream_tuple_output<default_cost<char const*>, char const*> out;
+    stringstream_tuple_output<default_cost, char const*> out;
     unsigned dist = edit_alignment(str1, str2, out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 
