@@ -83,6 +83,47 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     CHECK_EDIT_ALIGNMENT_COST("axax", "aa", cost_expensive_ins, 2);
 }
 
+
+BOOST_AUTO_TEST_CASE(beam_1) {
+    // to find the equal run 'bcd', beam width has to be >= 1 
+    CHECK_EDIT_ALIGNMENT("abcde", "bcdef", 2);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcde", "bcdef", 0, 5);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcde", "bcdef", 1, 2);
+
+    // to find the equal run 'cd', beam width has to be >= 2
+    CHECK_EDIT_ALIGNMENT("abcde", "cdefg", 4);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcde", "cdefg", 0, 5);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcde", "cdefg", 1, 5);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcde", "cdefg", 2, 4);
+
+    // beam has to be >= 3 to discover the equal run 'abcd'
+    CHECK_EDIT_ALIGNMENT("xxxabcd", "abcd", 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("xxxabcd", "abcd", 0, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("xxxabcd", "abcd", 1, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("xxxabcd", "abcd", 2, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("xxxabcd", "abcd", 3, 3);
+
+    CHECK_EDIT_ALIGNMENT("abcd", "xxxabcd", 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "xxxabcd", 0, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "xxxabcd", 1, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "xxxabcd", 2, 7);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "xxxabcd", 3, 3);
+
+    // the equal run 'abcd' is at the beginning, and so always find-able
+    CHECK_EDIT_ALIGNMENT("abcd", "abcdxxx", 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "abcdxxx", 0, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "abcdxxx", 1, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "abcdxxx", 2, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcd", "abcdxxx", 3, 3);
+
+    CHECK_EDIT_ALIGNMENT("abcdxxx", "abcd", 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcdxxx", "abcd", 0, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcdxxx", "abcd", 1, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcdxxx", "abcd", 2, 3);
+    CHECK_EDIT_ALIGNMENT_BEAM("abcdxxx", "abcd", 3, 3);
+}
+
+
 BOOST_AUTO_TEST_CASE(long_sequences) {
     CHECK_EDIT_ALIGNMENT("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", 
                          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", 
