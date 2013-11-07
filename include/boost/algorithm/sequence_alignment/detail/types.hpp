@@ -156,11 +156,8 @@ construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, co
     r->pos1 = pos1_;
     r->pos2 = pos2_;
     r->cost = cost_;
-    if (visited.end() == f) {
-        visited.insert(r);
-    } else if (cost_ < (*f)->cost) {
-        (*f)->cost = cost_;
-    }
+    if (visited.end() != f) visited.erase(f);
+    visited.insert(r);
     return r;
 }
 
@@ -179,11 +176,8 @@ construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, co
     r->pos2 = pos2_;
     r->cost = cost_;
     r->edge = edge_;
-    if (visited.end() == f) {
-        visited.insert(r);
-    } else if (cost_ < (*f)->cost) {
-        (*f)->cost = cost_;
-    }
+    if (visited.end() != f) visited.erase(f);
+    visited.insert(r);
     return r;
 }
 
