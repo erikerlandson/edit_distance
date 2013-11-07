@@ -44,6 +44,13 @@ struct default_cost {
     }
 };
 
+namespace parameter {
+    BOOST_PARAMETER_NAME(seq1)
+    BOOST_PARAMETER_NAME(seq2)
+    BOOST_PARAMETER_NAME(output)
+    BOOST_PARAMETER_NAME(cost)
+    BOOST_PARAMETER_NAME(beam)
+}
 
 }}}
 

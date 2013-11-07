@@ -45,18 +45,12 @@ edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost, Bea
     // the cost matrix
 }
 
-namespace edit_distance_params {
-BOOST_PARAMETER_NAME(seq1)
-BOOST_PARAMETER_NAME(seq2)
-BOOST_PARAMETER_NAME(cost)
-BOOST_PARAMETER_NAME(beam)
-}
 
 BOOST_PARAMETER_FUNCTION(
-(typename cost_type<typename boost::parameter::value_type<Args, edit_distance_params::tag::cost, default_cost>::type,
-                    typename boost::range_value<typename boost::parameter::value_type<Args, edit_distance_params::tag::seq1>::type>::type>::type),
+(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, default_cost>::type,
+                    typename boost::range_value<typename boost::parameter::value_type<Args, parameter::tag::seq1>::type>::type>::type),
     edit_distance,
-    edit_distance_params::tag,
+    parameter::tag,
     (required
         (seq1, *)
         (seq2, *))

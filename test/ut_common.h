@@ -37,8 +37,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
 
-using namespace boost::algorithm::sequence_alignment;
-
+using boost::algorithm::sequence_alignment::edit_distance;
+using boost::algorithm::sequence_alignment::edit_alignment;
+using namespace boost::algorithm::sequence_alignment::parameter;
 
 template <typename Range>
 std::list<typename boost::range_value<Range>::type>

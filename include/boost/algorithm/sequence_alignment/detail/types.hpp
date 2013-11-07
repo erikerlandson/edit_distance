@@ -74,6 +74,17 @@ struct beam_checker<Node, Beam, typename enable_if<is_same<Beam, none> >::type> 
     inline bool operator()(Node*) { return true; }
 };
 
+template <typename Node, typename Beam>
+struct beam_checker<Node, Beam, typename enable_if<is_integral<Beam> >::type> {
+    typename Node::pos1_type beg1;
+    typename Node::pos2_type beg2;
+    Beam beam;
+    beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) : beg1(beg1_), beg2(beg2_), beam(std::abs(beam_)) {}
+    inline bool operator()(Node* n) {
+        return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= beam;
+    }
+};
+
 
 template <typename Itr, typename Enabled=void>
 struct position {
