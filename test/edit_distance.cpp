@@ -117,6 +117,45 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
 }
 
 
+BOOST_AUTO_TEST_CASE(beam_1) {
+    // to find the equal run 'bcd', beam width has to be >= 1 
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef"), 2);
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef", _beam=0), 5);
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef", _beam=1), 2);
+
+    // to find the equal run 'cd', beam width has to be >= 2
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg"), 4);
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _beam=0), 5);
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _beam=1), 5);
+    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _beam=2), 4);
+
+    // beam has to be >= 3 to discover the equal run 'abcd'
+    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd"), 3);
+    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _beam=0), 7);
+    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _beam=1), 7);
+    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _beam=2), 7);
+    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _beam=3), 3);
+
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd"), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _beam=0), 7);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _beam=1), 7);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _beam=2), 7);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _beam=3), 3);
+
+    // the equal run 'abcd' is at the beginning, and so always find-able
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx"), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _beam=0), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _beam=1), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _beam=2), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _beam=3), 3);
+
+    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd"), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _beam=0), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _beam=1), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _beam=2), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _beam=3), 3);
+}
+
 BOOST_AUTO_TEST_CASE(timing_1) {
     char data[] = "abcdefghij0123456789";
     const unsigned int data_size = sizeof(data)-1;

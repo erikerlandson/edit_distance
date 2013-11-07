@@ -77,9 +77,10 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
         heap.pop();
         if (!on_beam(h)) {
             // prune all paths that move off the beam
-            // unless going off-beam is the only way to continue, e.g. if
+            // unless we are at the end of one of the sequences, in which
+            // case going off-beam is the only way to continue when
             // one string is longer than the other and difference > beam
-            if (!heap.empty()) continue;
+            if (h->pos1 != end1  &&  h->pos2 != end2) continue;
         }
         if (h->pos1 < env1  &&  h->pos2 < env2  &&  h->cost >= env_best_cost) {
             // no edit path from this node can do better than the current
