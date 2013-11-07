@@ -189,13 +189,13 @@ construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, co
 
 
 struct path_lessthan {
-    template <typename T> bool operator()(T const* a, T const* b) const {
+    template <typename T> inline bool operator()(T const* a, T const* b) const {
         return a->cost > b->cost;
     }
 };
 
 struct visited_lessthan {
-    template <typename T> bool operator()(T const* a, T const* b) const {
+    template <typename T> inline bool operator()(T const* a, T const* b) const {
         if (a->pos1 < b->pos1) return true;
         if (b->pos1 < a->pos1) return false;
         return a->pos2 < b->pos2;
