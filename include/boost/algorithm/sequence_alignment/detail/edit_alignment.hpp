@@ -35,7 +35,7 @@ using boost::range_iterator;
 
 template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Beam>
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, Cost& cost, Beam beam) {
+dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Beam& beam) {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;

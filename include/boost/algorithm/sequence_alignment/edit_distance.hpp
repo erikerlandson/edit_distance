@@ -37,7 +37,7 @@ BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
-edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, Cost cost, Beam beam) {
+edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Beam& beam) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
     return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost, beam);
