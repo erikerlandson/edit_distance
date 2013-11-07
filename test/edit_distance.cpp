@@ -160,12 +160,12 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     char data[] = "abcdefghij0123456789";
     const unsigned int data_size = sizeof(data)-1;
     srand(42);
-    const unsigned int N = 50;
+    const unsigned int N = 100;
     const unsigned int LEN = 1000000;
     const unsigned int D = 10;
     const unsigned int R = LEN/D;
     const unsigned int K = 100;
-    vector<std::string> seqdata(20);
+    vector<std::string> seqdata(15);
     for (int i = 0;  i < seqdata.size();  ++i) {
         seqdata[i].resize(LEN, 'x');
         for (int d = 0;  d < D;  ++d) {
@@ -180,12 +180,13 @@ BOOST_AUTO_TEST_CASE(timing_1) {
         if (n > N) break;
         for (int j = 0;  j < i;  ++j) {
             if (++n > N) break;
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], cost_mixed_ops());
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _cost = cost_mixed_ops());
             BOOST_CHECK(d <= 2*LEN);
         }
     }
+    n -= 1;
     double tt = time(0) - t0;
-    BOOST_TEST_MESSAGE("time= " << tt << " sec   mean= " << tt/double(N) << "\n" );
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }
 
 
