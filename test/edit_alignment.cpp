@@ -139,4 +139,52 @@ BOOST_AUTO_TEST_CASE(long_sequences) {
                          8);
 }
 
+
+BOOST_AUTO_TEST_CASE(failure_1) {
+    std::string seq1 = "xxxxxxxxx3d07a05d385h77xxxxxxxxxxxx";
+    std::string seq2 = "xbd9a3d2gjf6b7a77hjcxxxxxxxxxxxxxxx";
+    output_check_script_string out(seq1, seq2);
+    unsigned int d = edit_alignment(seq1, seq2, _output = out, _cost = cost_mixed_ops());
+    out.finalize();
+    BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seq1 << "'\nseq2= '"<< seq2 <<"'\n\n");
+}
+
+
+BOOST_AUTO_TEST_CASE(timing_1) {
+    char data[] = "abcdefghij0123456789";
+    const unsigned int data_size = sizeof(data)-1;
+    srand(42);
+    const unsigned int N = 100;
+    const unsigned int LEN = 1000000;
+    const unsigned int D = 10;
+    const unsigned int R = LEN/D;
+    const unsigned int K = 100;
+    std::vector<std::string> seqdata(15);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        seqdata[i].resize(LEN, 'x');
+        for (int d = 0;  d < D;  ++d) {
+            unsigned int b1 = d*R + (rand() % K);
+            unsigned int l1 =  rand() % K;
+            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
+        }
+    }
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n > N) break;
+        for (int j = 0;  j < i;  ++j) {
+            if (++n > N) break;
+            output_check_script_long_string out(seqdata[i], seqdata[j]);
+            unsigned int d = edit_alignment(seqdata[i], seqdata[j], _output = out, _cost = cost_mixed_ops());
+            out.finalize();
+            BOOST_CHECK(out.correct);
+            BOOST_CHECK(d <= 2*LEN);
+        }
+    }
+    n -= 1;
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -148,6 +148,109 @@ struct output_check_script {
     bool correct;
 };
 
+struct output_check_script_long_string {
+    typedef char value_type;
+    typedef long cost_type;
+
+    output_check_script_long_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1) {
+    }
+
+    void output_ins(const value_type& v2, cost_type c) { 
+        if (seq2[++j2] != v2) correct=false;
+    }
+    void output_del(const value_type& v1, cost_type c) { 
+        if (seq1[++j1] != v1) correct=false; 
+    }
+    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
+        // cost should be > zero: otherwise we should be in output_eql()
+        if (c <= cost_type(0)) correct=false;
+    }
+    void output_eql(const value_type& v1, const value_type& v2) { 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
+        // this condition is not necessarily true in general, since a cost function
+        // can define two elements as equivalent even if they are not identical, but
+        // I expect it to be true for my testing examples, and it helps make the
+        // test checking stronger
+        if (seq1[j1] != seq2[j2]) correct=false;
+    }
+
+    void finalize() {
+        if (j1 != long(seq1.size())-1) correct = false;
+        if (j2 != long(seq2.size())-1) correct = false;
+    }
+
+    long j1;
+    long j2;
+    std::string seq1;
+    std::string seq2;
+    bool correct;
+};
+
+
+struct output_check_script_string {
+    typedef char value_type;
+    typedef long cost_type;
+
+    output_check_script_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1) {
+    }
+
+    void output_ins(const value_type& v2, cost_type c) { 
+        if (seq2[++j2] != v2) {
+            std::cerr << "INS seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
+            correct=false;
+        }
+    }
+    void output_del(const value_type& v1, cost_type c) { 
+        if (seq1[++j1] != v1) {
+            std::cerr << "DEL seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 << "\n";
+            correct=false; 
+        }
+    }
+    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
+            std::cerr << "SUB seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
+            correct=false;
+        }
+        // cost should be > zero: otherwise we should be in output_eql()
+        if (c <= cost_type(0)) {
+            std::cerr << "SUB cost= " << c << "   seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
+            correct=false;
+        }
+    }
+    void output_eql(const value_type& v1, const value_type& v2) { 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
+            std::cerr << "EQL seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
+            correct=false;
+        }
+        // this condition is not necessarily true in general, since a cost function
+        // can define two elements as equivalent even if they are not identical, but
+        // I expect it to be true for my testing examples, and it helps make the
+        // test checking stronger
+        if (seq1[j1] != seq2[j2]) {
+            std::cerr << "EQL (2) seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
+            correct=false;
+        }
+    }
+
+    void finalize() {
+        if (j1 != long(seq1.size())-1) {
+            std::cerr << "j1= " << j1  <<  "    != " << long(seq1.size())-1 << "\n";
+            correct = false;
+        }
+        if (j2 != long(seq2.size())-1) {
+            std::cerr << "j2= " << j2  <<  "    != " << long(seq2.size())-1 << "\n";
+            correct = false;
+        }
+    }
+
+    long j1;
+    long j2;
+    std::string seq1;
+    std::string seq2;
+    bool correct;
+};
+
 
 #define CHECK_EDIT_ALIGNMENT(seq1, seq2, dist) \
 { \
