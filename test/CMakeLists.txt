@@ -4,6 +4,9 @@ find_package(Boost 1.50 COMPONENTS unit_test_framework system)
 # include path
 include_directories(${edit_distance_SOURCE_DIR}/include)
 
+set (CMAKE_CXX_FLAGS "-O")
+set (CMAKE_CXX_FLAGS_DEBUG "-g")
+
 if (Boost_FOUND)
     add_executable(test
                    test.cpp
