@@ -48,8 +48,6 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     const itr1_t end1 = end(seq1);
     const itr2_t end2 = end(seq2);
 
-    std::set<head_t*, visited_lessthan> visited;
-
     // pool allocators are born for node allocations in graph algorithms
     boost::object_pool<head_t> pool;
 
@@ -64,6 +62,9 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     pos1_t env1; env1.beg(begin(seq1));
     pos2_t env2; env2.beg(begin(seq2));
     cost_t env_best_cost = 0;
+
+    // keep track of nodes in the edit graph that have been visited
+    boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited(31, visited_hash<pos1_t,pos2_t>(env1,env2));
 
     // support beam-width pruning, if asked for
     beam_checker<head_t, Beam> on_beam(env1, env2, beam);

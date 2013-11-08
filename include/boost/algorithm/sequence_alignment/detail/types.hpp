@@ -41,6 +41,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/concept/assert.hpp>
 #include <boost/concept/usage.hpp>
 
+#include <boost/unordered_set.hpp>
+#include <boost/functional/hash.hpp>
+
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
@@ -193,6 +196,24 @@ struct visited_lessthan {
         if (a->pos1 < b->pos1) return true;
         if (b->pos1 < a->pos1) return false;
         return a->pos2 < b->pos2;
+    }
+};
+
+template <typename Pos1, typename Pos2>
+struct visited_hash {
+    Pos1 beg1;
+    Pos2 beg2;
+    visited_hash(const Pos1& pos1_, const Pos2& pos2_) : beg1(pos1_), beg2(pos2_) {}
+    template<typename T> inline
+    size_t operator()(T const* e) const {
+        return boost::hash_value(e->pos1-beg1) ^ boost::hash_value(e->pos2-beg2);
+    }
+};
+
+struct visited_equal {
+    template<typename T> inline
+    bool operator()(T const* a, T const* b) const {
+        return (a->pos1.j == b->pos1.j) && (a->pos2.j == b->pos2.j);
     }
 };
 
