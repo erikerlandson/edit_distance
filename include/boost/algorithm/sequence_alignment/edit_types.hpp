@@ -25,7 +25,7 @@ namespace algorithm {
 namespace sequence_alignment {
 
 
-struct default_cost {
+struct unit_cost {
     typedef size_t cost_type;
 
     template <typename value_type> inline
@@ -38,11 +38,33 @@ struct default_cost {
         return cost_type(1);
     }
 
-    template <typename value_type> inline
-    cost_type cost_sub(value_type const& a, value_type const& b) const {
+    template <typename value_type_1, typename value_type_2> inline
+    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
         return (a == b) ? cost_type(0) : cost_type(1);
     }
 };
+
+struct nosub_unit_cost {
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
+    cost_type cost_ins(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type> inline
+    cost_type cost_del(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type_1, typename value_type_2> inline
+    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
+        return (a == b) ? cost_type(0) : cost_type(10);
+    }
+};
+
+typedef unit_cost default_cost;
+
 
 namespace parameter {
     BOOST_PARAMETER_NAME(seq1)
