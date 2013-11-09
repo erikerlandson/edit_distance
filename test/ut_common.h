@@ -91,9 +91,9 @@ struct cost_expensive_ins {
 struct cost_mixed_ops {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) const { return 1; }
-    cost_type cost_del(value_type c) const { return 1; }
-    cost_type cost_sub(value_type c, value_type d) const {
+    inline cost_type cost_ins(value_type const& c) const { return 1; }
+    inline cost_type cost_del(value_type const& c) const { return 1; }
+    inline cost_type cost_sub(value_type const& c, value_type const& d) const {
         if (c == d) return 0;
         // allow substitution between alphabetics
         if (isalpha(c) && isalpha(d)) return 1;
