@@ -211,11 +211,11 @@ BOOST_AUTO_TEST_CASE(timing_2) {
     char data[] = "abcdefghij0123456789";
     const unsigned int data_size = sizeof(data)-1;
     srand(42);
-    const unsigned int N = 10000;
+    const unsigned int N = 1000000;
     const unsigned int LEN = 100;
-    const unsigned int D = 5;
+    const unsigned int D = 10;
     const unsigned int R = LEN/D;
-    const unsigned int K = 5;
+    const unsigned int K = 2;
     vector<std::string> seqdata(1500);
     for (int i = 0;  i < seqdata.size();  ++i) {
         seqdata[i].resize(LEN, 'x');
