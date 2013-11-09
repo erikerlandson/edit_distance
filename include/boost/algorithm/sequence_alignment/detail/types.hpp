@@ -206,7 +206,9 @@ struct visited_hash {
     visited_hash(const Pos1& pos1_, const Pos2& pos2_) : beg1(pos1_), beg2(pos2_) {}
     template<typename T> inline
     size_t operator()(T const* e) const {
-        return boost::hash_value(e->pos1-beg1) ^ boost::hash_value(e->pos2-beg2);
+        size_t h = boost::hash_value(e->pos1-beg1);
+        boost::hash_combine(h, e->pos2-beg2);
+        return h;
     }
 };
 
