@@ -74,7 +74,7 @@ struct beam_checker {
 template <typename Node, typename Beam>
 struct beam_checker<Node, Beam, typename enable_if<is_same<Beam, none> >::type> {
     beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) {}
-    inline bool operator()(Node*) { return true; }
+    inline bool operator()(Node*) const { return true; }
 };
 
 template <typename Node, typename Beam>
@@ -83,9 +83,33 @@ struct beam_checker<Node, Beam, typename enable_if<is_integral<Beam> >::type> {
     typename Node::pos2_type beg2;
     Beam beam;
     beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) : beg1(beg1_), beg2(beg2_), beam(std::abs(beam_)) {}
-    inline bool operator()(Node* n) {
+    inline bool operator()(Node* n) const {
         return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= beam;
     }
+};
+
+template <typename AllowSub, typename Enable=void>
+struct sub_checker {
+    // informative compile error here 
+};
+
+template <typename AllowSub>
+struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, bool> >::type> {
+    bool allow;
+    sub_checker(const bool& allow_) : allow(allow_) {}
+    inline bool operator()() const { return allow; }
+};
+
+template <typename AllowSub>
+struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, true_type> >::type> {
+    sub_checker(const AllowSub& allow_) {}
+    inline bool operator()() const { return true; }
+};
+
+template <typename AllowSub>
+struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, false_type> >::type> {
+    sub_checker(const AllowSub& allow_) {}
+    inline bool operator()() const { return false; }
 };
 
 

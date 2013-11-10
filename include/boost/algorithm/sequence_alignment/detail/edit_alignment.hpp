@@ -33,9 +33,9 @@ using boost::end;
 using boost::range_iterator;
 
 
-template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Beam>
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Beam, typename AllowSub>
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Beam& beam) {
+dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Beam& beam, const AllowSub& allowsub) {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -53,6 +53,8 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
 
     // is fibonacci heap best here?  O(1) insertion seems well suited.
     boost::heap::fibonacci_heap<head_t*, boost::heap::compare<path_lessthan> > heap;
+
+    sub_checker<AllowSub> allow_sub(allowsub);
 
     head_t* path_head = hnull;
 
@@ -124,7 +126,8 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
                     }
                 }
                 if (csub > cost_t(0)  ||  p1 == end1  ||  p2 == end2) {
-                    head_t* t = construct(pool, visited, p1, p2, h->cost + csub, h);
+                    head_t* t = (allow_sub() || (csub <= 0)) ? construct(pool, visited, p1, p2, h->cost + csub, h) 
+                                                             : construct(pool, visited, p1p, p2p, h->cost, h);
                     if (t != hnull) heap.push(t);
                     t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p), h);
                     if (t != hnull) heap.push(t);

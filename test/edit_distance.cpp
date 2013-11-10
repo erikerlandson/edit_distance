@@ -156,6 +156,27 @@ BOOST_AUTO_TEST_CASE(beam_1) {
     BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _beam=3), 3);
 }
 
+BOOST_AUTO_TEST_CASE(allow_sub_1) {
+    BOOST_CHECK_EQUAL(edit_distance("abc", "xyz"), 3);
+
+    // bool arg is run-time check
+    BOOST_CHECK_EQUAL(edit_distance("abc", "xyz", _allow_sub=true), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abc", "xyz", _allow_sub=false), 6);
+
+    // type arg gives compile-time value: check can be optimized out:
+    BOOST_CHECK_EQUAL(edit_distance("abc", "xyz", _allow_sub=boost::true_type()), 3);
+    BOOST_CHECK_EQUAL(edit_distance("abc", "xyz", _allow_sub=boost::false_type()), 6);
+
+    BOOST_CHECK_EQUAL(edit_distance("aqc", "xqz", _allow_sub=boost::true_type()), 2);
+    BOOST_CHECK_EQUAL(edit_distance("aqc", "xqz", _allow_sub=boost::false_type()), 4);
+
+    BOOST_CHECK_EQUAL(edit_distance("aqcr", "xqzr", _allow_sub=boost::true_type()), 2);
+    BOOST_CHECK_EQUAL(edit_distance("aqcr", "xqzr", _allow_sub=boost::false_type()), 4);
+
+    BOOST_CHECK_EQUAL(edit_distance("raqc", "rxqz", _allow_sub=boost::true_type()), 2);
+    BOOST_CHECK_EQUAL(edit_distance("raqc", "rxqz", _allow_sub=boost::false_type()), 4);
+}
+
 
 BOOST_AUTO_TEST_CASE(long_sequences) {
     BOOST_CHECK_EQUAL(edit_distance("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",

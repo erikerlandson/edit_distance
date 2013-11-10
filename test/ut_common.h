@@ -285,4 +285,15 @@ struct output_check_script_string {
     BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
 }
 
+#define CHECK_EDIT_ALIGNMENT_ARG(seq1, seq2, arg, dist) \
+{ \
+    BOOST_TEST_CHECKPOINT("testing seq1='" << ASSTRING(seq1) << "'  seq2= '" << ASSTRING(seq2) << "'"); \
+    boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
+    output_check_script<char> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
+    long d = edit_alignment(seq1, seq2, ob, arg); \
+    ob.finalize(); \
+    BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
+    BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
+}
+
 #endif

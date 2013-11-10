@@ -123,6 +123,24 @@ BOOST_AUTO_TEST_CASE(beam_1) {
     CHECK_EDIT_ALIGNMENT_BEAM("abcdxxx", "abcd", 3, 3);
 }
 
+BOOST_AUTO_TEST_CASE(allow_sub_1) {
+    CHECK_EDIT_ALIGNMENT("abc", "xyz", 3);
+
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=true, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=false, 6);
+
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=boost::true_type(), 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=boost::false_type(), 6);
+
+    CHECK_EDIT_ALIGNMENT_ARG("aqc", "xqz", _allow_sub=boost::true_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("aqc", "xqz", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("aqcr", "xqzr", _allow_sub=boost::true_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("aqcr", "xqzr", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::true_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::false_type(), 4);
+}
 
 BOOST_AUTO_TEST_CASE(long_sequences) {
     CHECK_EDIT_ALIGNMENT("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", 

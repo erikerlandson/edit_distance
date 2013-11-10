@@ -31,16 +31,16 @@ using detail::cost_type;
 using detail::none;
 
 
-template <typename Sequence1, typename Sequence2, typename Cost, typename Beam>
+template <typename Sequence1, typename Sequence2, typename Cost, typename Beam, typename AllowSub>
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
-edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Beam& beam) {
+edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Beam& beam, const AllowSub& allow_sub) {
     // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
     // handle char* transparently, which seems to be working correctly
-    return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost, beam);
+    return dijkstra_sssp_cost(boost::as_literal(seq1), boost::as_literal(seq2), cost, beam, allow_sub);
     // note to self - in the general case edit distance isn't a symmetric function, depending on
     // the cost matrix
 }
@@ -56,10 +56,11 @@ BOOST_PARAMETER_FUNCTION(
         (seq2, *))
     (optional
         (cost, *, default_cost())
-        (beam, *, none()))
+        (beam, *, none())
+        (allow_sub, *, boost::true_type()))
 )
 {
-    return edit_distance_check(seq1, seq2, cost, beam);
+    return edit_distance_check(seq1, seq2, cost, beam, allow_sub);
 }
 
 

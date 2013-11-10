@@ -54,6 +54,7 @@ namespace parameter {
     BOOST_PARAMETER_NAME(output)
     BOOST_PARAMETER_NAME(cost)
     BOOST_PARAMETER_NAME(beam)
+    BOOST_PARAMETER_NAME(allow_sub)
 }
 
 }}}
