@@ -11,11 +11,9 @@ http://www.boost.org/LICENSE_1_0.txt
 *******/
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 
 #include "ut_common.h"
-
-using std::vector;
-using std::list;
 
 BOOST_AUTO_TEST_SUITE(edit_distance_suite)
 
@@ -193,104 +191,89 @@ BOOST_AUTO_TEST_CASE(long_sequences) {
                       8);
 }
 
-
-BOOST_AUTO_TEST_CASE(timing_1) {
-    char data[] = "abcdefghij0123456789";
-    const unsigned int data_size = sizeof(data)-1;
-    srand(42);
-    const unsigned int N = 100;
-    const unsigned int LEN = 1000000;
-    const unsigned int D = 10;
-    const unsigned int R = LEN/D;
-    const unsigned int K = 100;
-    vector<std::string> seqdata(15);
-    for (int i = 0;  i < seqdata.size();  ++i) {
-        seqdata[i].resize(LEN, 'x');
-        for (int d = 0;  d < D;  ++d) {
-            unsigned int b1 = d*R + (rand() % K);
-            unsigned int l1 =  rand() % K;
-            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
-        }
-    }
+BOOST_AUTO_TEST_CASE(pruning_crosscheck_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 1000;
+    random_localized_deviations(seqdata, N, 10000, 5, 20);
+    int ndiff = 0;
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {
-        if (n > N) break;
+        if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            if (++n > N) break;
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _cost = cost_mixed_ops());
-            BOOST_CHECK(d <= 2*LEN);
+            unsigned int d1 = edit_distance(seqdata[i], seqdata[j]);
+            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _prune_bias=5);
+            // the true minimum had better be <= what we get with pruning heuristic
+            BOOST_CHECK_LE(d1, d2);
+            // heuristic values should not deviate too greatly.
+            BOOST_CHECK_CLOSE(double(d2), double(d1), 10.0);
+            if (d1 != d2) ndiff+=1;
+            if (++n >= N) break;
         }
     }
-    n -= 1;
+    // I expect heuristic to give exact answer in almost all trials for this test
+    BOOST_CHECK_LE(ndiff, N/100);
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
+}
+
+
+BOOST_AUTO_TEST_CASE(timing_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 100;
+    random_localized_deviations(seqdata, N, 100000, 5, 20);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _prune_bias=5);
+            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            if (++n >= N) break;
+        }
+    }
     double tt = time(0) - t0;
     BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }
 
 
 BOOST_AUTO_TEST_CASE(timing_2) {
-    char data[] = "abcdefghij0123456789";
-    const unsigned int data_size = sizeof(data)-1;
-    srand(42);
-    const unsigned int N = 1000000;
-    const unsigned int LEN = 100;
-    const unsigned int D = 10;
-    const unsigned int R = LEN/D;
-    const unsigned int K = 2;
-    vector<std::string> seqdata(1500);
-    for (int i = 0;  i < seqdata.size();  ++i) {
-        seqdata[i].resize(LEN, 'x');
-        for (int d = 0;  d < D;  ++d) {
-            unsigned int b1 = d*R + (rand() % K);
-            unsigned int l1 =  rand() % K;
-            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
-        }
-    }
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 100000;
+    random_localized_deviations(seqdata, N, 100, 2, 5);
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {
-        if (n > N) break;
+        if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            if (++n > N) break;
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _cost = cost_mixed_ops());
-            BOOST_CHECK(d <= 2*LEN);
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _prune_bias=5);
+            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            if (++n >= N) break;
         }
     }
-    n -= 1;
     double tt = time(0) - t0;
     BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }
 
 
 BOOST_AUTO_TEST_CASE(timing_3) {
-    char data[] = "abcdefghij0123456789";
-    const unsigned int data_size = sizeof(data)-1;
-    srand(42);
-    const unsigned int N = 1000000;
-    const unsigned int LEN = 10;
-    const unsigned int D = 2;
-    const unsigned int R = LEN/D;
-    const unsigned int K = 2;
-    vector<std::string> seqdata(1500);
-    for (int i = 0;  i < seqdata.size();  ++i) {
-        seqdata[i].resize(LEN, 'x');
-        for (int d = 0;  d < D;  ++d) {
-            unsigned int b1 = d*R + (rand() % K);
-            unsigned int l1 =  rand() % K;
-            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
-        }
-    }
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 1000000;
+    random_localized_deviations(seqdata, N, 10, 2, 2);
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {
-        if (n > N) break;
+        if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            if (++n > N) break;
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _cost = cost_mixed_ops());
-            BOOST_CHECK(d <= 2*LEN);
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _prune_bias=5);
+            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            if (++n >= N) break;
         }
     }
-    n -= 1;
     double tt = time(0) - t0;
     BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }

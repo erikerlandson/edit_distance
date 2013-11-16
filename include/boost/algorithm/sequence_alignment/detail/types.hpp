@@ -44,9 +44,46 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
 
+#include <boost/parameter/name.hpp>
+#include <boost/parameter/preprocessor.hpp>
+
 namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
+
+struct unit_cost {
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
+    cost_type cost_ins(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type> inline
+    cost_type cost_del(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type_1, typename value_type_2> inline
+    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
+        return (a == b) ? cost_type(0) : cost_type(1);
+    }
+};
+
+
+typedef unit_cost default_cost;
+
+
+namespace parameter {
+    BOOST_PARAMETER_NAME(seq1)
+    BOOST_PARAMETER_NAME(seq2)
+    BOOST_PARAMETER_NAME(output)
+    BOOST_PARAMETER_NAME(cost)
+    BOOST_PARAMETER_NAME(beam)
+    BOOST_PARAMETER_NAME(allow_sub)
+    BOOST_PARAMETER_NAME(prune_bias)
+}
+
 namespace detail {
 
 using boost::is_same;
@@ -85,6 +122,51 @@ struct beam_checker<Node, Beam, typename enable_if<is_integral<Beam> >::type> {
     beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) : beg1(beg1_), beg2(beg2_), beam(std::abs(beam_)) {}
     inline bool operator()(Node* n) const {
         return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= beam;
+    }
+};
+
+template <typename Node, typename Cost, typename CostT, typename Bias, typename Enabled=void>
+struct env_pruner {
+    // some kind of compile-time error here
+};
+
+// default env pruner is no-op: no pruning at all
+template <typename Node, typename Cost, typename CostT, typename Bias>
+struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_same<Bias, none> >::type> {
+    typedef typename Node::pos1_type pos1_type;
+    typedef typename Node::pos2_type pos2_type;
+
+    env_pruner(const pos1_type&, const pos2_type&, const Bias&, const size_t& x=0) {}
+
+    inline bool operator()(Node*) const { return false; }
+
+    inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) {}
+};
+
+template <typename Node, typename Cost, typename CostT, typename Bias>
+struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
+    typedef typename Node::pos1_type pos1_type;
+    typedef typename Node::pos2_type pos2_type;
+
+    pos1_type env1;
+    pos2_type env2;
+    CostT best;
+    CostT bias;
+    size_t run_min;
+
+    env_pruner(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_, const size_t& run_min_=3) : 
+        env1(pos1_), env2(pos2_), bias(CostT(bias_)), run_min(run_min_), best(0) {}
+
+    inline bool operator()(Node* n) const {
+        return (n->pos1 < env1)  &&  (n->pos2 < env2)  &&  ((n->cost - std::min(bias,n->cost)) >= best);
+    }
+
+    inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
+        if ((env1 < pos1  ||  env2 < pos2)  &&  (pos1-ref1) > run_min) {
+            env1 = pos1;
+            env2 = pos2;
+            best = cost;
+        }
     }
 };
 
@@ -208,8 +290,11 @@ construct(Pool& pool, Visited& visited, const Pos1& pos1_, const Pos2& pos2_, co
     return r;
 }
 
-
-struct path_lessthan {
+template <typename Pos1, typename Pos2>
+struct heap_lessthan {
+    Pos1 beg1;
+    Pos2 beg2;
+    heap_lessthan(const Pos1& pos1_, const Pos2& pos2_) : beg1(pos1_), beg2(pos2_) {}
     template <typename T> inline bool operator()(T const* a, T const* b) const {
         return a->cost > b->cost;
     }
@@ -230,8 +315,9 @@ struct visited_hash {
     visited_hash(const Pos1& pos1_, const Pos2& pos2_) : beg1(pos1_), beg2(pos2_) {}
     template<typename T> inline
     size_t operator()(T const* e) const {
-        size_t h = boost::hash_value(e->pos1-beg1);
-        boost::hash_combine(h, e->pos2-beg2);
+        size_t h = 0;
+        boost::hash_combine(h, e->pos1-beg1);
+        boost::hash_combine(h, e->pos2-beg2);        
         return h;
     }
 };

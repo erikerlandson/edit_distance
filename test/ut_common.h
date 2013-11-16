@@ -14,6 +14,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #define __ut_common_h__ 1
 
 #include <cstdlib>
+#include <cmath>
 
 #include <vector>
 #include <list>
@@ -33,6 +34,10 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
+
+using std::vector;
+using std::list;
+using std::string;
 
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
@@ -72,6 +77,25 @@ _asstring(const Range& s) {
 #define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
 #define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
 
+struct test_unit_cost {
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
+    cost_type cost_ins(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type> inline
+    cost_type cost_del(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type_1, typename value_type_2> inline
+    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
+        return (a == b) ? cost_type(0) : cost_type(1);
+    }
+};
+
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;
@@ -97,7 +121,7 @@ struct cost_mixed_ops {
         if (c == d) return 0;
         // allow substitution between alphabetics
         if (isalpha(c) && isalpha(d)) return 1;
-        return 10;
+        return 3;
     }
 };
 
@@ -272,6 +296,23 @@ struct output_check_script_string {
     ob.finalize(); \
     BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
     BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
+}
+
+template <typename S>
+void random_localized_deviations(vector<S>& seqdata, const int N, const int LEN, const int D, const int K) {
+    char data[] = "abcdefghij0123456789";
+    const unsigned int data_size = sizeof(data)-1;
+    const unsigned int R = LEN/D;
+    int sz = int(ceil((1 + sqrt(1+8*N))/2));
+    seqdata.resize(sz);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        seqdata[i].resize(LEN, 'x');
+        for (int d = 0;  d < D;  ++d) {
+            unsigned int b1 = d*R + (rand() % K);
+            unsigned int l1 =  rand() % K;
+            for (unsigned int j = b1;  j < b1+l1;  ++j) seqdata[i][j] = data[rand()%data_size];
+        }
+    }
 }
 
 #endif
