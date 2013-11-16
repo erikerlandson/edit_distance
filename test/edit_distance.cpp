@@ -278,5 +278,46 @@ BOOST_AUTO_TEST_CASE(timing_3) {
     BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }
 
+BOOST_AUTO_TEST_CASE(stats_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 100;
+    const int beam = 4;
+    random_localized_deviations(seqdata, N, 100000, 5, 50);
+    int n = 0;
+    double t0 = time(0);
+    double sum = 0;
+    double sumdiff = 0;
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            unsigned int d1 = edit_distance(seqdata[i], seqdata[j]);
+            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _cost_beam=beam);
+            BOOST_CHECK_LE(d1, d2);
+            sum += d1;
+            sumdiff += d2 - d1;
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n));
+    BOOST_TEST_MESSAGE("sum= " << sum << "   sumdiff= " << sumdiff << "   ratio= " << sumdiff/sum);
+    BOOST_CHECK_LE(sumdiff/sum, 0.005);
+
+    n = 0;
+    t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _cost_beam=beam);
+            if (++n >= N) break;
+        }
+    }
+    double t2 = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << t2 << " sec   n= " << n << "   mean-time= " << t2/double(n) << "\n");
+    BOOST_CHECK_LT(t2, tt);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
