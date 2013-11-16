@@ -140,7 +140,7 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_same<Bia
 
     inline bool operator()(Node*) const { return false; }
 
-    inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) {}
+    inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) const {}
 };
 
 template <typename Node, typename Cost, typename CostT, typename Bias>
