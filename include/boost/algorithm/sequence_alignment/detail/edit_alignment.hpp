@@ -13,11 +13,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_ALIGNMENT_HPP
 
-#include <set>
-
 #include <boost/pool/object_pool.hpp>
 
-#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/heap/skew_heap.hpp>
 
 #include <boost/range/metafunctions.hpp>
 
@@ -54,7 +52,7 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     boost::object_pool<head_t> pool;
 
     // is fibonacci heap best here?  O(1) insertion seems well suited.
-    boost::heap::fibonacci_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
+    boost::heap::skew_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
 
     sub_checker<AllowSub> allow_sub(allowsub);
 
