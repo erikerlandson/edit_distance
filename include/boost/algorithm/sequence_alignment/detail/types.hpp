@@ -136,7 +136,7 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_same<Bia
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
 
-    cost_beam_checker(const pos1_type&, const pos2_type&, const Bias&, const size_t& x=0) {}
+    cost_beam_checker(const pos1_type&, const pos2_type&, const Bias&) {}
 
     inline bool operator()(Node*) const { return false; }
 
@@ -154,14 +154,17 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmet
     CostT bias;
     size_t run_min;
 
-    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_, const size_t& run_min_=3) : 
-        env1(pos1_), env2(pos2_), bias(CostT(bias_)), run_min(run_min_), best(0) {}
+    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_) : 
+        env1(pos1_), env2(pos2_), bias(CostT(bias_)), best(0) {}
 
     inline bool operator()(Node* n) const {
         return (n->pos1 < env1)  &&  (n->pos2 < env2)  &&  ((n->cost - std::min(bias,n->cost)) >= best);
     }
 
     inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
+        // I cannot decide if this should be exposed as a parameter or not
+        const size_t run_min = 3;
+
         if ((env1 < pos1  ||  env2 < pos2)  &&  (pos1-ref1) > run_min) {
             env1 = pos1;
             env2 = pos2;
