@@ -33,9 +33,9 @@ using boost::end;
 using boost::range_iterator;
 
 
-template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Beam, typename AllowSub, typename PruneBias>
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Beam& beam, const AllowSub& allowsub, const PruneBias& prune_bias) {
+dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -64,10 +64,10 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     typedef boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited_t;
     visited_t visited(31, visited_hash<pos1_t,pos2_t>(beg1,beg2));
 
-    // support beam-width pruning, if asked for
-    beam_checker<head_t, Beam> on_beam(beg1, beg2, beam);
+    // support edit_beam-width pruning, if asked for
+    edit_beam_checker<head_t, EditBeam> on_edit_beam(beg1, beg2, edit_beam);
 
-    env_pruner<head_t, Cost, cost_t, PruneBias> env_prune(beg1, beg2, prune_bias);
+    cost_beam_checker<head_t, Cost, cost_t, CostBeam> cost_beam_check(beg1, beg2, cost_beam);
 
     // kick off graph path frontier with initial node:
     heap.push(construct(pool, visited, beg1, beg2, cost_t(0), hnull));
@@ -76,16 +76,16 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
     while (true) {
         head_t* h = heap.top();
         heap.pop();
-        if (!on_beam(h)) {
-            // prune all paths that move off the beam
+        if (!on_edit_beam(h)) {
+            // prune all paths that move off the edit_beam
             // unless we are at the end of one of the sequences, in which
-            // case going off-beam is the only way to continue when
-            // one string is longer than the other and difference > beam
+            // case going off-edit_beam is the only way to continue when
+            // one string is longer than the other and difference > edit_beam
             if (h->pos1 != end1  &&  h->pos2 != end2) continue;
         }
 
         // compiles out if envelope pruning isn't requested
-        if (env_prune(h)) {
+        if (cost_beam_check(h)) {
             // prune pathways inside the current envelope that do not look promising
             // this is a heuristic: it can result in non-minimum edit path
             continue;
@@ -115,7 +115,7 @@ dijkstra_sssp_alignment(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Ou
             while (true) {
                 cost_t csub = cost.cost_sub(*p1p, *p2p);
                 if (csub > cost_t(0)  ||  p1 == end1  ||  p2 == end2) {
-                    env_prune.update(h->pos1, p1p, p2p, h->cost);
+                    cost_beam_check.update(h->pos1, p1p, p2p, h->cost);
                     head_t* t;
                     if (allow_sub() || (csub <= 0)) {
                         t = construct(pool, visited, p1, p2, h->cost + csub, h);

@@ -87,43 +87,43 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
 }
 
 
-BOOST_AUTO_TEST_CASE(beam_1) {
-    // to find the equal run 'bcd', beam width has to be >= 1 
+BOOST_AUTO_TEST_CASE(edit_beam_1) {
+    // to find the equal run 'bcd', edit_beam width has to be >= 1 
     CHECK_EDIT_ALIGNMENT("abcde", "bcdef", 2);
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "bcdef", _beam = 0, 5);
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "bcdef", _beam = 1, 2);
+    CHECK_EDIT_ALIGNMENT_ARG("abcde", "bcdef", _edit_beam = 0, 5);
+    CHECK_EDIT_ALIGNMENT_ARG("abcde", "bcdef", _edit_beam = 1, 2);
 
-    // to find the equal run 'cd', beam width has to be >= 2
+    // to find the equal run 'cd', edit_beam width has to be >= 2
     CHECK_EDIT_ALIGNMENT("abcde", "cdefg", 4);
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _beam = 0, 5);
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _beam = 1, 5);
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _beam = 2, 4);
+    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _edit_beam = 0, 5);
+    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _edit_beam = 1, 5);
+    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _edit_beam = 2, 4);
 
-    // beam has to be >= 3 to discover the equal run 'abcd'
+    // edit_beam has to be >= 3 to discover the equal run 'abcd'
     CHECK_EDIT_ALIGNMENT("xxxabcd", "abcd", 3);
-    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _beam = 0, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _beam = 1, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _beam = 2, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _beam = 3, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _edit_beam = 0, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _edit_beam = 1, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _edit_beam = 2, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _edit_beam = 3, 3);
 
     CHECK_EDIT_ALIGNMENT("abcd", "xxxabcd", 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _beam = 0, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _beam = 1, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _beam = 2, 7);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _beam = 3, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _edit_beam = 0, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _edit_beam = 1, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _edit_beam = 2, 7);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _edit_beam = 3, 3);
 
     // the equal run 'abcd' is at the beginning, and so always find-able
     CHECK_EDIT_ALIGNMENT("abcd", "abcdxxx", 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _beam = 0, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _beam = 1, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _beam = 2, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _beam = 3, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _edit_beam = 0, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _edit_beam = 1, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _edit_beam = 2, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _edit_beam = 3, 3);
 
     CHECK_EDIT_ALIGNMENT("abcdxxx", "abcd", 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _beam = 0, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _beam = 1, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _beam = 2, 3);
-    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _beam = 3, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _edit_beam = 0, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _edit_beam = 1, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _edit_beam = 2, 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _edit_beam = 3, 3);
 }
 
 BOOST_AUTO_TEST_CASE(allow_sub_1) {

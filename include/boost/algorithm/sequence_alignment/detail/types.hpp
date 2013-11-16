@@ -79,9 +79,9 @@ namespace parameter {
     BOOST_PARAMETER_NAME(seq2)
     BOOST_PARAMETER_NAME(output)
     BOOST_PARAMETER_NAME(cost)
-    BOOST_PARAMETER_NAME(beam)
+    BOOST_PARAMETER_NAME(edit_beam)
     BOOST_PARAMETER_NAME(allow_sub)
-    BOOST_PARAMETER_NAME(prune_bias)
+    BOOST_PARAMETER_NAME(cost_beam)
 }
 
 namespace detail {
@@ -102,41 +102,41 @@ using boost::enable_if;
 
 struct none {};
 
-template <typename Node, typename Beam, typename Enabled=void>
-struct beam_checker {
+template <typename Node, typename EditBeam, typename Enabled=void>
+struct edit_beam_checker {
     // some kind of compile-time error here
 };
 
-// default beam checker is no-op: no beam checking at all
-template <typename Node, typename Beam>
-struct beam_checker<Node, Beam, typename enable_if<is_same<Beam, none> >::type> {
-    beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) {}
+// default edit_beam checker is no-op: no edit_beam checking at all
+template <typename Node, typename EditBeam>
+struct edit_beam_checker<Node, EditBeam, typename enable_if<is_same<EditBeam, none> >::type> {
+    edit_beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, EditBeam const& edit_beam_) {}
     inline bool operator()(Node*) const { return true; }
 };
 
-template <typename Node, typename Beam>
-struct beam_checker<Node, Beam, typename enable_if<is_integral<Beam> >::type> {
+template <typename Node, typename EditBeam>
+struct edit_beam_checker<Node, EditBeam, typename enable_if<is_integral<EditBeam> >::type> {
     typename Node::pos1_type beg1;
     typename Node::pos2_type beg2;
-    Beam beam;
-    beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, Beam const& beam_) : beg1(beg1_), beg2(beg2_), beam(std::abs(beam_)) {}
+    EditBeam edit_beam;
+    edit_beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, EditBeam const& edit_beam_) : beg1(beg1_), beg2(beg2_), edit_beam(std::abs(edit_beam_)) {}
     inline bool operator()(Node* n) const {
-        return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= beam;
+        return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= edit_beam;
     }
 };
 
 template <typename Node, typename Cost, typename CostT, typename Bias, typename Enabled=void>
-struct env_pruner {
+struct cost_beam_checker {
     // some kind of compile-time error here
 };
 
 // default env pruner is no-op: no pruning at all
 template <typename Node, typename Cost, typename CostT, typename Bias>
-struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_same<Bias, none> >::type> {
+struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_same<Bias, none> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
 
-    env_pruner(const pos1_type&, const pos2_type&, const Bias&, const size_t& x=0) {}
+    cost_beam_checker(const pos1_type&, const pos2_type&, const Bias&, const size_t& x=0) {}
 
     inline bool operator()(Node*) const { return false; }
 
@@ -144,7 +144,7 @@ struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_same<Bias, none
 };
 
 template <typename Node, typename Cost, typename CostT, typename Bias>
-struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
+struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
 
@@ -154,7 +154,7 @@ struct env_pruner<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias
     CostT bias;
     size_t run_min;
 
-    env_pruner(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_, const size_t& run_min_=3) : 
+    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_, const size_t& run_min_=3) : 
         env1(pos1_), env2(pos2_), bias(CostT(bias_)), run_min(run_min_), best(0) {}
 
     inline bool operator()(Node* n) const {
