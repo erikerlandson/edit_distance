@@ -14,8 +14,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP)
 #define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP
 
-#include <set>
-
 // this requires me to link against boost system lib, which disappoints me,
 // since it prevents my algorithms from being pure-template.
 // maybe figure out how to use a pure-template pool allocator later
