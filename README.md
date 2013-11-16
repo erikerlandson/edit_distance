@@ -16,7 +16,8 @@ A user specified edit operation cost function can be provided:
 
 Sequences may be any kind of C++ range object, and may be mixed:
 
-    // Any forward range can be provided to these functions.  Sequence element types are not required to be exactly equal, as long as they are compatible.
+    // Any forward range can be provided to these functions.
+    // Sequence element types are not required to be exactly equal, as long as they are compatible.
     int d = edit_distance(my_vector, my_list | boost::adaptors::reversed, _cost=my_cost());
     
 If a beam radius is provided, then edit operations will be restricted to within that radius of 'diagonal':
