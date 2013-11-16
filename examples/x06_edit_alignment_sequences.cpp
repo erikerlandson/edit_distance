@@ -15,7 +15,7 @@ http://www.boost.org/LICENSE_1_0.txt
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
 using boost::algorithm::sequence_alignment::edit_alignment;
-using boost::algorithm::sequence_alignment::default_cost;
+using boost::algorithm::sequence_alignment::unit_cost;
 
 int main(int argc, char** argv) {
     char const* str1 = "abc";
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
     // Compare two null-terminated strings that differ by one substitution
     // (distance should be 1)
-    stringstream_tuple_output<default_cost, char const*> out;
+    stringstream_tuple_output<unit_cost, char const*> out;
     unsigned dist = edit_alignment(str1, str2, out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 

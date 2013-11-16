@@ -18,7 +18,7 @@ http://www.boost.org/LICENSE_1_0.txt
 // get the edit_alignment() function
 #include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
 using boost::algorithm::sequence_alignment::edit_alignment;
-using boost::algorithm::sequence_alignment::default_cost;
+using boost::algorithm::sequence_alignment::unit_cost;
 
 
 // define a custom cost function where case changes cost less

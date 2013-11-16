@@ -45,7 +45,7 @@ edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& outpu
 
 
 BOOST_PARAMETER_FUNCTION(
-(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, default_cost>::type, 
+(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, unit_cost>::type, 
                     typename boost::range_value<typename boost::parameter::value_type<Args, parameter::tag::seq1>::type>::type>::type),
     edit_alignment,
     parameter::tag,
@@ -54,7 +54,7 @@ BOOST_PARAMETER_FUNCTION(
         (seq2, *)
         (in_out(output), *))
     (optional
-        (cost, *, default_cost())
+        (cost, *, unit_cost())
         (allow_sub, *, boost::true_type())
         (edit_beam, *, none())
         (cost_beam, *, none()))

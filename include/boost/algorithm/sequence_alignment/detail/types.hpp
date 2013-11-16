@@ -71,9 +71,6 @@ struct unit_cost {
 };
 
 
-typedef unit_cost default_cost;
-
-
 namespace parameter {
     BOOST_PARAMETER_NAME(seq1)
     BOOST_PARAMETER_NAME(seq2)

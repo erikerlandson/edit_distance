@@ -47,7 +47,7 @@ edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& co
 
 
 BOOST_PARAMETER_FUNCTION(
-(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, default_cost>::type,
+(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, unit_cost>::type,
                     typename boost::range_value<typename boost::parameter::value_type<Args, parameter::tag::seq1>::type>::type>::type),
     edit_distance,
     parameter::tag,
@@ -55,7 +55,7 @@ BOOST_PARAMETER_FUNCTION(
         (seq1, *)
         (seq2, *))
     (optional
-        (cost, *, default_cost())
+        (cost, *, unit_cost())
         (allow_sub, *, boost::true_type())
         (edit_beam, *, none())
         (cost_beam, *, none()))
