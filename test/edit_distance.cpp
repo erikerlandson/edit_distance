@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(cost_beam_crosscheck_1) {
     srand(time(0));
     vector<std::string> seqdata;
     const int N = 100;
-    const int beam = 2;
+    const int beam = 10;
     random_localized_deviations(seqdata, N, 100000, 5, 50);
     int n = 0;
     double t0 = time(0);

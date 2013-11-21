@@ -144,28 +144,30 @@ template <typename Node, typename Cost, typename CostT, typename Bias>
 struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
+    typedef typename Node::pos1_type::difference_type difference_type;
 
     pos1_type env1;
     pos2_type env2;
-    CostT best;
-    CostT bias;
-    size_t run_min;
+    CostT Ce;
+    CostT B;
 
     cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_) : 
-        env1(pos1_), env2(pos2_), bias(CostT(bias_)), best(0) {}
+        env1(pos1_), env2(pos2_), B(CostT(std::abs(bias_))), Ce(0) {}
 
     inline bool operator()(Node* n) const {
-        return (n->pos1 < env1)  &&  (n->pos2 < env2)  &&  ((n->cost - std::min(bias,n->cost)) >= best);
+        if (!(n->pos1 < env1  &&  n->pos2 < env2)) return false;
+        difference_type Ds = std::min(difference_type(env1 - n->pos1), difference_type(env2 - n->pos2));
+        return (n->cost >= Ce + B - CostT(Ds));
     }
 
     inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
         // I cannot decide if this should be exposed as a parameter or not
         const size_t run_min = 3;
-
-        if ((env1 < pos1  ||  env2 < pos2)  &&  (pos1-ref1) > run_min) {
+        
+        if ((env1 < pos1 ||  env2 < pos2)  &&  (pos1-ref1) > run_min) {
             env1 = pos1;
             env2 = pos2;
-            best = cost;
+            Ce = cost;
         }
     }
 };
