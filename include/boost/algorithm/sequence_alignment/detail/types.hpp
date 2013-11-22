@@ -140,25 +140,53 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_same<Bia
     inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) const {}
 };
 
+
 template <typename Node, typename Cost, typename CostT, typename Bias>
 struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
+    typedef typename pos1_type::difference_type difference_type;
 
-    pos1_type env1;
-    pos2_type env2;
+    pos1_type beg1;
+    pos2_type beg2;
     CostT best;
     CostT bias;
-    size_t run_min;
+    typedef std::map<difference_type, CostT> map_t;
+    map_t bestmap;
 
     cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_) : 
-        env1(pos1_), env2(pos2_), bias(CostT(bias_)), best(0) {}
+        beg1(pos1_), beg2(pos2_), bias(CostT(bias_)), best(0), bestmap() {}
 
-    inline bool operator()(Node* n) const {
-        return (n->pos1 < env1)  &&  (n->pos2 < env2)  &&  ((n->cost - std::min(bias,n->cost)) >= best);
+#if 0
+    inline difference_type shell(const Node* n) const { return std::max(difference_type(n->pos1-beg1), difference_type(n->pos2-beg2)); }
+#else
+    inline difference_type shell(const Node* n) const { return (n->pos1-beg1) + (n->pos2-beg2); }
+#endif
+
+    inline bool operator()(Node* n) {
+        difference_type s = shell(n);
+        typename map_t::iterator f(bestmap.find(s));
+        if (bestmap.end() == f) {
+            f = bestmap.insert(typename map_t::value_type(s, n->cost)).first;
+            typename map_t::iterator nxt(f);
+            ++nxt;
+            if (bestmap.end() != nxt  &&  nxt->second < f->second) f->second = nxt->second;
+        }
+
+        if (n->cost >= f->second + bias) return true;
+        while (true) {
+            if (n->cost >= f->second) break;
+            f->second = n->cost;
+            if (bestmap.begin() == f) break;
+            --f;
+        }
+        
+        if (bestmap.size() > 100) bestmap.erase(bestmap.begin());
+        return false;
     }
 
     inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
+#if 0
         // I cannot decide if this should be exposed as a parameter or not
         const size_t run_min = 3;
 
@@ -167,6 +195,7 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmet
             env2 = pos2;
             best = cost;
         }
+#endif
     }
 };
 

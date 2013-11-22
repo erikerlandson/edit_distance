@@ -95,7 +95,10 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const C
 
         if (h->pos1 == end1) {
             // if we are at end of both sequences, then we have our final cost: 
-            if (h->pos2 == end2) return h->cost;
+            if (h->pos2 == end2) {
+                std::cout << "    visited= " << visited.size() << "    ratio= " << double(visited.size())/double(1+(h->pos1-beg1)*(h->pos2-beg2))<< "\n";
+                return h->cost;
+            }
             // sequence 1 is at end, so only consider insertion from seq2
             pos2_t p2 = h->pos2;
             head_t* t = construct(pool, visited, h->pos1, ++p2, h->cost + cost.cost_ins(*(h->pos2)));
