@@ -96,6 +96,28 @@ struct test_unit_cost {
     }
 };
 
+// this is same as default unit_cost, but will trigger
+// the generic algorithm because of its differing type
+// useful for cross-checking
+struct unit_cost_test {
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
+    cost_type cost_ins(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type> inline
+    cost_type cost_del(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type_1, typename value_type_2> inline
+    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
+        return (a == b) ? cost_type(0) : cost_type(1);
+    }
+};
+
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;

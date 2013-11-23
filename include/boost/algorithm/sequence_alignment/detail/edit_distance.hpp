@@ -32,12 +32,21 @@ namespace detail {
 
 using boost::begin;
 using boost::end;
+using boost::distance;
 using boost::range_iterator;
 
+using boost::enable_if;
+using boost::is_same;
+using boost::mpl::and_;
+using std::iterator_traits;
+using std::random_access_iterator_tag;
 
-template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam, typename Enabled = void>
+struct edit_cost_struct {
+
+// Default is generic edit distance algorithm based on a Dijkstra Single Source Shortest Path approach
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) const {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -135,6 +144,83 @@ dijkstra_sssp_cost(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const C
     BOOST_ASSERT(false);
     return 0;
 }
+
+}; // edit_cost_struct
+
+
+template <typename ForwardRange1, typename ForwardRange2>
+struct edit_cost_struct<ForwardRange1, ForwardRange2, unit_cost, none, boost::false_type, none, 
+                        typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<ForwardRange1>::type>::iterator_category, 
+                                                        random_access_iterator_tag>, 
+                                                is_same<typename iterator_traits<typename range_iterator<ForwardRange2>::type>::iterator_category, 
+                                                        random_access_iterator_tag> > >::type> {
+
+template <typename Vec, typename Itr, typename Size, typename Diff> 
+inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
+    Size Rp = R + (R>>1);
+    V_data.resize(1 + 2*Rp,0);
+    V = V_data.begin() + R;
+    Itr Vp = V_data.begin() + Rp;
+    for (Diff j=D;  j >= -D;  --j) Vp[j] = V[j];
+    R = Rp;
+    V = Vp;
+}
+
+// If we are using unit cost for ins/del, with no substitution,
+// and if our sequences support random-access,
+// and if no beam-searches were enabled,
+// *then* we can invoke the efficient and elegant Myers algorithm:
+//     An O(ND) Difference Algorithm and its Variations
+//     by Eugene W. Myers
+//     Dept of Computer Science, University of Arizona
+typename cost_type<unit_cost, typename boost::range_value<ForwardRange1>::type>::type
+operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const unit_cost&, const none&, const boost::false_type&, const none&) const {
+    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
+    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+
+    typedef std::vector<int>::difference_type difference_type;
+    typedef std::vector<int>::size_type size_type;
+
+    size_type len1 = distance(seq1);
+    size_type len2 = distance(seq2);
+
+    itr1_t S1 = begin(seq1);
+    itr2_t S2 = begin(seq2);
+
+    size_type R = 10;
+    std::vector<size_type> V_data(1 + 2*R, 0);
+    std::vector<size_type>::iterator V = V_data.begin() + R;
+
+    difference_type D = 0;
+    V[1] = 0;
+    while (true) {
+        for (difference_type k = -D;  k <= D;  k += 2) {
+            difference_type j1 = (k == -D  ||  (k != D  &&  V[k-1] < V[k+1]))  ?  V[k+1]  :  1+V[k-1];
+            difference_type j2 = j1-k;
+            while (j1 < len1  &&  j2 < len2  &&  S1[j1] == S2[j2]) { ++j1;  ++j2; }
+            if (j1 >= len1  &&  j2 >= len2) return D;
+            V[k] = j1;
+        }
+        // expand the working vector as needed
+        if (++D > R) expand(V_data, V, R, D);
+    }
+
+    // control should not reach here
+    BOOST_ASSERT(false);
+    return 0;
+}
+
+}; // edit_cost_struct
+
+
+template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+inline
+typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
+edit_cost_impl(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+    // specialize the most appropriate implementation for the given parameters
+    return edit_cost_struct<ForwardRange1, ForwardRange2, Cost, EditBeam, AllowSub, CostBeam>()(seq1, seq2, cost, edit_beam, allowsub, cost_beam);
+}
+
 
 }}}}
 
