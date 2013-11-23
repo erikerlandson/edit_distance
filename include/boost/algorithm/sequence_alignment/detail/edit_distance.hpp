@@ -148,11 +148,11 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 }; // edit_cost_struct
 
 
-template <typename ForwardRange1, typename ForwardRange2>
-struct edit_cost_struct<ForwardRange1, ForwardRange2, unit_cost, none, boost::false_type, none, 
-                        typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<ForwardRange1>::type>::iterator_category, 
+template <typename Range1, typename Range2>
+struct edit_cost_struct<Range1, Range2, unit_cost, none, boost::false_type, none, 
+                        typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<Range1>::type>::iterator_category, 
                                                         random_access_iterator_tag>, 
-                                                is_same<typename iterator_traits<typename range_iterator<ForwardRange2>::type>::iterator_category, 
+                                                is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
                                                         random_access_iterator_tag> > >::type> {
 
 template <typename Vec, typename Itr, typename Size, typename Diff> 
@@ -173,10 +173,10 @@ inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
 //     An O(ND) Difference Algorithm and its Variations
 //     by Eugene W. Myers
 //     Dept of Computer Science, University of Arizona
-typename cost_type<unit_cost, typename boost::range_value<ForwardRange1>::type>::type
-operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const unit_cost&, const none&, const boost::false_type&, const none&) const {
-    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
-    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
+operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const none&, const boost::false_type&, const none&) const {
+    typedef typename range_iterator<Range1 const>::type itr1_t;
+    typedef typename range_iterator<Range2 const>::type itr2_t;
 
     typedef std::vector<int>::difference_type difference_type;
     typedef std::vector<int>::size_type size_type;
@@ -213,12 +213,12 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const unit_cost
 }; // edit_cost_struct
 
 
-template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename Range1, typename Range2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
 inline
-typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-edit_cost_impl(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+typename cost_type<Cost, typename boost::range_value<Range1>::type>::type
+edit_cost_impl(Range1 const& seq1, Range2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
     // specialize the most appropriate implementation for the given parameters
-    return edit_cost_struct<ForwardRange1, ForwardRange2, Cost, EditBeam, AllowSub, CostBeam>()(seq1, seq2, cost, edit_beam, allowsub, cost_beam);
+    return edit_cost_struct<Range1, Range2, Cost, EditBeam, AllowSub, CostBeam>()(seq1, seq2, cost, edit_beam, allowsub, cost_beam);
 }
 
 
