@@ -122,39 +122,39 @@ struct edit_beam_checker<Node, EditBeam, typename enable_if<is_integral<EditBeam
     }
 };
 
-template <typename Node, typename Cost, typename CostT, typename Bias, typename Enabled=void>
+template <typename Node, typename Cost, typename CostT, typename Beam, typename Enabled=void>
 struct cost_beam_checker {
     // some kind of compile-time error here
 };
 
 // default env pruner is no-op: no pruning at all
-template <typename Node, typename Cost, typename CostT, typename Bias>
-struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_same<Bias, none> >::type> {
+template <typename Node, typename Cost, typename CostT, typename Beam>
+struct cost_beam_checker<Node, Cost, CostT, Beam, typename enable_if<is_same<Beam, none> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
 
-    cost_beam_checker(const pos1_type&, const pos2_type&, const Bias&) {}
+    cost_beam_checker(const pos1_type&, const pos2_type&, const Beam&) {}
 
     inline bool operator()(Node*) const { return false; }
 
     inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) const {}
 };
 
-template <typename Node, typename Cost, typename CostT, typename Bias>
-struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmetic<Bias> >::type> {
+template <typename Node, typename Cost, typename CostT, typename Beam>
+struct cost_beam_checker<Node, Cost, CostT, Beam, typename enable_if<is_arithmetic<Beam> >::type> {
     typedef typename Node::pos1_type pos1_type;
     typedef typename Node::pos2_type pos2_type;
 
     pos1_type env1;
     pos2_type env2;
-    CostT best;
-    CostT bias;
+    CostT beam;
+    CostT beam_ub;
 
-    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Bias& bias_) : 
-        env1(pos1_), env2(pos2_), bias(CostT(bias_)), best(0) {}
+    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Beam& beam_) : 
+        env1(pos1_), env2(pos2_), beam(CostT(std::abs(beam_))), beam_ub(0) {}
 
     inline bool operator()(Node* n) const {
-        return (n->pos1 < env1)  &&  (n->pos2 < env2)  &&  (n->cost >= best);
+        return (n->cost >= beam_ub)  &&  (n->pos1 < env1)  &&  (n->pos2 < env2);
     }
 
     inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
@@ -170,7 +170,7 @@ struct cost_beam_checker<Node, Cost, CostT, Bias, typename enable_if<is_arithmet
         if ((env1 < pos1  ||  env2 < pos2)  &&  (pos1-ref1) >= run_min) {
             env1 = pos1;
             env2 = pos2;
-            best = cost + bias;
+            beam_ub = cost + beam;
         }
     }
 };
