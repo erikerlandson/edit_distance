@@ -158,7 +158,7 @@ struct edit_cost_struct<Range1, Range2, unit_cost, none, boost::false_type, none
 template <typename Vec, typename Itr, typename Size, typename Diff> 
 inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
     Size Rp = R + (R>>1);
-    V_data.resize(1 + 2*Rp,0);
+    V_data.resize(1 + 2*Rp);
     V = V_data.begin() + R;
     Itr Vp = V_data.begin() + Rp;
     for (Diff j=D;  j >= -D;  --j) Vp[j] = V[j];
@@ -188,7 +188,7 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const none&
     itr2_t S2 = begin(seq2);
 
     size_type R = 10;
-    std::vector<size_type> V_data(1 + 2*R, 0);
+    std::vector<size_type> V_data(1 + 2*R);
     std::vector<size_type>::iterator V = V_data.begin() + R;
 
     difference_type D = 0;

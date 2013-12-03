@@ -227,7 +227,7 @@ typedef size_t size_type;
 template <typename Vec, typename Itr> 
 inline void expand(Vec& V_data, Itr& Vf, Itr& Vr, size_type& R, const diff_type& D, const diff_type& delta) const {
     size_type Rp = R + (R>>1);
-    V_data.resize(2 + 4*Rp, 0);
+    V_data.resize(2 + 4*Rp);
     Vf = V_data.begin() + R;
     Vr = V_data.begin() + (3*R+1) - delta;
 
@@ -277,7 +277,7 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
     // set up 'V' vectors for forward and reverse edit path diagonals
     // note, these are maintained to allow negative indexes
-    if (V_data.size() <= 0) V_data.resize(2*(1+2*10),0);
+    if (V_data.size() <= 0) V_data.resize(2*(1+2*10));
     size_type R = V_data.size()/4;
     std::vector<diff_type>::iterator Vf = V_data.begin()+R;
     std::vector<diff_type>::iterator Vr = V_data.begin()+(3*R+1)-delta;
