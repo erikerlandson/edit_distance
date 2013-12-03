@@ -277,10 +277,10 @@ BOOST_AUTO_TEST_CASE(crosscheck_1) {
 }
 
 
-BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_2) {
+BOOST_AUTO_TEST_CASE(myers_dist_path_crosscheck_1) {
     srand(time(0));
     vector<std::string> seqdata;
-    const int N = 100;
+    const int N = 100000;
     random_localized_deviations(seqdata, N, 100, 5, 10);
     int n = 0;
     double t0 = time(0);
