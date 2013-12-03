@@ -305,14 +305,6 @@ struct heap_lessthan {
     }
 };
 
-struct visited_lessthan {
-    template <typename T> inline bool operator()(T const* a, T const* b) const {
-        if (a->pos1 < b->pos1) return true;
-        if (b->pos1 < a->pos1) return false;
-        return a->pos2 < b->pos2;
-    }
-};
-
 template <typename Pos1, typename Pos2>
 struct visited_hash {
     Pos1 beg1;
