@@ -127,6 +127,60 @@ BOOST_AUTO_TEST_CASE(edit_beam_1) {
 }
 
 BOOST_AUTO_TEST_CASE(allow_sub_1) {
+
+    CHECK_EDIT_ALIGNMENT_ARG("", "", _allow_sub=boost::false_type(), 0);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "a", _allow_sub=boost::false_type(), 0);
+    CHECK_EDIT_ALIGNMENT_ARG("aa", "aa", _allow_sub=boost::false_type(), 0);
+    CHECK_EDIT_ALIGNMENT_ARG("aaa", "aaa", _allow_sub=boost::false_type(), 0);
+
+    CHECK_EDIT_ALIGNMENT_ARG("", "a", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("", "aa", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("", "aaa", _allow_sub=boost::false_type(), 3);
+
+    CHECK_EDIT_ALIGNMENT_ARG("a", "", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("aa", "", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("aaa", "", _allow_sub=boost::false_type(), 3);
+
+    CHECK_EDIT_ALIGNMENT_ARG("a", "aa", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "aaa", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "aaaa", _allow_sub=boost::false_type(), 3);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "aaaaa", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("aa", "a", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("aaa", "a", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("aaaa", "a", _allow_sub=boost::false_type(), 3);
+    CHECK_EDIT_ALIGNMENT_ARG("aaaaa", "a", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("a", "x", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("ab", "xy", _allow_sub=boost::false_type(), 4);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=boost::false_type(), 6);
+
+    CHECK_EDIT_ALIGNMENT_ARG("a", "xy", _allow_sub=boost::false_type(), 3);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "xyz", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("ab", "x", _allow_sub=boost::false_type(), 3);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "x", _allow_sub=boost::false_type(), 4);
+
+
+    CHECK_EDIT_ALIGNMENT_ARG("aqc", "arc", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("aqc", "xqz", _allow_sub=boost::false_type(), 4);
+
+    CHECK_EDIT_ALIGNMENT_ARG("aqqc", "arrc", _allow_sub=boost::false_type(), 4);
+    CHECK_EDIT_ALIGNMENT_ARG("aqqc", "xqqz", _allow_sub=boost::false_type(), 4);
+
+#if 1
+    CHECK_EDIT_ALIGNMENT_ARG("ax", "abx", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("abx", "ax", _allow_sub=boost::false_type(), 1);
+
+    CHECK_EDIT_ALIGNMENT_ARG("ax", "abbx", _allow_sub=boost::false_type(), 2);
+    CHECK_EDIT_ALIGNMENT_ARG("abx", "ax", _allow_sub=boost::false_type(), 1);
+
+    CHECK_EDIT_ALIGNMENT_ARG("", "", _allow_sub=boost::false_type(), 0);
+    CHECK_EDIT_ALIGNMENT_ARG("a", "", _allow_sub=boost::false_type(), 1);
+    CHECK_EDIT_ALIGNMENT_ARG("", "a", _allow_sub=boost::false_type(), 1);
+#endif
+
+#if 1
     CHECK_EDIT_ALIGNMENT("abc", "xyz", 3);
 
     CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=true, 3);
@@ -143,6 +197,7 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
 
     CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::true_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::false_type(), 4);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(long_sequences) {
@@ -217,5 +272,36 @@ BOOST_AUTO_TEST_CASE(crosscheck_1) {
     double tt = time(0) - t0;
     BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
 }
+
+
+BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_2) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 100;
+    random_localized_deviations(seqdata, N, 100, 5, 10);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            BOOST_TEST_CHECKPOINT("n= " << n << "   i= " << i << "   j= " << j);
+            output_check_script_long_string out(seqdata[i], seqdata[j]);
+            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _allow_sub=boost::false_type());
+                //BOOST_TEST_CHECKPOINT("aaa");
+            unsigned int d1 = edit_alignment(seqdata[i], seqdata[j], _output = out, _allow_sub=boost::false_type());
+                //BOOST_TEST_CHECKPOINT("bbb");
+            out.finalize();
+            // verify that the edit script is a correct one: it transforms seq1 into seq2
+            BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+            // cross-check that edit_alignment() and edit_distance() compute the same distance
+            BOOST_CHECK_MESSAGE(d1==d2, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n");
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()

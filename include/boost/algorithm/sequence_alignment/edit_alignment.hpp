@@ -24,22 +24,19 @@ namespace sequence_alignment {
 
 using detail::SequenceAlignmentCost;
 using detail::ForwardRangeConvertible;
-using detail::dijkstra_sssp_alignment;
+using detail::edit_path_impl;
 using detail::cost_type;
 using detail::none;
 
 template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
 edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allow_sub, const CostBeam& cost_beam) {
-    // as_literal() appears to be idempotent, so I tentatively feel OK layering it in here to
-    // handle char* transparently, which seems to be working correctly
-    return dijkstra_sssp_alignment(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, edit_beam, allow_sub, cost_beam);
-    // note to self - in the general case edit distance isn't a symmetric function, depending on
-    // the cost matrix
+    return edit_path_impl(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, edit_beam, allow_sub, cost_beam);
 }
 
 
