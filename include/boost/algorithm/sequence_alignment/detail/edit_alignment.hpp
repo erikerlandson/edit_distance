@@ -242,18 +242,9 @@ inline void expand(Vec& V_data, Itr& Vf, Itr& Vr, size_type& R, const diff_type&
     R = Rp;
 }
 
-std::string dump(const itr1_t& S1, const size_type& len1) const {
-    std::string r;
-    for (int j = 0; j < len1;  ++j) r += S1[j];
-    return r;
-}
 
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
 path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_type& len2, Output& output, std::vector<diff_type>& V_data) const {
-    std::cout << "\n\nlen1= " << len1 << "    len2= " << len2 << std::endl;
-    std::cout << "S1= '" << dump(seq1, len1) << "'\n";
-    std::cout << "S2= '" << dump(seq2, len2) << "'\n";
-
     // identify any equal suffix and/or prefix
     diff_type eqb = 0;
     for (;  eqb < std::min(len1, len2);  ++eqb) if (seq1[eqb] != seq2[eqb]) break;
@@ -283,13 +274,11 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
     const diff_type delta = L1-L2;
     const bool delta_even = delta%2 == 0;
-    std::cout << "delta,even= " << make_tuple(delta, delta_even) << std::endl;
 
     if (V_data.size() <= 0) V_data.resize(2*(1+2*10),0);
     size_type R = V_data.size()/4;
     std::vector<diff_type>::iterator Vf = V_data.begin()+R;
     std::vector<diff_type>::iterator Vr = V_data.begin()+(3*R+1)-delta;
-    std::cout << "R= " << R << "    Vr = " << Vr-V_data.begin() << std::endl;
 
     diff_type r1b, r2b, r1e, r2e;
 
@@ -298,102 +287,74 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
     Vr[-1+delta] = L1;
     bool found = false;
     while (true) {
-        std::cout << "\n    D= " << D << std::endl;
-#if 1
-        std::cout << "    odd\n";
         for (diff_type k = -D;  k <= D;  k += 2) {
             diff_type j1 = (k == -D  ||  (k != D  &&  Vf[k-1] < Vf[k+1]))  ?  Vf[k+1]  :  1+Vf[k-1];
             diff_type j2 = j1-k;
-            std::cout << "    k,j1,j2= " << make_tuple(k, j1, j2) << std::endl;
             diff_type t1 = j1;
             diff_type t2 = j2;
-            while (j1 < L1  &&  j2 < L2  &&  S1[j1] == S2[j2]) { std::cout << "        " << make_tuple('=', j1, j2, S1[j1], S2[j2]) << std::endl;  ++j1;  ++j2; }
+            while (j1 < L1  &&  j2 < L2  &&  S1[j1] == S2[j2]) { ++j1;  ++j2; }
             Vf[k] = j1;
-#if 1
+
             if (!delta_even  &&  (k-delta) >= -(D-1)  &&  (k-delta) <= (D-1)) {
                 diff_type r1 = Vr[k];
                 diff_type r2 = Vr[k]-(k);
-                std::cout << "    r1,r2= " << make_tuple(r1, r2) << std::endl;
                 if ((t1-t2) == (r1-r2)  &&  t1 >= r1) {
                     r1b = t1;
                     r2b = t2;
                     r1e = j1;
                     r2e = j2;
-                        //D = 2*D - 1;
                     found = true;
-                        //break;
+                    break;
                 }
             }
-#endif
         }
-        std::cout << "    Vf= ";
-        for (diff_type k = -D;  k <= D;  k += 2) {
-            std::cout << make_tuple(k, Vf[k], Vf[k]-k);
-        }
-        std::cout << std::endl;
 
         if (found) {
             D = 2*D - 1;
             break;
         }
 
-#endif
 
-#if 1
-        std::cout << "    even\n";
         for (diff_type k = -D+delta;  k <= D+delta;  k += 2) {
-                //std::cout <<     "k,Vr["<<k-1<<"],Vr["<<k+1<<"]"<<"= "<<make_tuple(k, (k>-D+delta)?Vr[k-1]:999, (k<D+delta)?Vr[k+1]:999)<<std::endl;
-                //diff_type j1 = (k == -D+delta  ||  (k != D+delta  &&  Vr[k-1] < Vr[k+1]))  ?  Vr[k+1]-1  :  Vr[k-1];
             diff_type j1 = (k == D+delta  ||  (k != -D+delta  &&  Vr[k-1] < Vr[k+1]))  ?  Vr[k-1]  :  Vr[k+1]-1;
             diff_type j2 = j1-k;
-            std::cout << "    k,j1,j2= " << make_tuple(k, j1, j2) << std::endl;
             diff_type t1 = j1;
             diff_type t2 = j2;
-            while (j1 > 0  &&  j2 > 0  &&  S1[j1-1] == S2[j2-1]) { std::cout << "        " << make_tuple('=', j1, j2, S1[j1-1], S2[j2-1]) << std::endl;   --j1;  --j2; }
-                //std::cout << "    k,j1,j2= " << make_tuple(k, j1, j2) << std::endl;
+            while (j1 > 0  &&  j2 > 0  &&  S1[j1-1] == S2[j2-1]) { --j1;  --j2; }
             Vr[k] = j1;
-#if 1
+
             if (delta_even  &&  (k) >= -D  &&  (k) <= D) {
                 diff_type f1 = Vf[k];   
                 diff_type f2 = Vf[k]-(k);
-                std::cout << "    f1,f2= " << make_tuple(f1,f2) << std::endl;
                 if ((t1-t2) == (f1-f2)  &&  f1 >= t1) {
                     r1b = j1;
                     r2b = j2;
                     r1e = t1;
                     r2e = t2;
-                        //D = 2*D;
                     found = true;
-                        //break;
+                    break;
                 }
             }
-#endif
         }
-
-        std::cout << "    Vr= ";
-        for (diff_type k = -D+delta;  k <= D+delta;  k += 2) {
-            std::cout << make_tuple(k, Vr[k], Vr[k]-k);
-        }
-        std::cout << std::endl;
 
         if (found) {
             D = 2*D;
             break;
         }
 
-#endif
-
         // expand the working vectors as needed
         if (++D > R) expand(V_data, Vf, Vr, R, D, delta);
     }
 
-    std::cout << "\n    FOUND:  D= " << D << "  " << make_tuple(r1b, r2b) << "->" << make_tuple(r1e, r2e) << std::endl;
-        // std::cout << "    found: D= " << D << std::endl;
-
+    // output for equal prefix:
     for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
+    // output for path up to midpoint snake:
     path(S1, r1b, S2, r2b, output, V_data);
+    // output for midpoint snake:
     for (diff_type j1=r1b,j2=r2b; j1 < r1e;  ++j1, ++j2) output.output_eql(S1[j1], S2[j2]);
+    // output for path from midpoint to end:
     path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, output, V_data);
+    // output for equal suffix:
     for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.output_eql(seq1[j1], seq2[j2]);
 
     return D;
@@ -403,7 +364,6 @@ inline
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
 operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const none&, const boost::false_type&, const none&) const {
     typedef std::vector<int>::difference_type diff_type;
-    std::cout << "\n\n**********************\n";
     std::vector<diff_type> V_data;
     return path(begin(seq1), distance(seq1), begin(seq2), distance(seq2), output, V_data);
 }
