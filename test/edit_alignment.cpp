@@ -277,6 +277,37 @@ BOOST_AUTO_TEST_CASE(crosscheck_1) {
 }
 
 
+BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 1000;
+    random_localized_deviations(seqdata, N, 100, 2, 25);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            output_check_script_long_string out1(seqdata[i], seqdata[j]);
+            output_check_script_long_string out2(seqdata[i], seqdata[j]);
+            // Myers algorithm
+            unsigned int d1 = edit_alignment(seqdata[i], seqdata[j], out1, _allow_sub=boost::false_type());
+            out1.finalize();
+            // SSSP algorithm
+            unsigned int d2 = edit_alignment(seqdata[i], seqdata[j], out2, _allow_sub=boost::false_type(), _cost = unit_cost_test());
+            out2.finalize();
+            // verify that the edit script is a correct one: it transforms seq1 into seq2
+            BOOST_CHECK_MESSAGE(out1.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+            BOOST_CHECK_MESSAGE(out2.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+            // cross-check that edit_alignment() and edit_distance() compute the same distance
+            BOOST_CHECK_MESSAGE(d1==d2, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n" );
+}
+
+
 BOOST_AUTO_TEST_CASE(myers_dist_path_crosscheck_1) {
     srand(time(0));
     vector<std::string> seqdata;
