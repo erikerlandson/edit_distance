@@ -57,10 +57,10 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
     pos1_t beg1;  beg1.beg(begin(seq1));
     pos2_t beg2;  beg2.beg(begin(seq2));
 
-    // pool allocators are born for node allocations in graph algorithms
+    // pool allocator for path nodes
     boost::object_pool<head_t> pool;
 
-    // is fibonacci heap best here?  O(1) insertion seems well suited.
+    // priority queue for path nodes
     boost::heap::skew_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
 
     sub_checker<AllowSub> allow_sub(allowsub);
