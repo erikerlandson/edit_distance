@@ -15,6 +15,7 @@ http://www.boost.org/LICENSE_1_0.txt
 // get the edit_distance() function
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
 using boost::algorithm::sequence_alignment::edit_distance;
+using namespace boost::algorithm::sequence_alignment::parameter;
 
 
 // define a custom cost function where insertion or deletion of space costs nothing
@@ -38,7 +39,8 @@ int main(int argc, char** argv) {
     char const* str2 = "    so many   spaces ";
 
     // with custom "free space" cost function, the distance should be zero:
-    unsigned dist = edit_distance(str1, str2, cost_free_space());
+    // here we also enable substitution
+    unsigned dist = edit_distance(str1, str2, cost_free_space(), _allow_sub=true);
     std::cout << "The edit distance between \"" << str1 << "\" and \"" << str2 << "\" = " << dist << "\n";    
 
     return 0;

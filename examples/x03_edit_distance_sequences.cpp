@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
     char const* str1 = "abc";
     char const* str2 = "axc";
 
-    // Compare two null-terminated strings that differ by one substitution
-    // (distance should be 1)
+    // Compare two null-terminated strings that differ by one insertion+deletion
+    // (distance should be 2)
     std::cout << "dist= " << edit_distance(str1, str2) << "\n";
 
     // Any two sequences or ranges can be compared, even differing types, provided
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     std::cout << "dist= " << edit_distance(as_vector(str1), str2) << "\n";
     std::cout << "dist= " << edit_distance(as_string(str1), as_list(str2)) << "\n";    
 
-    // Range adaptors work as expected (here distance should be 3)
+    // Range adaptors work as expected (here distance should be 4: -a, -b, =c, +x, +a)
     std::cout << "dist= " << edit_distance(as_vector(str1), as_list(str2) | boost::adaptors::reversed) << "\n";
 
     return 0;

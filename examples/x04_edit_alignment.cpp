@@ -29,9 +29,6 @@ int main(int argc, char** argv) {
     //   output_del(v, c)        // element v deleted, with deletion cost c
     //   output_sub(v1, v2, c)   // v1 subsituted with v2, subst cost c
     //   output_eql(v1, v2)      // v1 equivalent to value v2
-    // Note, 'equivalent' means v2 replaced v1 with cost of zero, which does 
-    // *not* necessarily mean v1 was identical to v2, although that is 
-    // frequently the case.
     stringstream_tuple_output<unit_cost, char const*> out;
     unsigned dist = edit_alignment(str1, str2, out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";

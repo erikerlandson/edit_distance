@@ -51,7 +51,7 @@ BOOST_PARAMETER_FUNCTION(
         (in_out(output), *))
     (optional
         (cost, *, unit_cost())
-        (allow_sub, *, boost::true_type())
+        (allow_sub, *, boost::false_type())
         (edit_beam, *, none())
         (cost_beam, *, none()))
 )

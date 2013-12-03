@@ -17,16 +17,16 @@ http://www.boost.org/LICENSE_1_0.txt
 using boost::algorithm::sequence_alignment::edit_distance;
 
 int main(int argc, char** argv) {
-    char const* str1 = "Oh, hello world.";
-    char const* str2 = "Hello world!!";
+    char const* str1 = "hello, world.";
+    char const* str2 = "Hello World!";
 
     // Obtain the cost of minimal edit sequence to transform str1 --> str2.
     // The default cost function defines the cost of insertion, deletion and substitution to be 1.  Elements that are equal cost 0.
-    // The distance should be 7: 
-    // delete 4: "Oh, "
-    // substitute 1: "h"->"H",
-    // substitute 1: "." -> "!"
-    // insert 1: "!"
+    // The distance should be 7
+    // delete 'h', insert 'H'
+    // delete ','
+    // delete 'w', insert 'W'
+    // delete '.', insert "!"
     unsigned dist = edit_distance(str1, str2);
     std::cout << "The edit distance between \"" << str1 << "\" and \"" << str2 << "\" = " << dist << "\n";
 
