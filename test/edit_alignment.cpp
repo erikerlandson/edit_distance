@@ -126,13 +126,17 @@ BOOST_AUTO_TEST_CASE(edit_beam_1) {
     CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _edit_beam = 3, 3);
 }
 
-BOOST_AUTO_TEST_CASE(allow_sub_1) {
-
+BOOST_AUTO_TEST_CASE(myers_empty) {
     CHECK_EDIT_ALIGNMENT_ARG("", "", _allow_sub=boost::false_type(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(myers_equal) {
     CHECK_EDIT_ALIGNMENT_ARG("a", "a", _allow_sub=boost::false_type(), 0);
     CHECK_EDIT_ALIGNMENT_ARG("aa", "aa", _allow_sub=boost::false_type(), 0);
     CHECK_EDIT_ALIGNMENT_ARG("aaa", "aaa", _allow_sub=boost::false_type(), 0);
+}
 
+BOOST_AUTO_TEST_CASE(myers_basis) {
     CHECK_EDIT_ALIGNMENT_ARG("", "a", _allow_sub=boost::false_type(), 1);
     CHECK_EDIT_ALIGNMENT_ARG("", "aa", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("", "aaa", _allow_sub=boost::false_type(), 3);
@@ -140,7 +144,9 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
     CHECK_EDIT_ALIGNMENT_ARG("a", "", _allow_sub=boost::false_type(), 1);
     CHECK_EDIT_ALIGNMENT_ARG("aa", "", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("aaa", "", _allow_sub=boost::false_type(), 3);
+}
 
+BOOST_AUTO_TEST_CASE(myers_prefix_suffix) {
     CHECK_EDIT_ALIGNMENT_ARG("a", "aa", _allow_sub=boost::false_type(), 1);
     CHECK_EDIT_ALIGNMENT_ARG("a", "aaa", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("a", "aaaa", _allow_sub=boost::false_type(), 3);
@@ -150,7 +156,9 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
     CHECK_EDIT_ALIGNMENT_ARG("aaa", "a", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("aaaa", "a", _allow_sub=boost::false_type(), 3);
     CHECK_EDIT_ALIGNMENT_ARG("aaaaa", "a", _allow_sub=boost::false_type(), 4);
+}
 
+BOOST_AUTO_TEST_CASE(myers_no_equal) {
     CHECK_EDIT_ALIGNMENT_ARG("a", "x", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("ab", "xy", _allow_sub=boost::false_type(), 4);
     CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=boost::false_type(), 6);
@@ -160,27 +168,23 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
 
     CHECK_EDIT_ALIGNMENT_ARG("ab", "x", _allow_sub=boost::false_type(), 3);
     CHECK_EDIT_ALIGNMENT_ARG("abc", "x", _allow_sub=boost::false_type(), 4);
+}
 
-
+BOOST_AUTO_TEST_CASE(myers_equal_runs) {
     CHECK_EDIT_ALIGNMENT_ARG("aqc", "arc", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("aqc", "xqz", _allow_sub=boost::false_type(), 4);
 
     CHECK_EDIT_ALIGNMENT_ARG("aqqc", "arrc", _allow_sub=boost::false_type(), 4);
     CHECK_EDIT_ALIGNMENT_ARG("aqqc", "xqqz", _allow_sub=boost::false_type(), 4);
 
-#if 1
     CHECK_EDIT_ALIGNMENT_ARG("ax", "abx", _allow_sub=boost::false_type(), 1);
     CHECK_EDIT_ALIGNMENT_ARG("abx", "ax", _allow_sub=boost::false_type(), 1);
 
     CHECK_EDIT_ALIGNMENT_ARG("ax", "abbx", _allow_sub=boost::false_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("abx", "ax", _allow_sub=boost::false_type(), 1);
+}
 
-    CHECK_EDIT_ALIGNMENT_ARG("", "", _allow_sub=boost::false_type(), 0);
-    CHECK_EDIT_ALIGNMENT_ARG("a", "", _allow_sub=boost::false_type(), 1);
-    CHECK_EDIT_ALIGNMENT_ARG("", "a", _allow_sub=boost::false_type(), 1);
-#endif
-
-#if 1
+BOOST_AUTO_TEST_CASE(allow_sub_1) {
     CHECK_EDIT_ALIGNMENT("abc", "xyz", 3);
 
     CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _allow_sub=true, 3);
@@ -197,7 +201,6 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
 
     CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::true_type(), 2);
     CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::false_type(), 4);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(long_sequences) {
