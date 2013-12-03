@@ -275,11 +275,14 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
     const diff_type delta = L1-L2;
     const bool delta_even = delta%2 == 0;
 
+    // set up 'V' vectors for forward and reverse edit path diagonals
+    // note, these are maintained to allow negative indexes
     if (V_data.size() <= 0) V_data.resize(2*(1+2*10),0);
     size_type R = V_data.size()/4;
     std::vector<diff_type>::iterator Vf = V_data.begin()+R;
     std::vector<diff_type>::iterator Vr = V_data.begin()+(3*R+1)-delta;
 
+    // midpoint run of equal elements ("snake")
     diff_type r1b, r2b, r1e, r2e;
 
     diff_type D = 0;
@@ -287,56 +290,53 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
     Vr[-1+delta] = L1;
     bool found = false;
     while (true) {
+        // advance the forward-path diagonals:
         for (diff_type k = -D;  k <= D;  k += 2) {
             diff_type j1 = (k == -D  ||  (k != D  &&  Vf[k-1] < Vf[k+1]))  ?  Vf[k+1]  :  1+Vf[k-1];
             diff_type j2 = j1-k;
-            diff_type t1 = j1;
-            diff_type t2 = j2;
+            r1b = j1;
+            r2b = j2;
             while (j1 < L1  &&  j2 < L2  &&  S1[j1] == S2[j2]) { ++j1;  ++j2; }
-            Vf[k] = j1;
 
             if (!delta_even  &&  (k-delta) >= -(D-1)  &&  (k-delta) <= (D-1)) {
                 diff_type r1 = Vr[k];
-                diff_type r2 = Vr[k]-(k);
-                if ((t1-t2) == (r1-r2)  &&  t1 >= r1) {
-                    r1b = t1;
-                    r2b = t2;
+                diff_type r2 = Vr[k]-k;
+                if ((r1b-r2b) == (r1-r2)  &&  r1b >= r1) {
                     r1e = j1;
                     r2e = j2;
                     found = true;
                     break;
                 }
             }
-        }
 
+            Vf[k] = j1;
+        }
         if (found) {
             D = 2*D - 1;
             break;
         }
 
-
+        // advance the reverse-path diagonals:
         for (diff_type k = -D+delta;  k <= D+delta;  k += 2) {
             diff_type j1 = (k == D+delta  ||  (k != -D+delta  &&  Vr[k-1] < Vr[k+1]))  ?  Vr[k-1]  :  Vr[k+1]-1;
             diff_type j2 = j1-k;
-            diff_type t1 = j1;
-            diff_type t2 = j2;
+            r1e = j1;
+            r2e = j2;
             while (j1 > 0  &&  j2 > 0  &&  S1[j1-1] == S2[j2-1]) { --j1;  --j2; }
-            Vr[k] = j1;
 
-            if (delta_even  &&  (k) >= -D  &&  (k) <= D) {
+            if (delta_even  &&  k >= -D  &&  k <= D) {
                 diff_type f1 = Vf[k];   
-                diff_type f2 = Vf[k]-(k);
-                if ((t1-t2) == (f1-f2)  &&  f1 >= t1) {
+                diff_type f2 = Vf[k]-k;
+                if ((r1e-r2e) == (f1-f2)  &&  f1 >= r1e) {
                     r1b = j1;
                     r2b = j2;
-                    r1e = t1;
-                    r2e = t2;
                     found = true;
                     break;
                 }
             }
-        }
 
+            Vr[k] = j1;
+        }
         if (found) {
             D = 2*D;
             break;
