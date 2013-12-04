@@ -86,6 +86,48 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     CHECK_EDIT_ALIGNMENT_2ARG("axax", "aa", _allow_sub=true_type(), _cost = cost_expensive_ins(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(custom_equal) {
+    {
+        const std::string seq1 = "abc";
+        const std::string seq2 = "aBc";
+        const unsigned dist = 2;
+        output_check_script<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        unsigned d = edit_alignment(seq1, seq2, ob);
+        ob.finalize();
+        BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
+        BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
+    }
+    {
+        const std::string seq1 = "abc";
+        const std::string seq2 = "aBc";
+        const unsigned dist = 0;
+        output_check_script<char, unsigned, case_equal> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        unsigned d = edit_alignment(seq1, seq2, ob, _equal=case_equal());
+        ob.finalize();
+        BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
+        BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
+    }
+    {
+        const std::string seq1 = "abc";
+        const std::string seq2 = "aBc";
+        const unsigned dist = 1;
+        output_check_script<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        unsigned d = edit_alignment(seq1, seq2, ob, _allow_sub=true_type());
+        ob.finalize();
+        BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
+        BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
+    }
+    {
+        const std::string seq1 = "abc";
+        const std::string seq2 = "aBc";
+        const unsigned dist = 0;
+        output_check_script<char, unsigned, case_equal> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        unsigned d = edit_alignment(seq1, seq2, ob, _allow_sub=true_type(), _equal=case_equal());
+        ob.finalize();
+        BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
+        BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
+    }
+}
 
 BOOST_AUTO_TEST_CASE(edit_beam_1) {
     // to find the equal run 'bcd', edit_beam width has to be >= 1 

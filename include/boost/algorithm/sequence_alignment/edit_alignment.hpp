@@ -22,27 +22,33 @@ namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 
+using boost::as_literal;
+using boost::parameter::value_type;
+using boost::range_value;
+using boost::false_type;
+
 using detail::SequenceAlignmentCost;
 using detail::ForwardRangeConvertible;
 using detail::edit_path_impl;
 using detail::cost_type;
 using detail::none;
+using detail::default_equal;
 
-template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam>
 inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
-(typename cost_type<Cost, typename boost::range_value<Sequence1>::type>::type))
-edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allow_sub, const CostBeam& cost_beam) {
-    return edit_path_impl(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, edit_beam, allow_sub, cost_beam);
+(typename cost_type<Cost, typename range_value<Sequence1>::type>::type))
+edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allow_sub, const CostBeam& cost_beam) {
+    return edit_path_impl(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, equal, edit_beam, allow_sub, cost_beam);
 }
 
 
 BOOST_PARAMETER_FUNCTION(
-(typename cost_type<typename boost::parameter::value_type<Args, parameter::tag::cost, unit_cost>::type, 
-                    typename boost::range_value<typename boost::parameter::value_type<Args, parameter::tag::seq1>::type>::type>::type),
+(typename cost_type<typename value_type<Args, parameter::tag::cost, unit_cost>::type, 
+                    typename range_value<typename value_type<Args, parameter::tag::seq1>::type>::type>::type),
     edit_alignment,
     parameter::tag,
     (required
@@ -51,12 +57,13 @@ BOOST_PARAMETER_FUNCTION(
         (in_out(output), *))
     (optional
         (cost, *, unit_cost())
-        (allow_sub, *, boost::false_type())
+        (equal, *, default_equal())
+        (allow_sub, *, false_type())
         (edit_beam, *, none())
         (cost_beam, *, none()))
 )
 {
-    return edit_alignment_check(seq1, seq2, output, cost, edit_beam, allow_sub, cost_beam);
+    return edit_alignment_check(seq1, seq2, output, cost, equal, edit_beam, allow_sub, cost_beam);
 }
 
 

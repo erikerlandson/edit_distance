@@ -156,7 +156,7 @@ struct case_equal {
 };
 
 
-template <typename ValueType, typename CostType = long>
+template <typename ValueType, typename CostType = long, typename Equal=std::equal_to<ValueType> >
 struct output_check_script {
     typedef ValueType value_type;
     typedef CostType cost_type;
@@ -186,7 +186,7 @@ struct output_check_script {
         // can define two elements as equivalent even if they are not identical, but
         // I expect it to be true for my testing examples, and it helps make the
         // test checking stronger
-        if (seq1[j1] != seq2[j2]) correct=false;
+        if (!equal(seq1[j1],seq2[j2])) correct=false;
     }
 
     void finalize() {
@@ -200,6 +200,7 @@ struct output_check_script {
     std::vector<value_type> seq1;
     std::vector<value_type> seq2;
     bool correct;
+    Equal equal;
 };
 
 struct output_check_script_long_string {
