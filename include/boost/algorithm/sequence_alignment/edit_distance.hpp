@@ -23,8 +23,6 @@ namespace boost {
 namespace algorithm {
 namespace sequence_alignment {
 
-using std::equal_to;
-
 using boost::as_literal;
 using boost::parameter::value_type;
 using boost::range_value;
