@@ -100,6 +100,20 @@ struct test_unit_cost {
     }
 };
 
+struct undef_sub_cost {
+    typedef size_t cost_type;
+
+    template <typename value_type> inline
+    cost_type cost_ins(value_type const& a) const {
+        return cost_type(1);
+    }
+
+    template <typename value_type> inline
+    cost_type cost_del(value_type const& a) const {
+        return cost_type(1);
+    }
+};
+
 // this is same as default unit_cost, but will trigger
 // the generic algorithm because of its differing type
 // useful for cross-checking
@@ -202,6 +216,44 @@ struct output_check_script {
     bool correct;
     Equal equal;
 };
+
+template <typename ValueType, typename CostType = long, typename Equal=std::equal_to<ValueType> >
+struct undef_sub_output {
+    typedef ValueType value_type;
+    typedef CostType cost_type;
+
+    undef_sub_output(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1) {
+        ss << boost::tuples::set_delimiter(' ');
+    }
+
+    void output_ins(const value_type& v2, cost_type c) { 
+        ss << boost::make_tuple('+', v2, c);
+        if (seq2[++j2] != v2) correct=false;
+    }
+    void output_del(const value_type& v1, cost_type c) { 
+        ss << boost::make_tuple('-', v1, c); 
+        if (seq1[++j1] != v1) correct=false; 
+    }
+    void output_eql(const value_type& v1, const value_type& v2) { 
+        ss << boost::make_tuple('=', v1, v2); 
+        if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
+        if (!equal(seq1[j1],seq2[j2])) correct=false;
+    }
+
+    void finalize() {
+        if (j1 != long(seq1.size())-1) correct = false;
+        if (j2 != long(seq2.size())-1) correct = false;
+    }
+
+    std::stringstream ss;
+    long j1;
+    long j2;
+    std::vector<value_type> seq1;
+    std::vector<value_type> seq2;
+    bool correct;
+    Equal equal;
+};
+
 
 struct output_check_script_long_string {
     typedef char value_type;

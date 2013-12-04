@@ -63,7 +63,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
     // priority queue for path nodes
     boost::heap::skew_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
 
-    sub_checker<AllowSub> allow_sub(allowsub);
+    sub_checker<AllowSub, Cost, cost_t, Output> allow_sub(allowsub);
 
     head_t* path_head = hnull;
 
@@ -125,7 +125,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
                     cost_beam_check.update(h->pos1, p1p, p2p, h->cost);
                     head_t* t;
                     if (allow_sub() || eq) {
-                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : cost.cost_sub(*p1p, *p2p)), h);
+                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : allow_sub.cost_sub(cost, *p1p, *p2p)), h);
                         if (t != hnull) heap.push(t);
                     }
                     t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p), h);
@@ -187,7 +187,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
                 if (equal(*j1, *j2)) {
                     output.output_eql(*j1, *j2);
                 } else {
-                    output.output_sub(*j1, *j2, n->edge->cost - n->cost);
+                    allow_sub.output_sub(output, *j1, *j2, n->edge->cost - n->cost);
                 }
             } else {
                 output.output_eql(*j1, *j2);

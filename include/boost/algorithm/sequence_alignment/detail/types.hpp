@@ -98,6 +98,8 @@ using boost::mpl::not_;
 using boost::mpl::equal_to;
 using boost::enable_if;
 
+template <typename X> struct invoke : public true_type {};
+
 struct none {};
 
 struct default_equal {
@@ -181,28 +183,34 @@ struct cost_beam_checker<Node, Cost, CostT, Beam, typename enable_if<is_arithmet
     }
 };
 
-template <typename AllowSub, typename Enable=void>
+template <typename AllowSub, typename Cost, typename CostT, typename Output, typename Enable=void>
 struct sub_checker {
     // informative compile error here 
 };
 
-template <typename AllowSub>
-struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, bool> >::type> {
+template <typename AllowSub, typename Cost, typename CostT, typename Output>
+struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<AllowSub, bool> >::type> {
     bool allow;
     sub_checker(const bool& allow_) : allow(allow_) {}
     inline bool operator()() const { return allow; }
+    template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
+    template <typename V1, typename V2> inline void output_sub(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.output_sub(v1, v2, csub); }
 };
 
-template <typename AllowSub>
-struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, true_type> >::type> {
-    sub_checker(const AllowSub& allow_) {}
+template <typename AllowSub, typename Cost, typename CostT, typename Output>
+struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<AllowSub, true_type> >::type> {
+    sub_checker(const AllowSub&) {}
     inline bool operator()() const { return true; }
+    template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
+    template <typename V1, typename V2> inline void output_sub(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.output_sub(v1, v2, csub); }
 };
 
-template <typename AllowSub>
-struct sub_checker<AllowSub, typename enable_if<is_same<AllowSub, false_type> >::type> {
-    sub_checker(const AllowSub& allow_) {}
+template <typename AllowSub, typename Cost, typename CostT, typename Output>
+struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<AllowSub, false_type> >::type> {
+    sub_checker(const AllowSub&) {}
     inline bool operator()() const { return false; }
+    template <typename V1, typename V2> inline CostT cost_sub(const Cost&, const V1&, const V2&) const { return 0; }
+    template <typename V1, typename V2> inline void output_sub(Output&, const V1&, const V2&, const CostT&) const {}
 };
 
 
@@ -369,6 +377,23 @@ struct cost_type<X, V, typename enable_if<has_type_cost_type<X> >::type> {
     typedef typename X::cost_type type;
 };
 
+
+template <typename X, typename Sequence, typename Enabled=void> struct TestCostSub {};
+
+template <typename X, typename Sequence>
+struct TestCostSub<X, Sequence, typename enable_if<invoke<BOOST_TYPEOF_TPL(&X::cost_sub)> >::type> {
+    typedef typename boost::range_value<Sequence>::type value_type;
+    typedef typename cost_type<X, value_type>::type cost_type;
+    BOOST_CONCEPT_USAGE(TestCostSub) {
+        c = x.cost_sub(v,v);
+    }
+
+    X x;
+    cost_type c;
+    value_type v;
+};
+
+
 template <typename X, typename Sequence> struct SequenceAlignmentCost {
     BOOST_CONCEPT_ASSERT((ForwardRangeConvertible<Sequence>));
 
@@ -379,8 +404,10 @@ template <typename X, typename Sequence> struct SequenceAlignmentCost {
     BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
         c = x.cost_ins(v);
         c = x.cost_del(v);
-        c = x.cost_sub(v,v);
     }
+
+    // test x.cost_sub() method, if it is defined 
+    BOOST_CONCEPT_ASSERT((TestCostSub<X, Sequence>));
 
     X x;
     cost_type c;

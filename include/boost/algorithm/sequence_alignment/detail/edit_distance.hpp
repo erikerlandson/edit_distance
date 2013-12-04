@@ -67,7 +67,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
     // priority queue for path nodes
     boost::heap::skew_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
 
-    sub_checker<AllowSub> allow_sub(allowsub);
+    sub_checker<AllowSub, Cost, cost_t, int> allow_sub(allowsub);
 
     // keep track of nodes in the edit graph that have been visited
     typedef boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited_t;
@@ -126,7 +126,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
                     cost_beam_check.update(h->pos1, p1p, p2p, h->cost);
                     head_t* t;
                     if (allow_sub() || eq) {
-                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : cost.cost_sub(*p1p, *p2p)));
+                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : allow_sub.cost_sub(cost, *p1p, *p2p)));
                         if (t != hnull) heap.push(t);
                     }
                     t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p));

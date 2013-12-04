@@ -114,6 +114,11 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     BOOST_CHECK_EQUAL(edit_distance("aa", "aaaa", cost_expensive_ins(), _allow_sub=true_type()), 4);
 }
 
+BOOST_AUTO_TEST_CASE(undefined_sub) {
+    // verify that cost_sub() method can be undefined when substitution is compile-time disabled:
+    BOOST_CHECK_EQUAL(edit_distance("abc", "axc", _cost=undef_sub_cost()), 2);
+}
+
 BOOST_AUTO_TEST_CASE(custom_equal) {
     BOOST_CHECK_EQUAL(edit_distance("abc", "aBc"), 2);
     BOOST_CHECK_EQUAL(edit_distance("abc", "aBc", _equal=case_equal()), 0);

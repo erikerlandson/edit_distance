@@ -86,6 +86,29 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
     CHECK_EDIT_ALIGNMENT_2ARG("axax", "aa", _allow_sub=true_type(), _cost = cost_expensive_ins(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(undefined_sub) {
+    // verify that cost_sub() and output_sub() can be undefined when substitution is compile-time disabled:
+    const std::string seq1 = "abc";
+    const std::string seq2 = "axc";
+
+    {
+        // test sssp implementation
+        undef_sub_output<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob, _cost=undef_sub_cost()), 2);
+        ob.finalize();
+        BOOST_CHECK(ob.correct);
+    }
+
+    {
+        // test invoking myers specialization
+        undef_sub_output<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
+        BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob), 2);
+        ob.finalize();
+        BOOST_CHECK(ob.correct);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(custom_equal) {
     {
         const std::string seq1 = "abc";
