@@ -81,35 +81,16 @@ _asstring(const Range& s) {
 #define ASVECTOR(seq) (_asvector(boost::as_literal(seq)))
 #define ASSTRING(seq) (_asstring(boost::as_literal(seq)))
 
-struct test_unit_cost {
-    typedef size_t cost_type;
-
-    template <typename value_type> inline
-    cost_type cost_ins(value_type const& a) const {
-        return cost_type(1);
-    }
-
-    template <typename value_type> inline
-    cost_type cost_del(value_type const& a) const {
-        return cost_type(1);
-    }
-
-    template <typename value_type_1, typename value_type_2> inline
-    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
-        return (a == b) ? cost_type(0) : cost_type(1);
-    }
-};
-
 struct undef_sub_cost {
     typedef size_t cost_type;
 
     template <typename value_type> inline
-    cost_type cost_ins(value_type const& a) const {
+    cost_type cost_ins(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type> inline
-    cost_type cost_del(value_type const& a) const {
+    cost_type cost_del(value_type const&) const {
         return cost_type(1);
     }
 };
@@ -121,44 +102,43 @@ struct unit_cost_test {
     typedef size_t cost_type;
 
     template <typename value_type> inline
-    cost_type cost_ins(value_type const& a) const {
+    cost_type cost_ins(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type> inline
-    cost_type cost_del(value_type const& a) const {
+    cost_type cost_del(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type_1, typename value_type_2> inline
-    cost_type cost_sub(value_type_1 const& a, value_type_2 const& b) const {
-        return (a == b) ? cost_type(0) : cost_type(1);
+    cost_type cost_sub(value_type_1 const&, value_type_2 const&) const {
+        return cost_type(1);
     }
 };
 
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) const { return 1; }
-    cost_type cost_del(value_type c) const { return 1; }
-    cost_type cost_sub(value_type c, value_type d) const { return (c == d) ? 0 : 3; }
+    cost_type cost_ins(value_type) const { return 1; }
+    cost_type cost_del(value_type) const { return 1; }
+    cost_type cost_sub(value_type, value_type) const { return 3; }
 };
 
 struct cost_expensive_ins {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type c) const { return 2; }
-    cost_type cost_del(value_type c) const { return 1; }
-    cost_type cost_sub(value_type c, value_type d) const { return (c == d) ? 0 : 1; }
+    cost_type cost_ins(value_type) const { return 2; }
+    cost_type cost_del(value_type) const { return 1; }
+    cost_type cost_sub(value_type, value_type) const { return 1; }
 };
 
 struct cost_mixed_ops {
     typedef int cost_type;
     typedef char value_type;
-    inline cost_type cost_ins(value_type const& c) const { return 1; }
-    inline cost_type cost_del(value_type const& c) const { return 1; }
+    inline cost_type cost_ins(value_type const&) const { return 1; }
+    inline cost_type cost_del(value_type const&) const { return 1; }
     inline cost_type cost_sub(value_type const& c, value_type const& d) const {
-        if (c == d) return 0;
         // allow substitution between alphabetics
         if (isalpha(c) && isalpha(d)) return 1;
         return 3;

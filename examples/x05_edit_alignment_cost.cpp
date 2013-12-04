@@ -30,9 +30,7 @@ struct cost_case_less {
     cost_type cost_del(char c) const { return 1; }
 
     // changes in case cost less than other edit operations:
-    // note that substitution cost also encompasses the definition of equality
     cost_type cost_sub(char c, char d) const { 
-        if (c == d) return 0;
         if (toupper(c) == toupper(d)) return 0.5;
         return 1;
     }

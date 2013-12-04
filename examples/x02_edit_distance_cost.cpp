@@ -25,13 +25,18 @@ struct cost_free_space {
     // floating point to support non-integer costs, etc.
 
     // cost_type is inferred from the return values of cost functions if not defined explicitly
-    //typedef unsigned cost_type;
+    typedef unsigned cost_type;
 
     // inserting or deleting a space is free:
     unsigned cost_ins(char c) const { return (c == ' ') ? 0 : 1; }
     unsigned cost_del(char c) const { return (c == ' ') ? 0 : 1; }
-    // note that substitution cost also encompasses the definition of equality
-    unsigned cost_sub(char c, char d) const { return (c == d) ? 0 : 1; }
+
+    // replacing one char with another costs 1
+    // (equal elements always incur zero cost)
+    unsigned cost_sub(char c, char d) const { return 1; }
+
+    // Defining cost_sub() is optional if substitution is compile-time disabled (the default).
+    // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
 };
 
 int main(int argc, char** argv) {

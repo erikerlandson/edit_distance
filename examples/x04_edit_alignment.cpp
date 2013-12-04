@@ -28,7 +28,10 @@ int main(int argc, char** argv) {
     //   output_ins(v, c)        // element v inserted, with insertion cost c
     //   output_del(v, c)        // element v deleted, with deletion cost c
     //   output_sub(v1, v2, c)   // v1 subsituted with v2, subst cost c
-    //   output_eql(v1, v2)      // v1 equivalent to value v2
+    //   output_eql(v1, v2)      // v1 == v2
+    //
+    // Defining output_sub() is optional if substitution is compile-time disabled (the default)
+    // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
     stringstream_tuple_output<unit_cost, char const*> out;
     unsigned dist = edit_alignment(str1, str2, out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
