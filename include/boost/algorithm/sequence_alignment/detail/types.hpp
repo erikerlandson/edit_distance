@@ -76,8 +76,9 @@ namespace parameter {
     BOOST_PARAMETER_NAME(seq2)
     BOOST_PARAMETER_NAME(output)
     BOOST_PARAMETER_NAME(cost)
-    BOOST_PARAMETER_NAME(edit_beam)
+    BOOST_PARAMETER_NAME(equal)
     BOOST_PARAMETER_NAME(allow_sub)
+    BOOST_PARAMETER_NAME(edit_beam)
     BOOST_PARAMETER_NAME(cost_beam)
 }
 
@@ -98,6 +99,11 @@ using boost::mpl::equal_to;
 using boost::enable_if;
 
 struct none {};
+
+struct default_equal {
+    template <typename T1, typename T2>
+    inline bool operator()(const T1& a, const T2& b) const { return a == b; }
+};
 
 template <typename Node, typename EditBeam, typename Enabled=void>
 struct edit_beam_checker {

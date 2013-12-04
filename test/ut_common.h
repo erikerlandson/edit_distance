@@ -15,6 +15,7 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <cstdlib>
 #include <cmath>
+#include <ctype.h>
 
 #include <vector>
 #include <list>
@@ -148,6 +149,10 @@ struct cost_mixed_ops {
         if (isalpha(c) && isalpha(d)) return 1;
         return 3;
     }
+};
+
+struct case_equal {
+    inline bool operator()(char a, char b) const { return tolower(a) == tolower(b); }
 };
 
 

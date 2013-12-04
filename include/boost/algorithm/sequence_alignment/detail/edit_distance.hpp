@@ -41,12 +41,12 @@ using boost::mpl::and_;
 using std::iterator_traits;
 using std::random_access_iterator_tag;
 
-template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam, typename Enabled = void>
+template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam, typename Enabled = void>
 struct edit_cost_struct {
 
 // Default is generic edit distance algorithm based on a Dijkstra Single Source Shortest Path approach
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) const {
+operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) const {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -121,12 +121,12 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
             pos2_t p2 = h->pos2;  ++p2;
             pos2_t p2p = h->pos2;
             while (true) {
-                cost_t csub = cost.cost_sub(*p1p, *p2p);
-                if (csub > cost_t(0)  ||  p1 == end1  ||  p2 == end2) {
+                const bool eq = equal(*p1p, *p2p);
+                if (!eq  ||  p1 == end1  ||  p2 == end2) {
                     cost_beam_check.update(h->pos1, p1p, p2p, h->cost);
                     head_t* t;
-                    if (allow_sub() || (csub <= 0)) {
-                        t = construct(pool, visited, p1, p2, h->cost + csub);
+                    if (allow_sub() || eq) {
+                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : cost.cost_sub(*p1p, *p2p)));
                         if (t != hnull) heap.push(t);
                     }
                     t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p));
@@ -148,8 +148,8 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 }; // edit_cost_struct
 
 
-template <typename Range1, typename Range2>
-struct edit_cost_struct<Range1, Range2, unit_cost, none, boost::false_type, none, 
+template <typename Range1, typename Range2, typename Equal>
+struct edit_cost_struct<Range1, Range2, unit_cost, Equal, none, boost::false_type, none, 
                         typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<Range1>::type>::iterator_category, 
                                                         random_access_iterator_tag>, 
                                                 is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
@@ -174,7 +174,7 @@ inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
 //     by Eugene W. Myers
 //     Dept of Computer Science, University of Arizona
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const none&, const boost::false_type&, const none&) const {
+operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal& equal, const none&, const boost::false_type&, const none&) const {
     typedef typename range_iterator<Range1 const>::type itr1_t;
     typedef typename range_iterator<Range2 const>::type itr2_t;
 
@@ -197,7 +197,7 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const none&
         for (difference_type k = -D;  k <= D;  k += 2) {
             difference_type j1 = (k == -D  ||  (k != D  &&  V[k-1] < V[k+1]))  ?  V[k+1]  :  1+V[k-1];
             difference_type j2 = j1-k;
-            while (j1 < len1  &&  j2 < len2  &&  S1[j1] == S2[j2]) { ++j1;  ++j2; }
+            while (j1 < len1  &&  j2 < len2  &&  equal(S1[j1], S2[j2])) { ++j1;  ++j2; }
             if (j1 >= len1  &&  j2 >= len2) return D;
             V[k] = j1;
         }
@@ -213,12 +213,12 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const none&
 }; // edit_cost_struct
 
 
-template <typename Range1, typename Range2, typename Cost, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename Range1, typename Range2, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam>
 inline
 typename cost_type<Cost, typename boost::range_value<Range1>::type>::type
-edit_cost_impl(Range1 const& seq1, Range2 const& seq2, const Cost& cost, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+edit_cost_impl(Range1 const& seq1, Range2 const& seq2, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
     // specialize the most appropriate implementation for the given parameters
-    return edit_cost_struct<Range1, Range2, Cost, EditBeam, AllowSub, CostBeam>()(seq1, seq2, cost, edit_beam, allowsub, cost_beam);
+    return edit_cost_struct<Range1, Range2, Cost, Equal, EditBeam, AllowSub, CostBeam>()(seq1, seq2, cost, equal, edit_beam, allowsub, cost_beam);
 }
 
 
