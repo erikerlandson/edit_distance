@@ -38,11 +38,11 @@ using std::iterator_traits;
 using std::random_access_iterator_tag;
 using boost::make_tuple;
 
-template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam, typename Enabled = void>
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam, typename Enabled = void>
 struct edit_path_struct {
 
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
     typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
     typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
     typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -204,8 +204,8 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
 
 }; // edit_path_struct
 
-template <typename Range1, typename Range2, typename Output, typename Equal>
-struct edit_path_struct<Range1, Range2, Output, unit_cost, Equal, none, boost::false_type, none, 
+template <typename Range1, typename Range2, typename Output, typename Equal, typename MaxCost>
+struct edit_path_struct<Range1, Range2, Output, unit_cost, Equal, boost::false_type, MaxCost, none, none, 
                         typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<Range1>::type>::iterator_category, 
                                                         random_access_iterator_tag>, 
                                                 is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
@@ -237,7 +237,7 @@ inline void expand(Vec& V_data, Itr& Vf, Itr& Vr, size_type& R, const diff_type&
 
 
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_type& len2, const Equal& equal, Output& output, std::vector<diff_type>& V_data) const {
+path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_type& len2, const Equal& equal, const MaxCost& max_cost, const bool max_cost_exception, Output& output, std::vector<diff_type>& V_data) const {
     // identify any equal suffix and/or prefix
     diff_type eqb = 0;
     for (;  eqb < std::min(len1, len2);  ++eqb) if (!equal(seq1[eqb],seq2[eqb])) break;
@@ -342,11 +342,11 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
     // output for equal prefix:
     for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
     // output for path up to midpoint snake:
-    path(S1, r1b, S2, r2b, equal, output, V_data);
+    path(S1, r1b, S2, r2b, equal, max_cost, max_cost_exception, output, V_data);
     // output for midpoint snake:
     for (diff_type j1=r1b,j2=r2b; j1 < r1e;  ++j1, ++j2) output.output_eql(S1[j1], S2[j2]);
     // output for path from midpoint to end:
-    path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, equal, output, V_data);
+    path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, equal, max_cost, max_cost_exception, output, V_data);
     // output for equal suffix:
     for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.output_eql(seq1[j1], seq2[j2]);
 
@@ -355,21 +355,21 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
 inline
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const Equal& equal, const none&, const boost::false_type&, const none&) const {
+operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception, const none&, const none&) const {
     typedef std::vector<int>::difference_type diff_type;
     std::vector<diff_type> V_data;
-    return path(begin(seq1), distance(seq1), begin(seq2), distance(seq2), equal, output, V_data);
+    return path(begin(seq1), distance(seq1), begin(seq2), distance(seq2), equal, max_cost, max_cost_exception, output, V_data);
 }
 
 }; // edit_path_struct
 
 
-template <typename Range1, typename Range2, typename Output, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename Range1, typename Range2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam>
 inline
 typename cost_type<Cost, typename boost::range_value<Range1>::type>::type
-edit_path_impl(Range1 const& seq1, Range2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allowsub, const CostBeam& cost_beam) {
+edit_path_impl(Range1 const& seq1, Range2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
     // specialize the most appropriate implementation for the given parameters
-    return edit_path_struct<Range1, Range2, Output, Cost, Equal, EditBeam, AllowSub, CostBeam>()(seq1, seq2, output, cost, equal, edit_beam, allowsub, cost_beam);
+    return edit_path_struct<Range1, Range2, Output, Cost, Equal, AllowSub, MaxCost, EditBeam, CostBeam>()(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
 }
 
 

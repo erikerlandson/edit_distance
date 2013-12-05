@@ -44,6 +44,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
 
+#define BOOST_PARAMETER_MAX_ARITY 10
 #include <boost/parameter/name.hpp>
 #include <boost/parameter/preprocessor.hpp>
 
@@ -78,6 +79,8 @@ namespace parameter {
     BOOST_PARAMETER_NAME(cost)
     BOOST_PARAMETER_NAME(equal)
     BOOST_PARAMETER_NAME(allow_sub)
+    BOOST_PARAMETER_NAME(max_cost)
+    BOOST_PARAMETER_NAME(max_cost_exception)
     BOOST_PARAMETER_NAME(edit_beam)
     BOOST_PARAMETER_NAME(cost_beam)
 }

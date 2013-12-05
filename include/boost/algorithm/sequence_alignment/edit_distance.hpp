@@ -36,16 +36,17 @@ using detail::none;
 using detail::default_equal;
 
 
-template <typename Sequence1, typename Sequence2, typename Cost, typename Equal, typename EditBeam, typename AllowSub, typename CostBeam>
+template <typename Sequence1, typename Sequence2, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam>
 inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename range_value<Sequence1>::type>::type))
-edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Equal& equal, const EditBeam& edit_beam, const AllowSub& allow_sub, const CostBeam& cost_beam) {
-    return edit_cost_impl(as_literal(seq1), as_literal(seq2), cost, equal, edit_beam, allow_sub, cost_beam);
+edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
+    return edit_cost_impl(as_literal(seq1), as_literal(seq2), cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
 }
+
 
 BOOST_PARAMETER_FUNCTION(
 (typename cost_type<typename value_type<Args, parameter::tag::cost, unit_cost>::type,
@@ -59,11 +60,13 @@ BOOST_PARAMETER_FUNCTION(
         (cost, *, unit_cost())
         (equal, *, default_equal())
         (allow_sub, *, false_type())
+        (max_cost, *, none())
+        (max_cost_exception, *(bool), false)
         (edit_beam, *, none())
         (cost_beam, *, none()))
 )
 {
-    return edit_distance_check(seq1, seq2, cost, equal, edit_beam, allow_sub, cost_beam);
+    return edit_distance_check(seq1, seq2, cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
 }
 
 
