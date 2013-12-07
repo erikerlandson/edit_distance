@@ -268,6 +268,12 @@ struct output_check_script_long_string {
         if (j2 != long(seq2.size())-1) correct = false;
     }
 
+    void reset() {
+        j1 = -1;
+        j2 = -1;
+        correct = true;
+    }
+
     long j1;
     long j2;
     std::string seq1;

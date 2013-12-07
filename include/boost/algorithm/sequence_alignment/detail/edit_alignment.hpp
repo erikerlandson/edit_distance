@@ -41,15 +41,77 @@ using boost::make_tuple;
 template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam, typename Enabled = void>
 struct edit_path_struct {
 
-typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
-    typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
-    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
-    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
-    typedef path_node<itr1_t, itr2_t, cost_t> head_t;
-    typedef typename head_t::pos1_type pos1_t;
-    typedef typename head_t::pos2_type pos2_t;
+typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
+typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
+typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+typedef path_node<itr1_t, itr2_t, cost_t> head_t;
+typedef typename head_t::pos1_type pos1_t;
+typedef typename head_t::pos2_type pos2_t;
 
+
+void traceback(head_t* path_head, const Equal& equal, sub_checker<AllowSub, Cost, cost_t, Output> const& allow_sub, Output& output) {
+    head_t* const hnull = static_cast<head_t*>(NULL);
+
+    // trace back from the head, reversing as we go
+    head_t* ncur = path_head;
+    head_t* nprv = hnull;
+    while (true) {
+        head_t* nnxt = ncur->edge;
+        ncur->edge = nprv;
+        if (nnxt == hnull) {
+            // now path head points to edit sequence beginning
+            path_head = ncur;
+            break;
+        }
+        nprv = ncur;
+        ncur = nnxt;
+    }
+
+    // now traverse the edit path, from the beginning forward
+    for (head_t* n = path_head;  n->edge != hnull;  n = n->edge) {
+        itr1_t j1 = n->pos1.j;
+        itr1_t j1end = n->edge->pos1.j;
+        itr2_t j2 = n->pos2.j;
+        itr2_t j2end = n->edge->pos2.j;
+
+        if (j1 == j1end) {
+            // seq1 didn't advance, this is an insertion from seq2
+            output.output_ins(*j2, n->edge->cost - n->cost);
+            continue;
+        }    
+        if (j2 == j2end) {
+            // seq2 didn't advance, this is a deletion from seq1
+            output.output_del(*j1, n->edge->cost - n->cost);
+            continue;
+        }
+
+        itr1_t j1x = j1;  ++j1x;
+        itr2_t j2x = j2;  ++j2x;
+
+        while (j1x != j1end  &&  j2x != j2end) {
+            // unpack any compressed runs of 'eql'
+            output.output_eql(*j1, *j2);
+            ++j1;  ++j2;  ++j1x;  ++j2x;
+        }
+        if (j1x == j1end) {
+            if (j2x == j2end) {
+                if (equal(*j1, *j2)) {
+                    output.output_eql(*j1, *j2);
+                } else {
+                    allow_sub.output_sub(output, *j1, *j2, n->edge->cost - n->cost);
+                }
+            } else {
+                output.output_eql(*j1, *j2);
+                output.output_ins(*j2x, n->edge->cost - n->cost);
+            }
+        } else {
+            output.output_eql(*j1, *j2);
+            output.output_del(*j1x, n->edge->cost - n->cost);
+        }
+    }
+}
+
+cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
     head_t* const hnull = static_cast<head_t*>(NULL);
 
     const itr1_t end1 = end(seq1);
@@ -64,6 +126,8 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
     boost::heap::skew_heap<head_t*, boost::heap::compare<heap_lessthan<pos1_t, pos2_t> > > heap(heap_lessthan<pos1_t, pos2_t>(beg1, beg2));
 
     sub_checker<AllowSub, Cost, cost_t, Output> allow_sub(allowsub);
+
+    max_cost_checker<MaxCost, cost_t, head_t> max_cost_check(max_cost, beg1, beg2);
 
     head_t* path_head = hnull;
 
@@ -83,6 +147,63 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
     while (true) {
         head_t* h = heap.top();
         heap.pop();
+
+        if (max_cost_check(h->cost)) {
+            if (max_cost_exception) throw max_edit_cost_exception();
+
+            max_cost_check.get(h);
+            pos1_t j1 = h->pos1;
+            pos2_t j2 = h->pos2;
+            cost_t C = h->cost;
+
+            traceback(h, equal, allow_sub, output);
+
+            while (true) {
+                if (j1 == end1) {
+                    if (j2 == end2) {
+                        return C;
+                    } else {
+                        cost_t c = cost.cost_ins(*j2);
+                        output.output_ins(*j2, c);
+                        C += c;
+                        ++j2;
+                    }
+                } else {
+                    if (j2 == end2) {
+                        cost_t c = cost.cost_del(*j1);
+                        output.output_del(*j1, c);
+                        C += c;
+                        ++j1;
+                    } else {
+                        if (equal(*j1, *j2)) {
+                            output.output_eql(*j1, *j2);
+                        } else {
+                            cost_t cd = cost.cost_del(*j1);
+                            cost_t ci = cost.cost_ins(*j2);
+                            if (!allow_sub()) {
+                                output.output_del(*j1, cd);
+                                output.output_ins(*j2, ci);
+                                C += cd+ci;
+                            } else {
+                                cost_t cs = allow_sub.cost_sub(cost, *j1, *j2);
+                                if (cs <= cd+ci) {
+                                    allow_sub.output_sub(output, *j1, *j2, cs);
+                                    C += cs;
+                                } else {
+                                    output.output_del(*j1, cd);
+                                    output.output_ins(*j2, ci);
+                                    C += cd+ci;
+                                }
+                            }
+                        }
+                        ++j1;  ++j2;
+                    }
+                }
+            }
+            return C;
+        }
+
+        max_cost_check.update(h);
 
         if (!on_edit_beam(h)) {
             // prune all paths that move off the edit_beam
@@ -142,68 +263,13 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
 
     const cost_t edit_cost = path_head->cost;
 
-    // trace back from the head, reversing as we go
-    head_t* ncur = path_head;
-    head_t* nprv = hnull;
-    while (true) {
-        head_t* nnxt = ncur->edge;
-        ncur->edge = nprv;
-        if (nnxt == hnull) {
-            // now path head points to edit sequence beginning
-            path_head = ncur;
-            break;
-        }
-        nprv = ncur;
-        ncur = nnxt;
-    }
-
-    // now traverse the edit path, from the beginning forward
-    for (head_t* n = path_head;  n->edge != hnull;  n = n->edge) {
-        itr1_t j1 = n->pos1.j;
-        itr1_t j1end = n->edge->pos1.j;
-        itr2_t j2 = n->pos2.j;
-        itr2_t j2end = n->edge->pos2.j;
-
-        if (j1 == j1end) {
-            // seq1 didn't advance, this is an insertion from seq2
-            output.output_ins(*j2, n->edge->cost - n->cost);
-            continue;
-        }    
-        if (j2 == j2end) {
-            // seq2 didn't advance, this is a deletion from seq1
-            output.output_del(*j1, n->edge->cost - n->cost);
-            continue;
-        }
-
-        itr1_t j1x = j1;  ++j1x;
-        itr2_t j2x = j2;  ++j2x;
-
-        while (j1x != j1end  &&  j2x != j2end) {
-            // unpack any compressed runs of 'eql'
-            output.output_eql(*j1, *j2);
-            ++j1;  ++j2;  ++j1x;  ++j2x;
-        }
-        if (j1x == j1end) {
-            if (j2x == j2end) {
-                if (equal(*j1, *j2)) {
-                    output.output_eql(*j1, *j2);
-                } else {
-                    allow_sub.output_sub(output, *j1, *j2, n->edge->cost - n->cost);
-                }
-            } else {
-                output.output_eql(*j1, *j2);
-                output.output_ins(*j2x, n->edge->cost - n->cost);
-            }
-        } else {
-            output.output_eql(*j1, *j2);
-            output.output_del(*j1x, n->edge->cost - n->cost);
-        }
-    }
+    traceback(path_head, equal, allow_sub, output);
 
     return edit_cost;
 }
 
 }; // edit_path_struct
+
 
 template <typename Range1, typename Range2, typename Output, typename Equal, typename MaxCost>
 struct edit_path_struct<Range1, Range2, Output, unit_cost, Equal, boost::false_type, MaxCost, none, none, 
