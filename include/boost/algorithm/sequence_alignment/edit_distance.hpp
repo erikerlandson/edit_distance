@@ -61,7 +61,7 @@ BOOST_PARAMETER_FUNCTION(
         (equal, *, default_equal())
         (allow_sub, *, false_type())
         (max_cost, *, none())
-        (max_cost_exception, *(bool), false)
+        (max_cost_exception, (bool), false)
         (edit_beam, *, none())
         (cost_beam, *, none()))
 )
