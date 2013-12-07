@@ -221,6 +221,8 @@ BOOST_AUTO_TEST_CASE(max_cost_1) {
             dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d+2);
             BOOST_CHECK_EQUAL(dt, d);
 
+            BOOST_CHECK_THROW(edit_distance(seqdata[i], seqdata[j], _max_cost=d-1, _max_cost_exception=true), max_edit_cost_exception);
+
             if (++n >= N) break;
         }
     }
@@ -263,6 +265,8 @@ BOOST_AUTO_TEST_CASE(max_cost_2) {
 
             dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d+2);
             BOOST_CHECK_EQUAL(dt, d);
+
+            BOOST_CHECK_THROW(edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d-1, _max_cost_exception=true), max_edit_cost_exception);
 
             if (++n >= N) break;
         }

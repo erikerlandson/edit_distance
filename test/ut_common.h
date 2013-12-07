@@ -49,6 +49,7 @@ using boost::false_type;
 using boost::algorithm::sequence_alignment::edit_distance;
 using boost::algorithm::sequence_alignment::edit_alignment;
 using namespace boost::algorithm::sequence_alignment::parameter;
+using boost::algorithm::sequence_alignment::max_edit_cost_exception;
 
 template <typename Range>
 std::list<typename boost::range_value<Range>::type>
