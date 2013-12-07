@@ -374,14 +374,15 @@ struct output_check_script_string {
 }
 
 template <typename S>
-void random_localized_deviations(vector<S>& seqdata, const int N, const int LEN, const int D, const int K) {
+void random_localized_deviations(vector<S>& seqdata, const int N, const int LEN, const int D, const int K, const int maxsfx = 100000) {
     char data[] = "abcdefghij0123456789";
     const unsigned int data_size = sizeof(data)-1;
     const unsigned int R = LEN/D;
     int sz = int(ceil((1 + sqrt(1+8*N))/2));
+    int rsfx = std::min(maxsfx, std::max(2, LEN/10));
     seqdata.resize(sz);
     for (int i = 0;  i < seqdata.size();  ++i) {
-        seqdata[i].resize(LEN, 'x');
+        seqdata[i].resize(LEN + ((rand()%2) ? 0 : (rand()%rsfx)), 'x');
         for (int d = 0;  d < D;  ++d) {
             unsigned int b1 = d*R + (rand() % K);
             unsigned int l1 =  rand() % K;

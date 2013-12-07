@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     srand(time(0));
     vector<std::string> seqdata;
     const int N = 100;
-    random_localized_deviations(seqdata, N, 100000, 5, 20);
+    random_localized_deviations(seqdata, N, 100000, 5, 20, 100);
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {

@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(cost_beam_crosscheck_1) {
     vector<std::string> seqdata;
     const int N = 100;
     const int beam = 2;
-    random_localized_deviations(seqdata, N, 100000, 5, 50);
+    random_localized_deviations(seqdata, N, 100000, 5, 50, 10);
     int n = 0;
     double t0 = time(0);
     double sum = 0;
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_1) {
     srand(time(0));
     vector<std::string> seqdata;
     const int N = 100;
-    random_localized_deviations(seqdata, N, 100000, 5, 50);
+    random_localized_deviations(seqdata, N, 100000, 5, 50, 100);
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {
@@ -380,14 +380,14 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     srand(time(0));
     vector<std::string> seqdata;
     const int N = 100;
-    random_localized_deviations(seqdata, N, 100000, 5, 20);
+    random_localized_deviations(seqdata, N, 100000, 5, 20, 10);
     int n = 0;
     double t0 = time(0);
     for (int i = 0;  i < seqdata.size();  ++i) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
             unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
-            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }
     }
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(timing_2) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
             unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
-            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }
     }
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(timing_3) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
             unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
-            BOOST_CHECK(d <= 2 * seqdata[i].size());
+            BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }
     }
