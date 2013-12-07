@@ -69,7 +69,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 
     sub_checker<AllowSub, Cost, cost_t, int> allow_sub(allowsub);
 
-    max_cost_checker<MaxCost, cost_t, pos1_t, pos2_t> max_cost_check(max_cost, beg1, beg2);
+    max_cost_checker<MaxCost, cost_t, head_t> max_cost_check(max_cost, beg1, beg2);
 
     // keep track of nodes in the edit graph that have been visited
     typedef boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited_t;
@@ -91,10 +91,10 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
         if (max_cost_check(h->cost)) {
             if (max_cost_exception) throw max_edit_cost_exception();
 
-            pos1_t j1;
-            pos2_t j2;
-            cost_t C;
-            max_cost_check.get(j1, j2, C);
+            max_cost_check.get(h);
+            pos1_t j1 = h->pos1;
+            pos2_t j2 = h->pos2;
+            cost_t C = h->cost;
             while (true) {
                 if (j1 == end1) {
                     if (j2 == end2) {
@@ -118,7 +118,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
             return C;
         }
 
-        max_cost_check.update(h->pos1, h->pos2, h->cost);
+        max_cost_check.update(h);
 
         // compiles out if edit_beam constraint is not requested
         if (!on_edit_beam(h)) {
@@ -221,7 +221,7 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal
     itr1_t S1 = begin(seq1);
     itr2_t S2 = begin(seq2);
 
-    max_cost_checker<MaxCost, diff_type, diff_type, diff_type> max_cost_check(max_cost, 0, 0);
+    max_cost_checker_myers<MaxCost, diff_type, diff_type> max_cost_check(max_cost);
 
     size_type R = 10;
     std::vector<diff_type> V_data(1 + 2*R);

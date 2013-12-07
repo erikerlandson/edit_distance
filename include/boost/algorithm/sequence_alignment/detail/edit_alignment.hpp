@@ -83,6 +83,7 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output,
     while (true) {
         head_t* h = heap.top();
         heap.pop();
+
         if (!on_edit_beam(h)) {
             // prune all paths that move off the edit_beam
             // unless we are at the end of one of the sequences, in which

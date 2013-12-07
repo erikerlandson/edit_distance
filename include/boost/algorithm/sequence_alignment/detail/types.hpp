@@ -112,36 +112,79 @@ template <typename X> struct invoke : public true_type {};
 struct none {};
 
 
-template <typename MaxCost, typename CostT, typename Pos1, typename Pos2, typename Enable = void> struct max_cost_checker {};
+template <typename MaxCost, typename CostT, typename Node, typename Enable = void> struct max_cost_checker {};
 
-template <typename MaxCost, typename CostT, typename Pos1, typename Pos2>
-struct max_cost_checker<MaxCost, CostT, Pos1, Pos2, typename enable_if<is_same<MaxCost, none> >::type> {
-    max_cost_checker(const MaxCost&, const Pos1&, const Pos2&) {}
+template <typename MaxCost, typename CostT, typename Node>
+struct max_cost_checker<MaxCost, CostT, Node, typename enable_if<is_same<MaxCost, none> >::type> {
+    typedef typename Node::pos1_type pos1_type;
+    typedef typename Node::pos2_type pos2_type;
+    max_cost_checker(const MaxCost&, const pos1_type&, const pos2_type&) {}
     inline bool operator()(const CostT&) const { return false; }
-    inline void update(const Pos1&, const Pos2&, const CostT&) {}
-    inline void get(Pos1&, Pos2&, CostT&) {}
+    inline void update(const Node*) const {}
+    inline void get(Node*&) const {}
 };
 
-template <typename MaxCost, typename CostT, typename Pos1, typename Pos2>
-struct max_cost_checker<MaxCost, CostT, Pos1, Pos2, typename enable_if<is_arithmetic<MaxCost> >::type> {
-    typedef BOOST_TYPEOF_TPL(Pos1()-Pos1()) diff_type;
+template <typename MaxCost, typename CostT, typename Node>
+struct max_cost_checker<MaxCost, CostT, Node, typename enable_if<is_arithmetic<MaxCost> >::type> {
+    typedef typename Node::pos1_type pos1_type;
+    typedef typename Node::pos2_type pos2_type;
+    typedef typename pos1_type::difference_type diff_type;
+
     CostT max_cost;
-    Pos1 beg1;
-    Pos2 beg2;
-    Pos1 pos1;
-    Pos2 pos2;
-    CostT cost;
+    pos1_type beg1;
+    pos2_type beg2;
     diff_type mcmin;
     diff_type mctec;
-    max_cost_checker(const MaxCost& max_cost_, const Pos1& pos1_, const Pos2& pos2_) : max_cost(CostT(std::abs(max_cost_))), beg1(pos1_), beg2(pos2_), pos1(pos1_), pos2(pos2_), cost(0), mcmin(-1), mctec(-1) {}
+    Node* mcnode;
+
+    max_cost_checker(const MaxCost& max_cost_, const pos1_type& pos1_, const pos2_type& pos2_) : max_cost(CostT(std::abs(max_cost_))), beg1(pos1_), beg2(pos2_), mcmin(-1), mctec(-1), mcnode(NULL) {}
     inline bool operator()(const CostT& c) const { return c > max_cost; }
-    inline void update(const Pos1& pos1_, const Pos2& pos2_, const CostT& cost_) {
+    inline void update(Node* node) {
         // primary criteria:  position that consumes most sequence elements
-        diff_type ttec = (pos1_-beg1)+(pos2_-beg2);
+        diff_type ttec = (node->pos1 - beg1) + (node->pos2 - beg2);
         if (ttec < mctec) return;
 
         // secondary criteria: favor positions closest to diagonal
-        diff_type tmin = std::min(pos1_-beg1, pos2_-beg2);
+        diff_type tmin = std::min(node->pos1 - beg1, node->pos2 - beg2);
+        if (ttec > mctec  ||  tmin > mcmin) {
+            mcnode = node;
+            mctec = ttec;
+            mcmin = tmin;
+        }
+    }
+    inline void get(Node*& node) const {
+        node = mcnode;
+    }
+};
+
+
+template <typename MaxCost, typename CostT, typename Pos, typename Enable = void> struct max_cost_checker_myers {};
+
+template <typename MaxCost, typename CostT, typename Pos>
+struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_same<MaxCost, none> >::type> {
+    max_cost_checker_myers(const MaxCost&) {}
+    inline bool operator()(const CostT&) const { return false; }
+    inline void update(const Pos&, const Pos&, const CostT&) const {}
+    inline void get(Pos&, Pos&, CostT&) const {}
+};
+
+template <typename MaxCost, typename CostT, typename Pos>
+struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithmetic<MaxCost> >::type> {
+    CostT max_cost;
+    Pos mcmin;
+    Pos mctec;
+    Pos pos1;
+    Pos pos2;
+    CostT cost;
+    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), pos1(0), pos2(0), cost(0), mcmin(-1), mctec(-1) {}
+    inline bool operator()(const CostT& c) const { return c > max_cost; }
+    inline void update(const Pos& pos1_, const Pos& pos2_, const CostT& cost_) {
+        // primary criteria:  position that consumes most sequence elements
+        Pos ttec = pos1_ + pos2_;
+        if (ttec < mctec) return;
+
+        // secondary criteria: favor positions closest to diagonal
+        Pos tmin = std::min(pos1_, pos2_);
         if (ttec > mctec  ||  tmin > mcmin) {
             pos1 = pos1_;
             pos2 = pos2_;
@@ -150,7 +193,7 @@ struct max_cost_checker<MaxCost, CostT, Pos1, Pos2, typename enable_if<is_arithm
             mcmin = tmin;
         }
     }
-    inline void get(Pos1& pos1_, Pos2& pos2_, CostT& cost_) {
+    inline void get(Pos& pos1_, Pos& pos2_, CostT& cost_) const {
         pos1_ = pos1;
         pos2_ = pos2;
         cost_ = cost;
