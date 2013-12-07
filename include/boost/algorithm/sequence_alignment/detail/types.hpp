@@ -16,6 +16,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <cstddef>
 #include <iterator>
 
+#include <boost/exception/exception.hpp>
+
 #include <boost/type_traits.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 
@@ -72,6 +74,9 @@ struct unit_cost {
 };
 
 
+struct max_edit_cost_exception : public boost::exception {};
+
+
 namespace parameter {
     BOOST_PARAMETER_NAME(seq1)
     BOOST_PARAMETER_NAME(seq2)
@@ -84,6 +89,7 @@ namespace parameter {
     BOOST_PARAMETER_NAME(edit_beam)
     BOOST_PARAMETER_NAME(cost_beam)
 }
+
 
 namespace detail {
 
@@ -104,6 +110,53 @@ using boost::enable_if;
 template <typename X> struct invoke : public true_type {};
 
 struct none {};
+
+
+template <typename MaxCost, typename CostT, typename Pos1, typename Pos2, typename Enable = void> struct max_cost_checker {};
+
+template <typename MaxCost, typename CostT, typename Pos1, typename Pos2>
+struct max_cost_checker<MaxCost, CostT, Pos1, Pos2, typename enable_if<is_same<MaxCost, none> >::type> {
+    max_cost_checker(const MaxCost&, const Pos1&, const Pos2&) {}
+    inline bool operator()(const CostT&) const { return false; }
+    inline void update(const Pos1&, const Pos2&, const CostT&) {}
+    inline void get(Pos1&, Pos2&, CostT&) {}
+};
+
+template <typename MaxCost, typename CostT, typename Pos1, typename Pos2>
+struct max_cost_checker<MaxCost, CostT, Pos1, Pos2, typename enable_if<is_arithmetic<MaxCost> >::type> {
+    typedef BOOST_TYPEOF_TPL(Pos1()-Pos1()) diff_type;
+    CostT max_cost;
+    Pos1 beg1;
+    Pos2 beg2;
+    Pos1 pos1;
+    Pos2 pos2;
+    CostT cost;
+    diff_type mcmin;
+    diff_type mctec;
+    max_cost_checker(const MaxCost& max_cost_, const Pos1& pos1_, const Pos2& pos2_) : max_cost(CostT(std::abs(max_cost_))), beg1(pos1_), beg2(pos2_), pos1(pos1_), pos2(pos2_), cost(0), mcmin(-1), mctec(-1) {}
+    inline bool operator()(const CostT& c) const { return c > max_cost; }
+    inline void update(const Pos1& pos1_, const Pos2& pos2_, const CostT& cost_) {
+        // primary criteria:  position that consumes most sequence elements
+        diff_type ttec = (pos1_-beg1)+(pos2_-beg2);
+        if (ttec < mctec) return;
+
+        // secondary criteria: favor positions closest to diagonal
+        diff_type tmin = std::min(pos1_-beg1, pos2_-beg2);
+        if (ttec > mctec  ||  tmin > mcmin) {
+            pos1 = pos1_;
+            pos2 = pos2_;
+            cost = cost_;
+            mctec = ttec;
+            mcmin = tmin;
+        }
+    }
+    inline void get(Pos1& pos1_, Pos2& pos2_, CostT& cost_) {
+        pos1_ = pos1;
+        pos2_ = pos2;
+        cost_ = cost;
+    }
+};
+
 
 struct default_equal {
     template <typename T1, typename T2>

@@ -69,6 +69,8 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 
     sub_checker<AllowSub, Cost, cost_t, int> allow_sub(allowsub);
 
+    max_cost_checker<MaxCost, cost_t, pos1_t, pos2_t> max_cost_check(max_cost, beg1, beg2);
+
     // keep track of nodes in the edit graph that have been visited
     typedef boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited_t;
     visited_t visited(31, visited_hash<pos1_t,pos2_t>(beg1,beg2));
@@ -85,6 +87,38 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
     while (true) {
         head_t* h = heap.top();
         heap.pop();
+
+        if (max_cost_check(h->cost)) {
+            if (max_cost_exception) throw max_edit_cost_exception();
+
+            pos1_t j1;
+            pos2_t j2;
+            cost_t C;
+            max_cost_check.get(j1, j2, C);
+            while (true) {
+                if (j1 == end1) {
+                    if (j2 == end2) {
+                        return C;
+                    } else {
+                        C += cost.cost_ins(*j2);
+                        ++j2;
+                    }
+                } else {
+                    if (j2 == end2) {
+                        C += cost.cost_del(*j1);
+                        ++j1;
+                    } else {
+                        C += (equal(*j1, *j2)) ? 0 
+                                               : ((allow_sub()) ? std::min(allow_sub.cost_sub(cost, *j1, *j2), (cost.cost_del(*j1)+cost.cost_ins(*j2))) 
+                                                                : (cost.cost_del(*j1)+cost.cost_ins(*j2))) ;
+                        ++j1;  ++j2;
+                    }
+                }
+            }
+            return C;
+        }
+
+        max_cost_check.update(h->pos1, h->pos2, h->cost);
 
         // compiles out if edit_beam constraint is not requested
         if (!on_edit_beam(h)) {
@@ -178,7 +212,7 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal
     typedef typename range_iterator<Range1 const>::type itr1_t;
     typedef typename range_iterator<Range2 const>::type itr2_t;
 
-    typedef std::vector<int>::difference_type difference_type;
+    typedef std::vector<int>::difference_type diff_type;
     typedef std::vector<int>::size_type size_type;
 
     size_type len1 = distance(seq1);
@@ -187,20 +221,51 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal
     itr1_t S1 = begin(seq1);
     itr2_t S2 = begin(seq2);
 
-    size_type R = 10;
-    std::vector<size_type> V_data(1 + 2*R);
-    std::vector<size_type>::iterator V = V_data.begin() + R;
+    max_cost_checker<MaxCost, diff_type, diff_type, diff_type> max_cost_check(max_cost, 0, 0);
 
-    difference_type D = 0;
+    size_type R = 10;
+    std::vector<diff_type> V_data(1 + 2*R);
+    std::vector<diff_type>::iterator V = V_data.begin() + R;
+
+    diff_type D = 0;
     V[1] = 0;
     while (true) {
-        for (difference_type k = -D;  k <= D;  k += 2) {
-            difference_type j1 = (k == -D  ||  (k != D  &&  V[k-1] < V[k+1]))  ?  V[k+1]  :  1+V[k-1];
-            difference_type j2 = j1-k;
+        for (diff_type k = -D;  k <= D;  k += 2) {
+            diff_type j1 = (k == -D  ||  (k != D  &&  V[k-1] < V[k+1]))  ?  V[k+1]  :  1+V[k-1];
+            diff_type j2 = j1-k;
             while (j1 < len1  &&  j2 < len2  &&  equal(S1[j1], S2[j2])) { ++j1;  ++j2; }
             if (j1 >= len1  &&  j2 >= len2) return D;
             V[k] = j1;
         }
+
+        if (max_cost_check(1+D)) {
+            if (max_cost_exception) throw max_edit_cost_exception();
+
+            for (diff_type k = -D;  k <= D;  k += 2) max_cost_check.update(V[k], V[k]-k, D);
+
+            diff_type j1;
+            diff_type j2;
+            max_cost_check.get(j1, j2, D);
+            while (true) {
+                if (j1 >= len1) {
+                    if (j2 >= len2) {
+                        return D;
+                    } else {
+                        D += 1;
+                        ++j2;  
+                    }
+                } else {
+                    if (j2 >= len2) {
+                        D += 1;
+                        ++j1;
+                    } else {
+                        D += (equal(S1[j1], S2[j2])) ? 0 : 2;
+                        ++j1;  ++j2;
+                    }
+                }
+            }
+        }
+
         // expand the working vector as needed
         if (++D > R) expand(V_data, V, R, D);
     }

@@ -186,6 +186,92 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
 }
 
 
+BOOST_AUTO_TEST_CASE(max_cost_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 10000;
+    random_localized_deviations(seqdata, N, 100, 5, 10);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            unsigned int d = edit_distance(seqdata[i], seqdata[j]);
+            if (d < 2) continue;
+
+            unsigned int dub = seqdata[i].size()+seqdata[j].size();
+            unsigned int dt;
+
+            dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d-2);
+            BOOST_CHECK_GT(dt, d-2);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d-1);
+            BOOST_CHECK_GT(dt, d-1);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+            
+            dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d+1);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d+2);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n");
+}
+
+
+BOOST_AUTO_TEST_CASE(max_cost_2) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 200;
+    random_localized_deviations(seqdata, N, 100, 5, 10);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type());
+            if (d < 2) continue;
+
+            unsigned int dub = std::max(seqdata[i].size(), seqdata[j].size());
+            unsigned int dt;
+
+            dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d-2);
+            BOOST_CHECK_GT(dt, d-2);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d-1);
+            BOOST_CHECK_GT(dt, d-1);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+            
+            dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d+1);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            dt = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _max_cost=d+2);
+            BOOST_CHECK_EQUAL(dt, d);
+
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n");
+}
+
+
 BOOST_AUTO_TEST_CASE(long_sequences) {
     BOOST_CHECK_EQUAL(edit_distance("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                                     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", _allow_sub=true_type()),
