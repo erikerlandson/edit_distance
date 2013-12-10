@@ -403,7 +403,8 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
         }
 
         // expand the working vectors as needed
-        if (++D > R) expand(V_data, Vf, Vr, R, D, delta);
+        if (D >= R) expand(V_data, Vf, Vr, R, D, delta);
+        ++D;
     }
 
     // output for equal prefix:

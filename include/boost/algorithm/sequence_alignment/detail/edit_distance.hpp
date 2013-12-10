@@ -267,7 +267,8 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal
         }
 
         // expand the working vector as needed
-        if (++D > R) expand(V_data, V, R, D);
+        if (D >= R) expand(V_data, V, R, D);
+        ++D;
     }
 
     // control should not reach here
