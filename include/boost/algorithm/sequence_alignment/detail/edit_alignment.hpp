@@ -111,6 +111,66 @@ void traceback(head_t* path_head, const Equal& equal, sub_checker<AllowSub, Cost
     }
 }
 
+cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_check, bool max_cost_exception, const itr1_t end1, const itr2_t end2, Output& output, const Cost& cost, const Equal& equal, sub_checker<AllowSub, Cost, cost_t, Output> const& allow_sub) {
+    if (max_cost_exception) throw max_edit_cost_exception();
+
+    head_t* h;
+    max_cost_check.get(h);
+
+    pos1_t j1 = h->pos1;
+    pos2_t j2 = h->pos2;
+    cost_t C = h->cost;
+
+    // make use of any best-path work that was completed
+    traceback(h, equal, allow_sub, output);
+
+    // fast linear completion
+    while (true) {
+        if (j1 == end1) {
+            if (j2 == end2) {
+                return C;
+            } else {
+                cost_t c = cost.cost_ins(*j2);
+                output.output_ins(*j2, c);
+                C += c;
+                ++j2;
+            }
+        } else {
+            if (j2 == end2) {
+                cost_t c = cost.cost_del(*j1);
+                output.output_del(*j1, c);
+                C += c;
+                ++j1;
+            } else {
+                if (equal(*j1, *j2)) {
+                    output.output_eql(*j1, *j2);
+                } else {
+                    cost_t cd = cost.cost_del(*j1);
+                    cost_t ci = cost.cost_ins(*j2);
+                    if (!allow_sub()) {
+                        output.output_del(*j1, cd);
+                        output.output_ins(*j2, ci);
+                        C += cd+ci;
+                    } else {
+                        cost_t cs = allow_sub.cost_sub(cost, *j1, *j2);
+                        if (cs <= cd+ci) {
+                            allow_sub.output_sub(output, *j1, *j2, cs);
+                            C += cs;
+                        } else {
+                            output.output_del(*j1, cd);
+                            output.output_ins(*j2, ci);
+                            C += cd+ci;
+                        }
+                    }
+                }
+                ++j1;  ++j2;
+            }
+        }
+    }
+
+    return C;
+}
+
 cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
     head_t* const hnull = static_cast<head_t*>(NULL);
 
@@ -149,60 +209,8 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
         heap.pop();
 
         if (max_cost_check(h->cost)) {
-            if (max_cost_exception) throw max_edit_cost_exception();
-
-            max_cost_check.get(h);
-            pos1_t j1 = h->pos1;
-            pos2_t j2 = h->pos2;
-            cost_t C = h->cost;
-
-            traceback(h, equal, allow_sub, output);
-
-            while (true) {
-                if (j1 == end1) {
-                    if (j2 == end2) {
-                        return C;
-                    } else {
-                        cost_t c = cost.cost_ins(*j2);
-                        output.output_ins(*j2, c);
-                        C += c;
-                        ++j2;
-                    }
-                } else {
-                    if (j2 == end2) {
-                        cost_t c = cost.cost_del(*j1);
-                        output.output_del(*j1, c);
-                        C += c;
-                        ++j1;
-                    } else {
-                        if (equal(*j1, *j2)) {
-                            output.output_eql(*j1, *j2);
-                        } else {
-                            cost_t cd = cost.cost_del(*j1);
-                            cost_t ci = cost.cost_ins(*j2);
-                            if (!allow_sub()) {
-                                output.output_del(*j1, cd);
-                                output.output_ins(*j2, ci);
-                                C += cd+ci;
-                            } else {
-                                cost_t cs = allow_sub.cost_sub(cost, *j1, *j2);
-                                if (cs <= cd+ci) {
-                                    allow_sub.output_sub(output, *j1, *j2, cs);
-                                    C += cs;
-                                } else {
-                                    output.output_del(*j1, cd);
-                                    output.output_ins(*j2, ci);
-                                    C += cd+ci;
-                                }
-                            }
-                        }
-                        ++j1;  ++j2;
-                    }
-                }
-            }
-            return C;
+            return max_cost_fallback(max_cost_check, max_cost_exception, end1, end2, output, cost, equal, allow_sub);
         }
-
         max_cost_check.update(h);
 
         if (!on_edit_beam(h)) {
