@@ -302,6 +302,11 @@ inline void expand(Vec& V_data, Itr& Vf, Itr& Vr, size_type& R, const diff_type&
     R = Rp;
 }
 
+std::string dump(const itr1_t& S1, const size_type& len1) const {
+    std::string r;
+    for (int j = 0; j < len1;  ++j) r += S1[j];
+    return r;
+}
 
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
 path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_type& len2, const Equal& equal, const MaxCost& max_cost, const bool max_cost_exception, Output& output, std::vector<diff_type>& V_data) const {
@@ -344,6 +349,9 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
     // midpoint run of equal elements ("snake")
     diff_type r1b, r2b, r1e, r2e;
+
+    typedef max_cost_checker_myers<MaxCost, diff_type, diff_type> max_cost_type;
+    max_cost_type max_cost_check(max_cost);
 
     diff_type D = 0;
     Vf[1] = 0;
@@ -400,6 +408,85 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
         if (found) {
             D = 2*D;
             break;
+        }
+
+        if (max_cost_check((delta_even) ? (2*D+2) : (2*D+1))) {
+            if (max_cost_exception) throw max_edit_cost_exception();
+
+            for (diff_type k = -D;  k <= D;  k += 2) {
+                max_cost_check.update(k, Vf, Vr, delta, L1, L2, D);
+            }
+
+            diff_type k;
+            int kind;
+            max_cost_check.get(k, kind);
+            switch (kind) {
+                case max_cost_type::F: {
+                    r1b = Vf[k];
+                    r2b = r1b-k;
+                    r1e = L1;
+                    r2e = L2;
+                }; break;
+
+                case max_cost_type::R: {
+                    r1b = 0;
+                    r2b = 0;
+                    r1e = Vr[k];
+                    r2e = r1e-k;
+                }; break;
+
+                case max_cost_type::B: {
+                    r1b = Vf[k];
+                    r2b = r1b-k;
+                    r1e = Vr[k];
+                    r2e = r1e-k;
+                }; break;
+
+                default: BOOST_ASSERT(false);
+            }
+
+            // output equal prefix:
+            for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
+            // output any known best-path in forward direction 
+            D = path(S1, r1b, S2, r2b, equal, max_cost, max_cost_exception, output, V_data);
+
+            // output the unknown subsequence: this is the part we bailed on due to hitting the maximum
+            diff_type j1 = r1b;
+            diff_type j2 = r2b;
+            while (true) {
+                if (j1 >= r1e) {
+                    if (j2 >= r2e) {
+                        break;
+                    } else {
+                        output.output_ins(S2[j2], 1);
+                        D += 1;
+                        ++j2;
+                    }
+                } else {
+                    if (j2 >= r2e) {
+                        output.output_del(S1[j1], 1);
+                        D += 1;
+                        ++j1;
+                    } else {
+                        if (equal(S1[j1], S2[j2])) {
+                            output.output_eql(S1[j1], S2[j2]);
+                        } else {
+                            output.output_del(S1[j1], 1);
+                            output.output_ins(S2[j2], 1);
+                            D += 2;
+                        }
+                        ++j1;
+                        ++j2;
+                    }
+                }
+            }
+
+            // output known subsequence from reverse direction
+            D += path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, equal, max_cost, max_cost_exception, output, V_data);
+            // equal suffix
+            for (diff_type jj1=len1-eqe, jj2=len2-eqe; jj1 < len1; ++jj1,++jj2) output.output_eql(seq1[jj1], seq2[jj2]);
+
+            return D;
         }
 
         // expand the working vectors as needed

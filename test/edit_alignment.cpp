@@ -266,6 +266,7 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
     CHECK_EDIT_ALIGNMENT_ARG("raqc", "rxqz", _allow_sub=boost::false_type(), 4);
 }
 
+
 BOOST_AUTO_TEST_CASE(max_cost_0) {
     CHECK_EDIT_ALIGNMENT_2ARG("abc", "xyz", _allow_sub=true_type(), _max_cost=0, 3);
     CHECK_EDIT_ALIGNMENT_2ARG("abc", "xyz", _allow_sub=true_type(), _max_cost=1, 3);
@@ -278,6 +279,85 @@ BOOST_AUTO_TEST_CASE(max_cost_0) {
     CHECK_EDIT_ALIGNMENT_2ARG("abc", "xyz", _cost=unit_cost_test(), _max_cost=2, 6);
     CHECK_EDIT_ALIGNMENT_2ARG("abc", "xyz", _cost=unit_cost_test(), _max_cost=3, 6);
     CHECK_EDIT_ALIGNMENT_2ARG("abc", "xyz", _cost=unit_cost_test(), _max_cost=4, 6);
+
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _max_cost=0, 6);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _max_cost=1, 6);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _max_cost=2, 6);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _max_cost=3, 6);
+    CHECK_EDIT_ALIGNMENT_ARG("abc", "xyz", _max_cost=4, 6);
+}
+
+BOOST_AUTO_TEST_CASE(max_cost_1) {
+    srand(time(0));
+    vector<std::string> seqdata;
+    const int N = 100;
+    random_localized_deviations(seqdata, N, 100, 5, 10);
+    int n = 0;
+    double t0 = time(0);
+    for (int i = 0;  i < seqdata.size();  ++i) {
+        if (n >= N) break;
+        for (int j = 0;  j < i;  ++j) {
+            output_check_script_long_string out(seqdata[i], seqdata[j]);
+
+            unsigned int d = edit_alignment(seqdata[i], seqdata[j], out);
+            if (d < 2) continue;
+
+            unsigned int dub = seqdata[i].size() + seqdata[j].size();
+            unsigned int dt;
+
+            out.reset();
+            dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d/2);
+            out.finalize();
+            BOOST_CHECK_GT(dt, d/2);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+            BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+
+            out.reset();
+            dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d-1);
+            out.finalize();
+            BOOST_CHECK_GT(dt, d-1);
+            BOOST_CHECK_GE(dt, d);
+            BOOST_CHECK_LE(dt, dub);
+            BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
+
+            out.reset();
+            dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d);
+            out.finalize();
+            BOOST_CHECK_EQUAL(dt, d);
+            BOOST_CHECK(out.correct);
+
+            out.reset();
+            dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d+1);
+            out.finalize();
+            BOOST_CHECK_EQUAL(dt, d);
+            BOOST_CHECK(out.correct);
+
+            out.reset();
+            dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d+2);
+            out.finalize();
+            BOOST_CHECK_EQUAL(dt, d);
+            BOOST_CHECK(out.correct);
+
+            out.reset();
+            BOOST_CHECK_THROW(edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d-1, _max_cost_exception=true), max_edit_cost_exception);
+
+            if (++n >= N) break;
+        }
+    }
+    double tt = time(0) - t0;
+    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n) << "\n");
+}
+
+
+BOOST_AUTO_TEST_CASE(max_cost_error_1) {
+    std::string seq1 = "xxxxxjja0xxxxxxxxxxxxb544b0xxxxxxxxxxxxxxxxx2xxxxxxxxxxxxxxxxxxxxxxxicff76xxxxxxxxxxxxxxxdxxxxxxxxxx";
+    std::string seq2 = "xxxxxxx16g7xxxxxxxxxxxxxxx8f5c5xxxxxxxxxxxxxah9xxxxxxxxxxxxxxbxxxxxxxxxxxxxxxxxxxxxxxxxxxj5432539cxxxxxxx";
+    output_check_script_long_string out(seq1, seq2);
+
+    int d = edit_alignment(seq1, seq2, out, _max_cost=20);
+    out.finalize();
+    BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seq1 << "'\nseq2= '"<< seq2 <<"'\n\n");
 }
 
 

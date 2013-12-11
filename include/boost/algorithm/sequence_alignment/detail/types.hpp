@@ -162,21 +162,36 @@ template <typename MaxCost, typename CostT, typename Pos, typename Enable = void
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_same<MaxCost, none> >::type> {
+    static const int Z = 0;
+    static const int F = 1;
+    static const int R = 2;
+    static const int B = 3;
     max_cost_checker_myers(const MaxCost&) {}
     inline bool operator()(const CostT&) const { return false; }
     inline void update(const Pos&, const Pos&, const CostT&) const {}
     inline void get(Pos&, Pos&, CostT&) const {}
+    template <typename Itr>
+    inline void update(const Pos&, const Itr&, const Itr&, const Pos&, const Pos&, const Pos&, const Pos&) const {}
+    inline void get(Pos&, int&) const {}
 };
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithmetic<MaxCost> >::type> {
+    static const int Z = 0;
+    static const int F = 1;
+    static const int R = 2;
+    static const int B = 3;
+
     CostT max_cost;
     Pos mcmin;
     Pos mctec;
+    Pos mck;
     Pos pos1;
     Pos pos2;
     CostT cost;
-    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), pos1(0), pos2(0), cost(0), mcmin(-1), mctec(-1) {}
+    int kind;
+
+    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), pos1(0), pos2(0), cost(0), mcmin(-1), mctec(-1), mck(0), kind(Z) {}
     inline bool operator()(const CostT& c) const { return c > max_cost; }
     inline void update(const Pos& pos1_, const Pos& pos2_, const CostT& cost_) {
         // primary criteria:  position that consumes most sequence elements
@@ -191,12 +206,72 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithme
             cost = cost_;
             mctec = ttec;
             mcmin = tmin;
+            kind = F;
         }
     }
     inline void get(Pos& pos1_, Pos& pos2_, CostT& cost_) const {
         pos1_ = pos1;
         pos2_ = pos2;
         cost_ = cost;
+    }
+
+    template <typename Itr>
+    inline void update(const Pos& k, const Itr& Vf, const Itr& Vr, const Pos& delta, const Pos& L1, const Pos& L2, const Pos& D) {
+        Pos j1f = Vf[k];
+        Pos j2f = Vf[k]-k;
+        Pos cf = j1f+j2f;
+        
+        // test bi-directional path
+        if ((k-delta) >= -D  &&  (k-delta) <= D) {
+            Pos j1r = Vr[k];
+            Pos j2r = Vr[k]-k;
+            Pos cr = (L1-j1r)+(L2-j2r);
+
+            Pos ttec = cf+cr;
+            if (ttec < mctec) return;
+            
+            Pos tmin = std::min(j1f, j2f);
+            if (ttec > mctec  ||  tmin > mcmin) {
+                mctec = ttec;
+                mcmin = tmin;
+                mck = k;
+                kind = B;
+            }
+
+            // if a bidirectional path is available, that will be the best possible for this (k),
+            // so we do not have to test forward/reverse individually:
+            return;
+        }
+
+        // test forward path
+        if (cf >= mctec) {
+            Pos tmin = std::min(j1f, j2f);
+            if (cf > mctec || tmin > mcmin) {
+                mctec = cf;
+                mcmin = tmin;
+                mck = k;
+                kind = F;
+            }
+        }
+
+        // test reverse path
+        Pos j1r = Vr[k+delta];
+        Pos j2r = Vr[k+delta]-(k+delta);
+        Pos cr = (L1-j1r)+(L2-j2r);
+        if (cr >= mctec) {
+            Pos tmin = std::min((L1-j1r), (L2-j2r));
+            if (cr > mctec  ||  tmin > mcmin) {
+                mctec = cr;
+                mcmin = tmin;
+                mck = k+delta;
+                kind = R;
+            }    
+        }
+    }
+
+    inline void get(Pos& k_, int& kind_) const {
+        k_ = mck;
+        kind_ = kind;
     }
 };
 
