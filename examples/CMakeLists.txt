@@ -1,8 +1,5 @@
 find_package(Boost 1.50 COMPONENTS system)
 
-set (CMAKE_CXX_FLAGS "-O")
-set (CMAKE_CXX_FLAGS_DEBUG "-g")
-
 include_directories(${edit_distance_SOURCE_DIR}/include)
 
 macro(add_example name)
