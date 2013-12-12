@@ -539,8 +539,8 @@ BOOST_TTI_HAS_TYPE(cost_type)
 
 template <typename X, typename V, typename Enable=void>
 struct cost_type {
-    X x;
-    V v;
+    static X x;
+    static V v;
     // by default, we infer cost_type from the return value of cost functions
     typedef BOOST_TYPEOF(x.cost_ins(v)) type;
 };
