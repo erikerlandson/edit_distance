@@ -30,8 +30,6 @@ namespace algorithm {
 namespace sequence_alignment {
 namespace detail {
 
-using boost::begin;
-using boost::end;
 using boost::distance;
 using boost::range_iterator;
 
@@ -56,10 +54,10 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 
     head_t* const hnull = static_cast<head_t*>(NULL);
 
-    const itr1_t end1 = end(seq1);
-    const itr2_t end2 = end(seq2);
-    pos1_t beg1;  beg1.beg(begin(seq1));
-    pos2_t beg2;  beg2.beg(begin(seq2));
+    const itr1_t end1 = boost::end(seq1);
+    const itr2_t end2 = boost::end(seq2);
+    pos1_t beg1;  beg1.beg(boost::begin(seq1));
+    pos2_t beg2;  beg2.beg(boost::begin(seq2));
 
     // pool allocator for path nodes
     boost::object_pool<head_t> pool;
@@ -218,8 +216,8 @@ operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal
     size_type len1 = distance(seq1);
     size_type len2 = distance(seq2);
 
-    itr1_t S1 = begin(seq1);
-    itr2_t S2 = begin(seq2);
+    itr1_t S1 = boost::begin(seq1);
+    itr2_t S2 = boost::begin(seq2);
 
     max_cost_checker_myers<MaxCost, diff_type, diff_type> max_cost_check(max_cost);
 

@@ -26,8 +26,6 @@ namespace algorithm {
 namespace sequence_alignment {
 namespace detail {
 
-using boost::begin;
-using boost::end;
 using boost::distance;
 using boost::range_iterator;
 
@@ -174,10 +172,10 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
 cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
     head_t* const hnull = static_cast<head_t*>(NULL);
 
-    const itr1_t end1 = end(seq1);
-    const itr2_t end2 = end(seq2);
-    pos1_t beg1;  beg1.beg(begin(seq1));
-    pos2_t beg2;  beg2.beg(begin(seq2));
+    const itr1_t end1 = boost::end(seq1);
+    const itr2_t end2 = boost::end(seq2);
+    pos1_t beg1;  beg1.beg(boost::begin(seq1));
+    pos2_t beg2;  beg2.beg(boost::begin(seq2));
 
     // pool allocator for path nodes
     boost::object_pool<head_t> pool;
@@ -521,7 +519,7 @@ typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
 operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception, const none&, const none&) const {
     typedef std::vector<int>::difference_type diff_type;
     std::vector<diff_type> V_data;
-    return path(begin(seq1), distance(seq1), begin(seq2), distance(seq2), equal, max_cost, max_cost_exception, output, V_data);
+    return path(boost::begin(seq1), distance(seq1), boost::begin(seq2), distance(seq2), equal, max_cost, max_cost_exception, output, V_data);
 }
 
 }; // edit_path_struct
