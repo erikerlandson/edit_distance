@@ -1,5 +1,3 @@
-find_package(Boost 1.50 COMPONENTS system)
-
 include_directories(${edit_distance_SOURCE_DIR}/include)
 
 macro(add_example name)
@@ -7,11 +5,9 @@ macro(add_example name)
     target_link_libraries(${name} ${Boost_LIBRARIES})
 endmacro()
 
-if (Boost_FOUND)
-    add_example(x01_edit_distance)
-    add_example(x02_edit_distance_cost)
-    add_example(x03_edit_distance_sequences)
-    add_example(x04_edit_alignment)
-    add_example(x05_edit_alignment_cost)
-    add_example(x06_edit_alignment_sequences)
-endif ()
+add_example(x01_edit_distance)
+add_example(x02_edit_distance_cost)
+add_example(x03_edit_distance_sequences)
+add_example(x04_edit_alignment)
+add_example(x05_edit_alignment_cost)
+add_example(x06_edit_alignment_sequences)
