@@ -42,15 +42,48 @@ using std::random_access_iterator_tag;
 template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam, typename Enabled = void>
 struct edit_cost_struct {
 
+typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
+typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
+typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
+typedef path_head<itr1_t, itr2_t, cost_t> head_t;
+typedef typename head_t::pos1_type pos1_t;
+typedef typename head_t::pos2_type pos2_t;
+
+cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_check, bool max_cost_exception, const itr1_t end1, const itr2_t end2, const Cost& cost, const Equal& equal, sub_checker<AllowSub, Cost, cost_t, int> const& allow_sub) const {
+    if (max_cost_exception) throw max_edit_cost_exception();
+
+    head_t* h;
+    max_cost_check.get(h);
+
+    pos1_t j1 = h->pos1;
+    pos2_t j2 = h->pos2;
+    cost_t C = h->cost;
+    while (true) {
+        if (j1 == end1) {
+            if (j2 == end2) {
+                return C;
+            } else {
+                C += cost.cost_ins(*j2);
+                ++j2;
+            }
+        } else {
+            if (j2 == end2) {
+                C += cost.cost_del(*j1);
+                ++j1;
+            } else {
+                C += (equal(*j1, *j2)) ? 0 
+                                       : ((allow_sub()) ? std::min(allow_sub.cost_sub(cost, *j1, *j2), (cost.cost_del(*j1)+cost.cost_ins(*j2))) 
+                                                        : (cost.cost_del(*j1)+cost.cost_ins(*j2))) ;
+                ++j1;  ++j2;
+            }
+        }
+    }
+    return C;
+}
+
 // Default is generic edit distance algorithm based on a Dijkstra Single Source Shortest Path approach
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
 operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) const {
-    typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
-    typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
-    typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
-    typedef path_head<itr1_t, itr2_t, cost_t> head_t;
-    typedef typename head_t::pos1_type pos1_t;
-    typedef typename head_t::pos2_type pos2_t;
 
     head_t* const hnull = static_cast<head_t*>(NULL);
 
@@ -87,35 +120,8 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
         heap.pop();
 
         if (max_cost_check(h->cost)) {
-            if (max_cost_exception) throw max_edit_cost_exception();
-
-            max_cost_check.get(h);
-            pos1_t j1 = h->pos1;
-            pos2_t j2 = h->pos2;
-            cost_t C = h->cost;
-            while (true) {
-                if (j1 == end1) {
-                    if (j2 == end2) {
-                        return C;
-                    } else {
-                        C += cost.cost_ins(*j2);
-                        ++j2;
-                    }
-                } else {
-                    if (j2 == end2) {
-                        C += cost.cost_del(*j1);
-                        ++j1;
-                    } else {
-                        C += (equal(*j1, *j2)) ? 0 
-                                               : ((allow_sub()) ? std::min(allow_sub.cost_sub(cost, *j1, *j2), (cost.cost_del(*j1)+cost.cost_ins(*j2))) 
-                                                                : (cost.cost_del(*j1)+cost.cost_ins(*j2))) ;
-                        ++j1;  ++j2;
-                    }
-                }
-            }
-            return C;
+            return max_cost_fallback(max_cost_check, max_cost_exception, end1, end2, cost, equal, allow_sub);
         }
-
         max_cost_check.update(h);
 
         // compiles out if edit_beam constraint is not requested
