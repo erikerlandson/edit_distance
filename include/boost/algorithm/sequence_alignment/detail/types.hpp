@@ -16,6 +16,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <cstddef>
 #include <iterator>
 
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
+
 #include <boost/exception/exception.hpp>
 
 #include <boost/type_traits.hpp>
