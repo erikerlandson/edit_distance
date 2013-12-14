@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(undefined_sub) {
         // test sssp implementation
         undef_sub_output<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob, _cost=undef_sub_cost()), 2);
-        ob.finalize();
+        ob.finalize(2);
         BOOST_CHECK(ob.correct);
     }
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(undefined_sub) {
         // test invoking myers specialization
         undef_sub_output<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         BOOST_CHECK_EQUAL(edit_alignment(seq1, seq2, ob), 2);
-        ob.finalize();
+        ob.finalize(2);
         BOOST_CHECK(ob.correct);
     }
 }
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
         const unsigned dist = 2;
         output_check_script<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         unsigned d = edit_alignment(seq1, seq2, ob);
-        ob.finalize();
+        ob.finalize(dist);
         BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
         BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
     }
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
         const unsigned dist = 0;
         output_check_script<char, unsigned, case_equal> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         unsigned d = edit_alignment(seq1, seq2, ob, _equal=case_equal());
-        ob.finalize();
+        ob.finalize(dist);
         BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
         BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
     }
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
         const unsigned dist = 1;
         output_check_script<char, unsigned> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         unsigned d = edit_alignment(seq1, seq2, ob, _allow_sub=true_type());
-        ob.finalize();
+        ob.finalize(dist);
         BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
         BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
     }
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
         const unsigned dist = 0;
         output_check_script<char, unsigned, case_equal> ob(ASVECTOR(seq1), ASVECTOR(seq2));
         unsigned d = edit_alignment(seq1, seq2, ob, _allow_sub=true_type(), _equal=case_equal());
-        ob.finalize();
+        ob.finalize(dist);
         BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << seq1 << "'  seq2='" << seq2 << "'");
         BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << seq1 << "' seq2='" << seq2 << "'  script='" << ob.ss.str() <<"'");
     }
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(max_cost_1) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d/2);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_GT(dt, d/2);
             BOOST_CHECK_GE(dt, d);
             BOOST_CHECK_LE(dt, dub);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(max_cost_1) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d-1);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_GT(dt, d-1);
             BOOST_CHECK_GE(dt, d);
             BOOST_CHECK_LE(dt, dub);
@@ -323,19 +323,19 @@ BOOST_AUTO_TEST_CASE(max_cost_1) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d+1);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _max_cost=d+2);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(max_cost_error_1) {
     output_check_script_long_string out(seq1, seq2);
 
     int d = edit_alignment(seq1, seq2, out, _max_cost=20);
-    out.finalize();
+    out.finalize(d);
     BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seq1 << "'\nseq2= '"<< seq2 <<"'\n\n");
 }
 
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(max_cost_2) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _allow_sub=true_type(), _max_cost=d/2);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_GT(dt, d/2);
             BOOST_CHECK_GE(dt, d);
             BOOST_CHECK_LE(dt, dub);
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(max_cost_2) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _allow_sub=true_type(), _max_cost=d-1);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_GT(dt, d-1);
             BOOST_CHECK_GE(dt, d);
             BOOST_CHECK_LE(dt, dub);
@@ -397,19 +397,19 @@ BOOST_AUTO_TEST_CASE(max_cost_2) {
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _allow_sub=true_type(), _max_cost=d);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _allow_sub=true_type(), _max_cost=d+1);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
             out.reset();
             dt = edit_alignment(seqdata[i], seqdata[j], out, _allow_sub=true_type(), _max_cost=d+2);
-            out.finalize();
+            out.finalize(dt);
             BOOST_CHECK_EQUAL(dt, d);
             BOOST_CHECK(out.correct);
 
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
         for (int j = 0;  j < i;  ++j) {
             output_check_script_long_string out(seqdata[i], seqdata[j]);
             unsigned int d = edit_alignment(seqdata[i], seqdata[j], _output = out, _allow_sub=true_type(), _cost = cost_mixed_ops());
-            out.finalize();
+            out.finalize(d);
             BOOST_CHECK(out.correct);
             BOOST_CHECK(d <= 2*seqdata[i].size());
             if (++n >= N) break;
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(crosscheck_1) {
             output_check_script_long_string out(seqdata[i], seqdata[j]);
             unsigned int d1 = edit_alignment(seqdata[i], seqdata[j], _output = out, _allow_sub=true_type(), _cost = cost_mixed_ops());
             unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost = cost_mixed_ops());
-            out.finalize();
+            out.finalize(d2);
             // verify that the edit script is a correct one: it transforms seq1 into seq2
             BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
             // cross-check that edit_alignment() and edit_distance() compute the same distance
@@ -512,10 +512,10 @@ BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_1) {
             output_check_script_long_string out2(seqdata[i], seqdata[j]);
             // Myers algorithm
             unsigned int d1 = edit_alignment(seqdata[i], seqdata[j], out1, _allow_sub=boost::false_type());
-            out1.finalize();
+            out1.finalize(d1);
             // SSSP algorithm
             unsigned int d2 = edit_alignment(seqdata[i], seqdata[j], out2, _allow_sub=boost::false_type(), _cost = unit_cost_test());
-            out2.finalize();
+            out2.finalize(d2);
             // verify that the edit script is a correct one: it transforms seq1 into seq2
             BOOST_CHECK_MESSAGE(out1.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
             BOOST_CHECK_MESSAGE(out2.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(myers_dist_path_crosscheck_1) {
                 //BOOST_TEST_CHECKPOINT("aaa");
             unsigned int d1 = edit_alignment(seqdata[i], seqdata[j], _output = out, _allow_sub=boost::false_type());
                 //BOOST_TEST_CHECKPOINT("bbb");
-            out.finalize();
+            out.finalize(d2);
             // verify that the edit script is a correct one: it transforms seq1 into seq2
             BOOST_CHECK_MESSAGE(out.correct, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
             // cross-check that edit_alignment() and edit_distance() compute the same distance

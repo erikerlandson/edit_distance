@@ -156,23 +156,26 @@ struct output_check_script {
     typedef ValueType value_type;
     typedef CostType cost_type;
 
-    output_check_script(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1) {
+    output_check_script(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1), tcost(0) {
         ss << boost::tuples::set_delimiter(' ');
     }
 
     void output_ins(const value_type& v2, cost_type c) { 
         ss << boost::make_tuple('+', v2, c);
         if (seq2[++j2] != v2) correct=false;
+        tcost += c;
     }
     void output_del(const value_type& v1, cost_type c) { 
         ss << boost::make_tuple('-', v1, c); 
         if (seq1[++j1] != v1) correct=false; 
+        tcost += c;
     }
     void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
         ss << boost::make_tuple(':', v1, v2, c); 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         // cost should be > zero: otherwise we should be in output_eql()
         if (c <= cost_type(0)) correct=false;
+        tcost += c;
     }
     void output_eql(const value_type& v1, const value_type& v2) { 
         ss << boost::make_tuple('=', v1, v2); 
@@ -189,6 +192,11 @@ struct output_check_script {
         if (j2 != long(seq2.size())-1) correct = false;
     }
 
+    void finalize(cost_type c) {
+        finalize();
+        if (tcost != c) correct = false;
+    }
+
     std::stringstream ss;
     long j1;
     long j2;
@@ -196,6 +204,7 @@ struct output_check_script {
     std::vector<value_type> seq2;
     bool correct;
     Equal equal;
+    cost_type tcost;
 };
 
 template <typename ValueType, typename CostType = long, typename Equal=std::equal_to<ValueType> >
@@ -203,17 +212,19 @@ struct undef_sub_output {
     typedef ValueType value_type;
     typedef CostType cost_type;
 
-    undef_sub_output(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1) {
+undef_sub_output(const std::vector<value_type>& seq1_, const std::vector<value_type>& seq2_) : seq1(ASVECTOR(seq1_)), seq2(ASVECTOR(seq2_)), correct(true), j1(-1), j2(-1), tcost(0) {
         ss << boost::tuples::set_delimiter(' ');
     }
 
     void output_ins(const value_type& v2, cost_type c) { 
         ss << boost::make_tuple('+', v2, c);
         if (seq2[++j2] != v2) correct=false;
+        tcost += c;
     }
     void output_del(const value_type& v1, cost_type c) { 
         ss << boost::make_tuple('-', v1, c); 
         if (seq1[++j1] != v1) correct=false; 
+        tcost += c;
     }
     void output_eql(const value_type& v1, const value_type& v2) { 
         ss << boost::make_tuple('=', v1, v2); 
@@ -226,6 +237,11 @@ struct undef_sub_output {
         if (j2 != long(seq2.size())-1) correct = false;
     }
 
+    void finalize(cost_type c) {
+        finalize();
+        if (tcost != c) correct = false;
+    }
+
     std::stringstream ss;
     long j1;
     long j2;
@@ -233,6 +249,7 @@ struct undef_sub_output {
     std::vector<value_type> seq2;
     bool correct;
     Equal equal;
+    cost_type tcost;
 };
 
 
@@ -240,19 +257,22 @@ struct output_check_script_long_string {
     typedef char value_type;
     typedef long cost_type;
 
-    output_check_script_long_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1) {
+    output_check_script_long_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1), tcost(0) {
     }
 
     void output_ins(const value_type& v2, cost_type c) { 
         if (seq2[++j2] != v2) correct=false;
+        tcost += c;
     }
     void output_del(const value_type& v1, cost_type c) { 
         if (seq1[++j1] != v1) correct=false; 
+        tcost += c;
     }
     void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         // cost should be > zero: otherwise we should be in output_eql()
         if (c <= cost_type(0)) correct=false;
+        tcost += c;
     }
     void output_eql(const value_type& v1, const value_type& v2) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
@@ -268,10 +288,16 @@ struct output_check_script_long_string {
         if (j2 != long(seq2.size())-1) correct = false;
     }
 
+    void finalize(cost_type c) {
+        finalize();
+        if (tcost != c) correct = false;
+    }
+
     void reset() {
         j1 = -1;
         j2 = -1;
         correct = true;
+        tcost = 0;
     }
 
     long j1;
@@ -279,6 +305,7 @@ struct output_check_script_long_string {
     std::string seq1;
     std::string seq2;
     bool correct;
+    cost_type tcost;
 };
 
 
@@ -286,7 +313,7 @@ struct output_check_script_string {
     typedef char value_type;
     typedef long cost_type;
 
-    output_check_script_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1) {
+    output_check_script_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1), tcost(0) {
     }
 
     void output_ins(const value_type& v2, cost_type c) { 
@@ -294,12 +321,14 @@ struct output_check_script_string {
             std::cerr << "INS seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
         }
+        tcost += c;
     }
     void output_del(const value_type& v1, cost_type c) { 
         if (seq1[++j1] != v1) {
             std::cerr << "DEL seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 << "\n";
             correct=false; 
         }
+        tcost += c;
     }
     void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
@@ -311,6 +340,7 @@ struct output_check_script_string {
             std::cerr << "SUB cost= " << c << "   seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
         }
+        tcost += c;
     }
     void output_eql(const value_type& v1, const value_type& v2) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
@@ -338,11 +368,17 @@ struct output_check_script_string {
         }
     }
 
+    void finalize(cost_type c) {
+        finalize();
+        if (tcost != c) correct = false;
+    }
+
     long j1;
     long j2;
     std::string seq1;
     std::string seq2;
     bool correct;
+    cost_type tcost;
 };
 
 
@@ -352,7 +388,7 @@ struct output_check_script_string {
     boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
     output_check_script<char> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
     long d = edit_alignment(seq1, seq2, ob); \
-    ob.finalize(); \
+    ob.finalize(d); \
     BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
     BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
 }
@@ -363,7 +399,7 @@ struct output_check_script_string {
     boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
     output_check_script<char> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
     long d = edit_alignment(seq1, seq2, ob, arg); \
-    ob.finalize(); \
+    ob.finalize(d); \
     BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
     BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
 }
@@ -374,7 +410,7 @@ struct output_check_script_string {
     boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages); \
     output_check_script<char> ob(ASVECTOR(seq1), ASVECTOR(seq2)); \
     long d = edit_alignment(seq1, seq2, ob, arg, arg2); \
-    ob.finalize(); \
+    ob.finalize(d); \
     BOOST_CHECK_MESSAGE(ob.correct, "incorrect edit script: '" << ob.ss.str() << "'  seq1='" << ASSTRING(seq1) << "'  seq2='" << ASSTRING(seq2) << "'"); \
     BOOST_CHECK_MESSAGE(d == dist, "incorrect edit distance " << d << "(expected " << dist << ")  seq1='" << ASSTRING(seq1) << "' seq2='" << ASSTRING(seq2) << "'  script='" << ob.ss.str() <<"'"); \
 }
