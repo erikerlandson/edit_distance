@@ -165,7 +165,6 @@ template <typename MaxCost, typename CostT, typename Pos, typename Enable = void
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_same<MaxCost, none> >::type> {
-    static const int Z = 0;
     static const int F = 1;
     static const int R = 2;
     static const int B = 3;
@@ -180,7 +179,6 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_same<Ma
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithmetic<MaxCost> >::type> {
-    static const int Z = 0;
     static const int F = 1;
     static const int R = 2;
     static const int B = 3;
@@ -189,35 +187,10 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithme
     Pos mcmin;
     Pos mctec;
     Pos mck;
-    Pos pos1;
-    Pos pos2;
-    CostT cost;
     int kind;
 
-    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), pos1(0), pos2(0), cost(0), mcmin(-1), mctec(-1), mck(0), kind(Z) {}
+    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), mcmin(-1), mctec(-1), mck(0), kind(0) {}
     inline bool operator()(const CostT& c) const { return c > max_cost; }
-    inline void update(const Pos& pos1_, const Pos& pos2_, const CostT& cost_) {
-        // primary criteria:  position that consumes most sequence elements
-        Pos ttec = pos1_ + pos2_;
-        if (ttec < mctec) return;
-
-        // secondary criteria: favor positions closest to diagonal
-        Pos tmin = std::min(pos1_, pos2_);
-        if (ttec > mctec  ||  tmin > mcmin) {
-            pos1 = pos1_;
-            pos2 = pos2_;
-            cost = cost_;
-            mctec = ttec;
-            mcmin = tmin;
-            kind = F;
-        }
-    }
-    inline void get(Pos& pos1_, Pos& pos2_, CostT& cost_) const {
-        pos1_ = pos1;
-        pos2_ = pos2;
-        cost_ = cost;
-    }
-
     template <typename Itr>
     inline void update(const Pos& k, const Itr& Vf, const Itr& Vr, const Pos& delta, const Pos& L1, const Pos& L2, const Pos& D) {
         Pos j1f = Vf[k];
