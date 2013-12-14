@@ -185,6 +185,16 @@ BOOST_AUTO_TEST_CASE(allow_sub_1) {
     BOOST_CHECK_EQUAL(edit_distance("raqc", "rxqz", _allow_sub=boost::false_type()), 4);
 }
 
+BOOST_AUTO_TEST_CASE(max_cost_error_1) {
+    std::string seq1 = "xx21fxxxxxxxxxxxxxxxxxxxgxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2b82cfxxxxxxxxxxxxxxxxxxxx";
+    std::string seq2 = "x32gc3eaxxxxxxxxxxxxxxxxxedfxxxxxxxxxxxxxxxxxg63bxxxxxxxxxxxxxxxxxxg2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+    int d = edit_distance(seq1, seq2);
+    BOOST_CHECK_EQUAL(d, 39);
+
+    int dt = edit_distance(seq1, seq2, _max_cost=d-2);
+    BOOST_CHECK_GT(dt, d-2); 
+}
 
 BOOST_AUTO_TEST_CASE(max_cost_1) {
     srand(time(0));
@@ -204,6 +214,7 @@ BOOST_AUTO_TEST_CASE(max_cost_1) {
 
             dt = edit_distance(seqdata[i], seqdata[j], _max_cost=d-2);
             BOOST_CHECK_GT(dt, d-2);
+            BOOST_CHECK_MESSAGE(dt > d-2, "\n\nseq1= '" << seqdata[i] << "'\nseq2= '"<< seqdata[j] <<"'\n\n");
             BOOST_CHECK_GE(dt, d);
             BOOST_CHECK_LE(dt, dub);
 
