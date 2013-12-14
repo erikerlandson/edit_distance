@@ -33,6 +33,7 @@ namespace detail {
 using boost::distance;
 using boost::range_iterator;
 
+using boost::make_tuple;
 using boost::enable_if;
 using boost::is_same;
 using boost::mpl::and_;
@@ -193,15 +194,106 @@ struct edit_cost_struct<Range1, Range2, unit_cost, Equal, boost::false_type, Max
                                                 is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
                                                         random_access_iterator_tag> > >::type> {
 
-template <typename Vec, typename Itr, typename Size, typename Diff> 
-inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
-    Size Rp = R + (R>>1);
-    V_data.resize(1 + 2*Rp);
-    V = V_data.begin() + R;
-    Itr Vp = V_data.begin() + Rp;
-    for (Diff j=D;  j >= -D;  --j) Vp[j] = V[j];
+typedef typename range_iterator<Range1 const>::type itr1_t;
+typedef typename range_iterator<Range2 const>::type itr2_t;
+
+typedef std::vector<int>::difference_type diff_type;
+typedef std::vector<int>::size_type size_type;
+
+typedef typename std::vector<diff_type>::iterator itrv_t;
+typedef max_cost_checker_myers<MaxCost, diff_type, diff_type> max_cost_type;
+
+std::string dump(const itr1_t& S1, const size_type& len1) const {
+    std::string r;
+    for (int j = 0; j < len1;  ++j) r += S1[j];
+    return r;
+}
+
+template <typename Vec, typename Itr> 
+inline void expand(Vec& V_data, Itr& Vf, Itr& Vr, size_type& R, const diff_type& D, const diff_type& delta) const {
+    size_type Rp = R + (R>>1);
+    V_data.resize(2 + 4*Rp);
+    Vf = V_data.begin() + R;
+    Vr = V_data.begin() + (3*R+1) - delta;
+
+    Itr Vp = V_data.begin() + (3*Rp+1) - delta;
+    for (diff_type j=D+delta;  j >= -D+delta;  --j) Vp[j] = Vr[j];
+    Vr = Vp;
+
+    Vp = V_data.begin() + Rp;
+    for (diff_type j=D;  j >= -D;  --j) Vp[j] = Vf[j];
+    Vf = Vp;
+
     R = Rp;
-    V = Vp;
+}
+
+diff_type max_cost_fallback(max_cost_type& max_cost_check, const bool max_cost_exception, const Equal& equal,
+                            const itr1_t& S1, const size_type& L1, const itr2_t& S2, const size_type& L2,
+                            const itrv_t& Vf, const itrv_t& Vr, const diff_type& delta, const diff_type& D) const {
+    if (max_cost_exception) throw max_edit_cost_exception();
+
+    for (diff_type k = -D;  k <= D;  k += 2) {
+        max_cost_check.update(k, Vf, Vr, delta, L1, L2, D);
+    }
+
+    diff_type r1b, r2b, r1e, r2e;
+
+    diff_type C = 0;
+    diff_type k;
+    int kind;
+    max_cost_check.get(k, kind);
+    switch (kind) {
+        case max_cost_type::F: {
+            r1b = Vf[k];
+            r2b = r1b-k;
+            r1e = L1;
+            r2e = L2;
+            C = D;
+        }; break;
+
+        case max_cost_type::R: {
+            r1b = 0;
+            r2b = 0;
+            r1e = Vr[k];
+            r2e = r1e-k;
+            C = D;
+        }; break;
+
+        case max_cost_type::B: {
+            r1b = Vf[k];
+            r2b = r1b-k;
+            r1e = Vr[k];
+            r2e = r1e-k;
+            C = 2*D;
+        }; break;
+
+        default: BOOST_ASSERT(false);
+    }
+
+    // this is the part we bailed on due to hitting the maximum
+    diff_type j1 = r1b;
+    diff_type j2 = r2b;
+    while (true) {
+        if (j1 >= r1e) {
+            if (j2 >= r2e) {
+                break;
+            } else {
+                C += 1;
+                ++j2;
+            }
+        } else {
+            if (j2 >= r2e) {
+                C += 1;
+                ++j1;
+            } else {
+                if (!equal(S1[j1], S2[j2])) C += 2;
+                ++j1;
+                ++j2;
+            }
+        }
+    }
+
+    return C;
 }
 
 // If we are using unit cost for ins/del, with no substitution,
@@ -212,66 +304,77 @@ inline void expand(Vec& V_data, Itr& V, Size& R, const Diff& D) const {
 //     by Eugene W. Myers
 //     Dept of Computer Science, University of Arizona
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-operator()(Range1 const& seq1, Range2 const& seq2, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception, const none&, const none&) const {
-    typedef typename range_iterator<Range1 const>::type itr1_t;
-    typedef typename range_iterator<Range2 const>::type itr2_t;
+operator()(Range1 const& seq1_, Range2 const& seq2_, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception, const none&, const none&) const {
+    itr1_t seq1 = boost::begin(seq1_);
+    itr2_t seq2 = boost::begin(seq2_);
+    size_type len1 = distance(seq1_);
+    size_type len2 = distance(seq2_);
 
-    typedef std::vector<int>::difference_type diff_type;
-    typedef std::vector<int>::size_type size_type;
+    // identify any equal suffix and/or prefix
+    diff_type eqb = 0;
+    for (;  eqb < std::min(len1, len2);  ++eqb) if (!equal(seq1[eqb],seq2[eqb])) break;
+    diff_type eqe = len1-1;
+    for (diff_type j2 = len2-1;  eqe > eqb && j2 > eqb;  --eqe,--j2) if (!equal(seq1[eqe],seq2[j2])) break;
+    eqe = len1-1-eqe;
 
-    size_type len1 = distance(seq1);
-    size_type len2 = distance(seq2);
+    // sub-strings with equal suffix and/or prefix stripped
+    const itr1_t S1 = seq1 + eqb;
+    const diff_type L1 = len1-(eqb+eqe);
+    const itr2_t S2 = seq2 + eqb;
+    const diff_type L2 = len2-(eqb+eqe);
 
-    itr1_t S1 = boost::begin(seq1);
-    itr2_t S2 = boost::begin(seq2);
+    // either or both strings are empty:
+    if (L1 <= 0) return L2;
+    if (L2 <= 0) return L1;
 
-    max_cost_checker_myers<MaxCost, diff_type, diff_type> max_cost_check(max_cost);
+    const diff_type delta = L1-L2;
+    const bool delta_even = delta%2 == 0;
 
     size_type R = 10;
-    std::vector<diff_type> V_data(1 + 2*R);
-    std::vector<diff_type>::iterator V = V_data.begin() + R;
+    std::vector<diff_type> V_data(2*(1 + 2*R));
+    itrv_t Vf = V_data.begin()+R;
+    itrv_t Vr = V_data.begin()+(3*R+1)-delta;
+
+    max_cost_type max_cost_check(max_cost);
 
     diff_type D = 0;
-    V[1] = 0;
+    Vf[1] = 0;
+    Vr[-1+delta] = L1;
     while (true) {
+        // advance forward-path diagonals:
         for (diff_type k = -D;  k <= D;  k += 2) {
-            diff_type j1 = (k == -D  ||  (k != D  &&  V[k-1] < V[k+1]))  ?  V[k+1]  :  1+V[k-1];
+            diff_type j1 = (k == -D  ||  (k != D  &&  Vf[k-1] < Vf[k+1]))  ?  Vf[k+1]  :  1+Vf[k-1];
             diff_type j2 = j1-k;
-            while (j1 < len1  &&  j2 < len2  &&  equal(S1[j1], S2[j2])) { ++j1;  ++j2; }
-            if (j1 >= len1  &&  j2 >= len2) return D;
-            V[k] = j1;
+            if (!delta_even  &&  (k-delta) >= -(D-1)  &&  (k-delta) <= (D-1)) {
+                diff_type r1 = Vr[k];
+                diff_type r2 = Vr[k]-k;
+                if ((j1-j2) == (r1-r2)  &&  j1 >= r1) return 2*D-1;
+            }
+            while (j1 < L1  &&  j2 < L2  &&  equal(S1[j1], S2[j2])) { ++j1;  ++j2; }
+            Vf[k] = j1;
         }
 
-        if (max_cost_check(1+D)) {
-            if (max_cost_exception) throw max_edit_cost_exception();
-
-            for (diff_type k = -D;  k <= D;  k += 2) max_cost_check.update(V[k], V[k]-k, D);
-
-            diff_type j1;
-            diff_type j2;
-            max_cost_check.get(j1, j2, D);
-            while (true) {
-                if (j1 >= len1) {
-                    if (j2 >= len2) {
-                        return D;
-                    } else {
-                        D += 1;
-                        ++j2;  
-                    }
-                } else {
-                    if (j2 >= len2) {
-                        D += 1;
-                        ++j1;
-                    } else {
-                        D += (equal(S1[j1], S2[j2])) ? 0 : 2;
-                        ++j1;  ++j2;
-                    }
-                }
+        // advance the reverse-path diagonals:
+        for (diff_type k = -D+delta;  k <= D+delta;  k += 2) {
+            diff_type j1 = (k == D+delta  ||  (k != -D+delta  &&  Vr[k-1] < Vr[k+1]))  ?  Vr[k-1]  :  Vr[k+1]-1;
+            diff_type j2 = j1-k;
+            if (delta_even  &&  k >= -D  &&  k <= D) {
+                diff_type f1 = Vf[k];
+                diff_type f2 = Vf[k]-k;
+                if ((j1-j2) == (f1-f2)  &&  f1 >= j1) return 2*D;
             }
+            while (j1 > 0  &&  j2 > 0  &&  equal(S1[j1-1], S2[j2-1])) { --j1;  --j2; }
+            Vr[k] = j1;
+        }
+
+        if (max_cost_check((delta_even) ? (2*D+2) : (2*D+1))) {
+            return max_cost_fallback(max_cost_check, max_cost_exception, equal,
+                                     S1, L1, S2, L2,
+                                     Vf, Vr, delta, D);
         }
 
         // expand the working vector as needed
-        if (D >= R) expand(V_data, V, R, D);
+        if (D >= R) expand(V_data, Vf, Vr, R, D, delta);
         ++D;
     }
 
