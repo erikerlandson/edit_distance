@@ -1,0 +1,14 @@
+*~
+# CMake
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+# Executables
+examples/x01_edit_distance
+examples/x02_edit_distance_cost
+examples/x03_edit_distance_sequences
+examples/x04_edit_alignment
+examples/x05_edit_alignment_cost
+examples/x06_edit_alignment_sequences
+test/test
