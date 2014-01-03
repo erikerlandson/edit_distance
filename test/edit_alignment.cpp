@@ -152,45 +152,6 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(edit_beam_1) {
-    // to find the equal run 'bcd', edit_beam width has to be >= 1 
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "bcdef", _allow_sub=true_type(), 2);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcde", "bcdef", _allow_sub=true_type(), _edit_beam = 0, 5);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcde", "bcdef", _allow_sub=true_type(), _edit_beam = 1, 2);
-
-    // to find the equal run 'cd', edit_beam width has to be >= 2
-    CHECK_EDIT_ALIGNMENT_ARG("abcde", "cdefg", _allow_sub=true_type(), 4);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcde", "cdefg", _allow_sub=true_type(), _edit_beam = 0, 5);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcde", "cdefg", _allow_sub=true_type(), _edit_beam = 1, 5);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcde", "cdefg", _allow_sub=true_type(), _edit_beam = 2, 4);
-
-    // edit_beam has to be >= 3 to discover the equal run 'abcd'
-    CHECK_EDIT_ALIGNMENT_ARG("xxxabcd", "abcd", _allow_sub=true_type(), 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("xxxabcd", "abcd", _allow_sub=true_type(), _edit_beam = 0, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("xxxabcd", "abcd", _allow_sub=true_type(), _edit_beam = 1, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("xxxabcd", "abcd", _allow_sub=true_type(), _edit_beam = 2, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("xxxabcd", "abcd", _allow_sub=true_type(), _edit_beam = 3, 3);
-
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "xxxabcd", _allow_sub=true_type(), 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "xxxabcd", _allow_sub=true_type(), _edit_beam = 0, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "xxxabcd", _allow_sub=true_type(), _edit_beam = 1, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "xxxabcd", _allow_sub=true_type(), _edit_beam = 2, 7);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "xxxabcd", _allow_sub=true_type(), _edit_beam = 3, 3);
-
-    // the equal run 'abcd' is at the beginning, and so always find-able
-    CHECK_EDIT_ALIGNMENT_ARG("abcd", "abcdxxx", _allow_sub=true_type(), 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "abcdxxx", _allow_sub=true_type(), _edit_beam = 0, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "abcdxxx", _allow_sub=true_type(), _edit_beam = 1, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "abcdxxx", _allow_sub=true_type(), _edit_beam = 2, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcd", "abcdxxx", _allow_sub=true_type(), _edit_beam = 3, 3);
-
-    CHECK_EDIT_ALIGNMENT_ARG("abcdxxx", "abcd", _allow_sub=true_type(), 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcdxxx", "abcd", _allow_sub=true_type(), _edit_beam = 0, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcdxxx", "abcd", _allow_sub=true_type(), _edit_beam = 1, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcdxxx", "abcd", _allow_sub=true_type(), _edit_beam = 2, 3);
-    CHECK_EDIT_ALIGNMENT_2ARG("abcdxxx", "abcd", _allow_sub=true_type(), _edit_beam = 3, 3);
-}
-
 BOOST_AUTO_TEST_CASE(myers_empty) {
     CHECK_EDIT_ALIGNMENT_ARG("", "", _allow_sub=boost::false_type(), 0);
 }

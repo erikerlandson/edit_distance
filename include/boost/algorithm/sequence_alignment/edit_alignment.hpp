@@ -34,15 +34,15 @@ using detail::cost_type;
 using detail::none;
 using detail::default_equal;
 
-template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam>
+template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
 inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename range_value<Sequence1>::type>::type))
-edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
-    return edit_path_impl(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
+edit_alignment_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
+    return edit_path_impl(boost::as_literal(seq1), boost::as_literal(seq2), output, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 
@@ -60,12 +60,10 @@ BOOST_PARAMETER_FUNCTION(
         (equal, *, default_equal())
         (allow_sub, *, false_type())
         (max_cost, *, none())
-        (max_cost_exception, (bool), false)
-        (edit_beam, *, none())
-        (cost_beam, *, none()))
+        (max_cost_exception, (bool), false))
 )
 {
-    return edit_alignment_check(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
+    return edit_alignment_check(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 

@@ -127,45 +127,6 @@ BOOST_AUTO_TEST_CASE(custom_equal) {
     BOOST_CHECK_EQUAL(edit_distance("abc", "aBc", _allow_sub=true_type(), _equal=case_equal()), 0);
 }
 
-BOOST_AUTO_TEST_CASE(edit_beam_1) {
-    // to find the equal run 'bcd', edit_beam width has to be >= 1 
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef", _allow_sub=true_type()), 2);
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef", _edit_beam=0, _allow_sub=true_type()), 5);
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "bcdef", _edit_beam=1, _allow_sub=true_type()), 2);
-
-    // to find the equal run 'cd', edit_beam width has to be >= 2
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _allow_sub=true_type()), 4);
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _edit_beam=0, _allow_sub=true_type()), 5);
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _edit_beam=1, _allow_sub=true_type()), 5);
-    BOOST_CHECK_EQUAL(edit_distance("abcde", "cdefg", _edit_beam=2, _allow_sub=true_type()), 4);
-
-    // edit_beam has to be >= 3 to discover the equal run 'abcd'
-    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _edit_beam=0, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _edit_beam=1, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _edit_beam=2, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("xxxabcd", "abcd", _edit_beam=3, _allow_sub=true_type()), 3);
-
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _edit_beam=0, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _edit_beam=1, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _edit_beam=2, _allow_sub=true_type()), 7);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "xxxabcd", _edit_beam=3, _allow_sub=true_type()), 3);
-
-    // the equal run 'abcd' is at the beginning, and so always find-able
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _edit_beam=0, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _edit_beam=1, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _edit_beam=2, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcd", "abcdxxx", _edit_beam=3, _allow_sub=true_type()), 3);
-
-    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _edit_beam=0, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _edit_beam=1, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _edit_beam=2, _allow_sub=true_type()), 3);
-    BOOST_CHECK_EQUAL(edit_distance("abcdxxx", "abcd", _edit_beam=3, _allow_sub=true_type()), 3);
-}
-
 BOOST_AUTO_TEST_CASE(allow_sub_1) {
     // bool arg is run-time check
     BOOST_CHECK_EQUAL(edit_distance("abc", "xyz", _allow_sub=true), 3);
@@ -303,47 +264,6 @@ BOOST_AUTO_TEST_CASE(long_sequences) {
 }
 
 
-BOOST_AUTO_TEST_CASE(cost_beam_crosscheck_1) {
-    srand(time(0));
-    vector<std::string> seqdata;
-    const int N = 100;
-    const int beam = 2;
-    random_localized_deviations(seqdata, N, 100000, 5, 50, 10);
-    int n = 0;
-    double t0 = time(0);
-    double sum = 0;
-    double sumdiff = 0;
-    for (int i = 0;  i < seqdata.size();  ++i) {
-        if (n >= N) break;
-        for (int j = 0;  j < i;  ++j) {
-            unsigned int d1 = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type());
-            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=beam);
-            BOOST_CHECK_LE(d1, d2);
-            sum += d1;
-            sumdiff += d2 - d1;
-            if (++n >= N) break;
-        }
-    }
-    double tt = time(0) - t0;
-    BOOST_TEST_MESSAGE("time= " << tt << " sec   n= " << n << "   mean-time= " << tt/double(n));
-    BOOST_TEST_MESSAGE("sum= " << sum << "   sumdiff= " << sumdiff << "   ratio= " << sumdiff/sum);
-    BOOST_CHECK_LE(sumdiff/sum, 0.01);
-
-    n = 0;
-    t0 = time(0);
-    for (int i = 0;  i < seqdata.size();  ++i) {
-        if (n >= N) break;
-        for (int j = 0;  j < i;  ++j) {
-            unsigned int d2 = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=beam);
-            if (++n >= N) break;
-        }
-    }
-    double t2 = time(0) - t0;
-    BOOST_TEST_MESSAGE("time= " << t2 << " sec   n= " << n << "   mean-time= " << t2/double(n) << "\n");
-    BOOST_CHECK_LT(t2, tt);
-}
-
-
 BOOST_AUTO_TEST_CASE(myers_sssp_crosscheck_1) {
     srand(time(0));
     vector<std::string> seqdata;
@@ -397,7 +317,7 @@ BOOST_AUTO_TEST_CASE(timing_1) {
     for (int i = 0;  i < seqdata.size();  ++i) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type());
             BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }
@@ -417,7 +337,7 @@ BOOST_AUTO_TEST_CASE(timing_2) {
     for (int i = 0;  i < seqdata.size();  ++i) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type());
             BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }
@@ -437,7 +357,7 @@ BOOST_AUTO_TEST_CASE(timing_3) {
     for (int i = 0;  i < seqdata.size();  ++i) {
         if (n >= N) break;
         for (int j = 0;  j < i;  ++j) {
-            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type(), _cost_beam=2);
+            unsigned int d = edit_distance(seqdata[i], seqdata[j], _allow_sub=true_type());
             BOOST_CHECK(d <= std::max(seqdata[i].size(),seqdata[j].size()));
             if (++n >= N) break;
         }

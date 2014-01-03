@@ -36,7 +36,7 @@ using std::iterator_traits;
 using std::random_access_iterator_tag;
 using boost::make_tuple;
 
-template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam, typename Enabled = void>
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename Enabled = void>
 struct edit_path_struct {
 
 typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
@@ -169,7 +169,7 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
     return C;
 }
 
-cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
+cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception) {
     head_t* const hnull = static_cast<head_t*>(NULL);
 
     const itr1_t end1 = boost::end(seq1);
@@ -193,11 +193,6 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
     typedef boost::unordered_set<head_t*, visited_hash<pos1_t,pos2_t>, visited_equal> visited_t;
     visited_t visited(31, visited_hash<pos1_t,pos2_t>(beg1,beg2));
 
-    // support edit_beam-width pruning, if asked for
-    edit_beam_checker<head_t, EditBeam> on_edit_beam(beg1, beg2, edit_beam);
-
-    cost_beam_checker<head_t, Cost, cost_t, CostBeam> cost_beam_check(beg1, beg2, cost_beam);
-
     // kick off graph path frontier with initial node:
     heap.push(construct(pool, visited, beg1, beg2, cost_t(0), hnull));
 
@@ -210,21 +205,6 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
             return max_cost_fallback(max_cost_check, max_cost_exception, end1, end2, output, cost, equal, allow_sub);
         }
         max_cost_check.update(h);
-
-        if (!on_edit_beam(h)) {
-            // prune all paths that move off the edit_beam
-            // unless we are at the end of one of the sequences, in which
-            // case going off-edit_beam is the only way to continue when
-            // one string is longer than the other and difference > edit_beam
-            if (h->pos1 != end1  &&  h->pos2 != end2) continue;
-        }
-
-        // compiles out if envelope pruning isn't requested
-        if (cost_beam_check(h)) {
-            // prune pathways inside the current envelope that do not look promising
-            // this is a heuristic: it can result in non-minimum edit path
-            continue;
-        }
 
         if (h->pos1 == end1) {
             if (h->pos2 == end2) {
@@ -250,7 +230,6 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
             while (true) {
                 const bool eq = equal(*p1p, *p2p);
                 if (!eq  ||  p1 == end1  ||  p2 == end2) {
-                    cost_beam_check.update(h->pos1, p1p, p2p, h->cost);
                     head_t* t;
                     if (allow_sub() || eq) {
                         t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : allow_sub.cost_sub(cost, *p1p, *p2p)), h);
@@ -278,7 +257,7 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
 
 
 template <typename Range1, typename Range2, typename Output, typename Equal, typename MaxCost>
-struct edit_path_struct<Range1, Range2, Output, unit_cost, Equal, boost::false_type, MaxCost, none, none, 
+struct edit_path_struct<Range1, Range2, Output, unit_cost, Equal, boost::false_type, MaxCost,
                         typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<Range1>::type>::iterator_category, 
                                                         random_access_iterator_tag>, 
                                                 is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
@@ -536,7 +515,7 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
 inline
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception, const none&, const none&) const {
+operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception) const {
     typedef std::vector<int>::difference_type diff_type;
     std::vector<diff_type> V_data;
     return path(boost::begin(seq1), distance(seq1), boost::begin(seq2), distance(seq2), equal, max_cost, max_cost_exception, output, V_data);
@@ -545,12 +524,12 @@ operator()(Range1 const& seq1, Range2 const& seq2, Output& output, const unit_co
 }; // edit_path_struct
 
 
-template <typename Range1, typename Range2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename EditBeam, typename CostBeam>
+template <typename Range1, typename Range2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
 inline
 typename cost_type<Cost, typename boost::range_value<Range1>::type>::type
-edit_path_impl(Range1 const& seq1, Range2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception, const EditBeam& edit_beam, const CostBeam& cost_beam) {
+edit_path_impl(Range1 const& seq1, Range2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
     // specialize the most appropriate implementation for the given parameters
-    return edit_path_struct<Range1, Range2, Output, Cost, Equal, AllowSub, MaxCost, EditBeam, CostBeam>()(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception, edit_beam, cost_beam);
+    return edit_path_struct<Range1, Range2, Output, Cost, Equal, AllowSub, MaxCost>()(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 

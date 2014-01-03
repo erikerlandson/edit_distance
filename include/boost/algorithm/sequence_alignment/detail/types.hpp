@@ -49,7 +49,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
 
-#define BOOST_PARAMETER_MAX_ARITY 10
 #include <boost/parameter/name.hpp>
 #include <boost/parameter/preprocessor.hpp>
 
@@ -89,8 +88,6 @@ namespace parameter {
     BOOST_PARAMETER_NAME(allow_sub)
     BOOST_PARAMETER_NAME(max_cost)
     BOOST_PARAMETER_NAME(max_cost_exception)
-    BOOST_PARAMETER_NAME(edit_beam)
-    BOOST_PARAMETER_NAME(cost_beam)
 }
 
 
@@ -257,81 +254,6 @@ struct default_equal {
     inline bool operator()(const T1& a, const T2& b) const { return a == b; }
 };
 
-template <typename Node, typename EditBeam, typename Enabled=void>
-struct edit_beam_checker {
-    // some kind of compile-time error here
-};
-
-// default edit_beam checker is no-op: no edit_beam checking at all
-template <typename Node, typename EditBeam>
-struct edit_beam_checker<Node, EditBeam, typename enable_if<is_same<EditBeam, none> >::type> {
-    edit_beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, EditBeam const& edit_beam_) {}
-    inline bool operator()(Node*) const { return true; }
-};
-
-template <typename Node, typename EditBeam>
-struct edit_beam_checker<Node, EditBeam, typename enable_if<is_integral<EditBeam> >::type> {
-    typename Node::pos1_type beg1;
-    typename Node::pos2_type beg2;
-    EditBeam edit_beam;
-    edit_beam_checker(typename Node::pos1_type const& beg1_, typename Node::pos2_type const& beg2_, EditBeam const& edit_beam_) : beg1(beg1_), beg2(beg2_), edit_beam(std::abs(edit_beam_)) {}
-    inline bool operator()(Node* n) const {
-        return std::abs((n->pos1 - beg1) - (n->pos2 - beg2)) <= edit_beam;
-    }
-};
-
-template <typename Node, typename Cost, typename CostT, typename Beam, typename Enabled=void>
-struct cost_beam_checker {
-    // some kind of compile-time error here
-};
-
-// default env pruner is no-op: no pruning at all
-template <typename Node, typename Cost, typename CostT, typename Beam>
-struct cost_beam_checker<Node, Cost, CostT, Beam, typename enable_if<is_same<Beam, none> >::type> {
-    typedef typename Node::pos1_type pos1_type;
-    typedef typename Node::pos2_type pos2_type;
-
-    cost_beam_checker(const pos1_type&, const pos2_type&, const Beam&) {}
-
-    inline bool operator()(Node*) const { return false; }
-
-    inline void update(const pos1_type&, const pos1_type&, const pos2_type&, const CostT&) const {}
-};
-
-template <typename Node, typename Cost, typename CostT, typename Beam>
-struct cost_beam_checker<Node, Cost, CostT, Beam, typename enable_if<is_arithmetic<Beam> >::type> {
-    typedef typename Node::pos1_type pos1_type;
-    typedef typename Node::pos2_type pos2_type;
-
-    pos1_type env1;
-    pos2_type env2;
-    CostT beam;
-    CostT beam_ub;
-
-    cost_beam_checker(const pos1_type& pos1_, const pos2_type& pos2_, const Beam& beam_) : 
-        env1(pos1_), env2(pos2_), beam(CostT(std::abs(beam_))), beam_ub(0) {}
-
-    inline bool operator()(Node* n) const {
-        return (n->cost >= beam_ub)  &&  (n->pos1 < env1)  &&  (n->pos2 < env2);
-    }
-
-    inline void update(typename Node::pos1_type const& ref1, typename Node::pos1_type const& pos1, typename Node::pos2_type const& pos2, const CostT& cost) {
-        // I cannot decide if this should be exposed as a parameter or not.
-        // 4 is a magic number, but appears to be consistently a bit better than
-        // other magic numbers in my testing.  Given the uncertainty I will lean in 
-        // favor of not exposing more free parameters than necessary.
-        // The basic idea in play here is that it's advantageous to only update the
-        // cost beam envelope for 'real' runs of equality, not spurious ones that
-        // occur purely by chance.
-        const size_t run_min = 4;
-
-        if ((env1 < pos1  ||  env2 < pos2)  &&  (pos1-ref1) >= run_min) {
-            env1 = pos1;
-            env2 = pos2;
-            beam_ub = cost + beam;
-        }
-    }
-};
 
 template <typename AllowSub, typename Cost, typename CostT, typename Output, typename Enable=void>
 struct sub_checker {
