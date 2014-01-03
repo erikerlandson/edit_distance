@@ -19,13 +19,3 @@ Sequences may be any kind of C++ range object, and may be mixed:
     // Any forward range can be provided to these functions.
     // Sequence element types are not required to be exactly equal, as long as they are compatible.
     int d = edit_distance(my_vector, my_list | boost::adaptors::reversed, _cost=my_cost());
-    
-If a beam radius is provided, then edit operations will be restricted to within that radius of 'diagonal':
-
-    // apply a beam radius check to limit exploration of edit paths
-    int d = edit_alignment(s1, s2, output_handler, _edit_beam=100);
-
-An edit cost beam may also be applied optionaly, which prunes exploration of edit paths based on a cost window.
-
-    // apply a cost beam to limit exploration of "less promising" edit paths
-    int d = edit_distance(s1, s2, _cost_beam=10);
