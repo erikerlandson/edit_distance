@@ -84,12 +84,12 @@ struct undef_sub_cost {
     typedef size_t cost_type;
 
     template <typename value_type> inline
-    cost_type cost_ins(value_type const&) const {
+    cost_type insertion(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type> inline
-    cost_type cost_del(value_type const&) const {
+    cost_type deletion(value_type const&) const {
         return cost_type(1);
     }
 };
@@ -101,17 +101,17 @@ struct unit_cost_test {
     typedef size_t cost_type;
 
     template <typename value_type> inline
-    cost_type cost_ins(value_type const&) const {
+    cost_type insertion(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type> inline
-    cost_type cost_del(value_type const&) const {
+    cost_type deletion(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type_1, typename value_type_2> inline
-    cost_type cost_sub(value_type_1 const&, value_type_2 const&) const {
+    cost_type substitution(value_type_1 const&, value_type_2 const&) const {
         return cost_type(1);
     }
 };
@@ -119,25 +119,25 @@ struct unit_cost_test {
 struct cost_expensive_sub {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type) const { return 1; }
-    cost_type cost_del(value_type) const { return 1; }
-    cost_type cost_sub(value_type, value_type) const { return 3; }
+    cost_type insertion(value_type) const { return 1; }
+    cost_type deletion(value_type) const { return 1; }
+    cost_type substitution(value_type, value_type) const { return 3; }
 };
 
 struct cost_expensive_ins {
     typedef int cost_type;
     typedef char value_type;
-    cost_type cost_ins(value_type) const { return 2; }
-    cost_type cost_del(value_type) const { return 1; }
-    cost_type cost_sub(value_type, value_type) const { return 1; }
+    cost_type insertion(value_type) const { return 2; }
+    cost_type deletion(value_type) const { return 1; }
+    cost_type substitution(value_type, value_type) const { return 1; }
 };
 
 struct cost_mixed_ops {
     typedef int cost_type;
     typedef char value_type;
-    inline cost_type cost_ins(value_type const&) const { return 1; }
-    inline cost_type cost_del(value_type const&) const { return 1; }
-    inline cost_type cost_sub(value_type const& c, value_type const& d) const {
+    inline cost_type insertion(value_type const&) const { return 1; }
+    inline cost_type deletion(value_type const&) const { return 1; }
+    inline cost_type substitution(value_type const& c, value_type const& d) const {
         // allow substitution between alphabetics
         if (isalpha(c) && isalpha(d)) return 1;
         return 3;

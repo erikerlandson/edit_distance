@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
 }
 
 BOOST_AUTO_TEST_CASE(undefined_sub) {
-    // verify that cost_sub() and substitution() can be undefined when substitution is compile-time disabled:
+    // verify that substitution() and substitution() can be undefined when substitution is compile-time disabled:
     const std::string seq1 = "abc";
     const std::string seq2 = "axc";
 

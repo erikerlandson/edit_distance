@@ -128,14 +128,14 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
             if (j2 == end2) {
                 return C;
             } else {
-                cost_t c = cost.cost_ins(*j2);
+                cost_t c = cost.insertion(*j2);
                 output.insertion(*j2, c);
                 C += c;
                 ++j2;
             }
         } else {
             if (j2 == end2) {
-                cost_t c = cost.cost_del(*j1);
+                cost_t c = cost.deletion(*j1);
                 output.deletion(*j1, c);
                 C += c;
                 ++j1;
@@ -143,14 +143,14 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
                 if (equal(*j1, *j2)) {
                     output.equality(*j1, *j2);
                 } else {
-                    cost_t cd = cost.cost_del(*j1);
-                    cost_t ci = cost.cost_ins(*j2);
+                    cost_t cd = cost.deletion(*j1);
+                    cost_t ci = cost.insertion(*j2);
                     if (!allow_sub()) {
                         output.deletion(*j1, cd);
                         output.insertion(*j2, ci);
                         C += cd+ci;
                     } else {
-                        cost_t cs = allow_sub.cost_sub(cost, *j1, *j2);
+                        cost_t cs = allow_sub.substitution(cost, *j1, *j2);
                         if (cs <= cd+ci) {
                             allow_sub.substitution(output, *j1, *j2, cs);
                             C += cs;
@@ -214,12 +214,12 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
             }
             // sequence 1 is at end, so only consider insertion from seq2
             pos2_t p2 = h->pos2;
-            head_t* t = construct(pool, visited, h->pos1, ++p2, h->cost + cost.cost_ins(*(h->pos2)), h);
+            head_t* t = construct(pool, visited, h->pos1, ++p2, h->cost + cost.insertion(*(h->pos2)), h);
             if (t != hnull) heap.push(t);
        } else if (h->pos2 == end2) {
             // sequence 2 is at end, so only consider deletion from seq1
             pos1_t p1 = h->pos1;
-            head_t* t = construct(pool, visited, ++p1, h->pos2, h->cost + cost.cost_del(*(h->pos1)), h);
+            head_t* t = construct(pool, visited, ++p1, h->pos2, h->cost + cost.deletion(*(h->pos1)), h);
             if (t != hnull) heap.push(t);
         } else {
             // interior of both sequences: consider insertion deletion and sub/eql:
@@ -232,12 +232,12 @@ cost_t operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, Output& 
                 if (!eq  ||  p1 == end1  ||  p2 == end2) {
                     head_t* t;
                     if (allow_sub() || eq) {
-                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : allow_sub.cost_sub(cost, *p1p, *p2p)), h);
+                        t = construct(pool, visited, p1, p2, h->cost + ((eq) ? 0 : allow_sub.substitution(cost, *p1p, *p2p)), h);
                         if (t != hnull) heap.push(t);
                     }
-                    t = construct(pool, visited, p1p, p2, h->cost + cost.cost_ins(*p2p), h);
+                    t = construct(pool, visited, p1p, p2, h->cost + cost.insertion(*p2p), h);
                     if (t != hnull) heap.push(t);
-                    t = construct(pool, visited, p1, p2p, h->cost + cost.cost_del(*p1p), h);
+                    t = construct(pool, visited, p1, p2p, h->cost + cost.deletion(*p1p), h);
                     if (t != hnull) heap.push(t);
                     break;
                 }

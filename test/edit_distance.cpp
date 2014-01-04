@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(custom_cost) {
 }
 
 BOOST_AUTO_TEST_CASE(undefined_sub) {
-    // verify that cost_sub() method can be undefined when substitution is compile-time disabled:
+    // verify that substitution() method can be undefined when substitution is compile-time disabled:
     BOOST_CHECK_EQUAL(edit_distance("abc", "axc", _cost=undef_sub_cost()), 2);
 }
 

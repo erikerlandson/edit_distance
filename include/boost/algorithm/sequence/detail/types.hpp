@@ -60,17 +60,17 @@ struct unit_cost {
     typedef size_t cost_type;
 
     template <typename value_type> inline
-    cost_type cost_ins(value_type const&) const {
+    cost_type insertion(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type> inline
-    cost_type cost_del(value_type const&) const {
+    cost_type deletion(value_type const&) const {
         return cost_type(1);
     }
 
     template <typename value_type_1, typename value_type_2> inline
-    cost_type cost_sub(value_type_1 const&, value_type_2 const&) const {
+    cost_type substitution(value_type_1 const&, value_type_2 const&) const {
         return cost_type(1);
     }
 };
@@ -273,7 +273,7 @@ struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<All
     bool allow;
     sub_checker(const bool& allow_) : allow(allow_) {}
     inline bool operator()() const { return allow; }
-    template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
+    template <typename V1, typename V2> inline CostT substitution(const Cost& cost, const V1& v1, const V2& v2) const { return cost.substitution(v1, v2); }
     template <typename V1, typename V2> inline void substitution(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.substitution(v1, v2, csub); }
 };
 
@@ -281,7 +281,7 @@ template <typename AllowSub, typename Cost, typename CostT, typename Output>
 struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<AllowSub, true_type> >::type> {
     sub_checker(const AllowSub&) {}
     inline bool operator()() const { return true; }
-    template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
+    template <typename V1, typename V2> inline CostT substitution(const Cost& cost, const V1& v1, const V2& v2) const { return cost.substitution(v1, v2); }
     template <typename V1, typename V2> inline void substitution(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.substitution(v1, v2, csub); }
 };
 
@@ -289,7 +289,7 @@ template <typename AllowSub, typename Cost, typename CostT, typename Output>
 struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<AllowSub, false_type> >::type> {
     sub_checker(const AllowSub&) {}
     inline bool operator()() const { return false; }
-    template <typename V1, typename V2> inline CostT cost_sub(const Cost&, const V1&, const V2&) const { return 0; }
+    template <typename V1, typename V2> inline CostT substitution(const Cost&, const V1&, const V2&) const { return 0; }
     template <typename V1, typename V2> inline void substitution(Output&, const V1&, const V2&, const CostT&) const {}
 };
 
@@ -448,7 +448,7 @@ struct cost_type {
     static X x;
     static V v;
     // by default, we infer cost_type from the return value of cost functions
-    typedef BOOST_TYPEOF(x.cost_ins(v)) type;
+    typedef BOOST_TYPEOF(x.insertion(v)) type;
 };
 
 template <typename X, typename V>
@@ -461,11 +461,11 @@ struct cost_type<X, V, typename enable_if<has_type_cost_type<X> >::type> {
 template <typename X, typename Sequence, typename Enabled=void> struct TestCostSub {};
 
 template <typename X, typename Sequence>
-struct TestCostSub<X, Sequence, typename enable_if<invoke<BOOST_TYPEOF_TPL(&X::cost_sub)> >::type> {
+struct TestCostSub<X, Sequence, typename enable_if<invoke<BOOST_TYPEOF_TPL(&X::substitution)> >::type> {
     typedef typename boost::range_value<Sequence>::type value_type;
     typedef typename cost_type<X, value_type>::type cost_type;
     BOOST_CONCEPT_USAGE(TestCostSub) {
-        c = x.cost_sub(v,v);
+        c = x.substitution(v,v);
     }
 
     X x;
@@ -482,11 +482,11 @@ template <typename X, typename Sequence> struct SequenceAlignmentCost {
     BOOST_CONCEPT_ASSERT((Arithmetic<cost_type>));
 
     BOOST_CONCEPT_USAGE(SequenceAlignmentCost) {
-        c = x.cost_ins(v);
-        c = x.cost_del(v);
+        c = x.insertion(v);
+        c = x.deletion(v);
     }
 
-    // test x.cost_sub() method, if it is defined 
+    // test x.substitution() method, if it is defined 
     BOOST_CONCEPT_ASSERT((TestCostSub<X, Sequence>));
 
     X x;

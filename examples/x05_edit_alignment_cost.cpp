@@ -26,11 +26,11 @@ using namespace boost::algorithm::sequence::parameter;
 struct cost_case_less {
     typedef float cost_type;     // edit costs may be fractional
 
-    cost_type cost_ins(char c) const { return 1; }
-    cost_type cost_del(char c) const { return 1; }
+    cost_type insertion(char c) const { return 1; }
+    cost_type deletion(char c) const { return 1; }
 
     // changes in case cost less than other edit operations:
-    cost_type cost_sub(char c, char d) const { 
+    cost_type substitution(char c, char d) const { 
         if (toupper(c) == toupper(d)) return 0.5;
         return 1;
     }

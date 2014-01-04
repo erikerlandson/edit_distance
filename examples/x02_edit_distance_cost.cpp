@@ -28,14 +28,14 @@ struct cost_free_space {
     typedef unsigned cost_type;
 
     // inserting or deleting a space is free:
-    unsigned cost_ins(char c) const { return (c == ' ') ? 0 : 1; }
-    unsigned cost_del(char c) const { return (c == ' ') ? 0 : 1; }
+    unsigned insertion(char c) const { return (c == ' ') ? 0 : 1; }
+    unsigned deletion(char c) const { return (c == ' ') ? 0 : 1; }
 
     // replacing one char with another costs 1
     // (equal elements always incur zero cost)
-    unsigned cost_sub(char c, char d) const { return 1; }
+    unsigned substitution(char c, char d) const { return 1; }
 
-    // Defining cost_sub() is optional if substitution is compile-time disabled (the default).
+    // Defining substitution() is optional if substitution is compile-time disabled (the default).
     // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
 };
 
