@@ -74,12 +74,12 @@ void traceback(head_t* path_head, const Equal& equal, sub_checker<AllowSub, Cost
 
         if (j1 == j1end) {
             // seq1 didn't advance, this is an insertion from seq2
-            output.output_ins(*j2, n->edge->cost - n->cost);
+            output.insertion(*j2, n->edge->cost - n->cost);
             continue;
         }    
         if (j2 == j2end) {
             // seq2 didn't advance, this is a deletion from seq1
-            output.output_del(*j1, n->edge->cost - n->cost);
+            output.deletion(*j1, n->edge->cost - n->cost);
             continue;
         }
 
@@ -88,23 +88,23 @@ void traceback(head_t* path_head, const Equal& equal, sub_checker<AllowSub, Cost
 
         while (j1x != j1end  &&  j2x != j2end) {
             // unpack any compressed runs of 'eql'
-            output.output_eql(*j1, *j2);
+            output.equality(*j1, *j2);
             ++j1;  ++j2;  ++j1x;  ++j2x;
         }
         if (j1x == j1end) {
             if (j2x == j2end) {
                 if (equal(*j1, *j2)) {
-                    output.output_eql(*j1, *j2);
+                    output.equality(*j1, *j2);
                 } else {
-                    allow_sub.output_sub(output, *j1, *j2, n->edge->cost - n->cost);
+                    allow_sub.substitution(output, *j1, *j2, n->edge->cost - n->cost);
                 }
             } else {
-                output.output_eql(*j1, *j2);
-                output.output_ins(*j2x, n->edge->cost - n->cost);
+                output.equality(*j1, *j2);
+                output.insertion(*j2x, n->edge->cost - n->cost);
             }
         } else {
-            output.output_eql(*j1, *j2);
-            output.output_del(*j1x, n->edge->cost - n->cost);
+            output.equality(*j1, *j2);
+            output.deletion(*j1x, n->edge->cost - n->cost);
         }
     }
 }
@@ -129,34 +129,34 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
                 return C;
             } else {
                 cost_t c = cost.cost_ins(*j2);
-                output.output_ins(*j2, c);
+                output.insertion(*j2, c);
                 C += c;
                 ++j2;
             }
         } else {
             if (j2 == end2) {
                 cost_t c = cost.cost_del(*j1);
-                output.output_del(*j1, c);
+                output.deletion(*j1, c);
                 C += c;
                 ++j1;
             } else {
                 if (equal(*j1, *j2)) {
-                    output.output_eql(*j1, *j2);
+                    output.equality(*j1, *j2);
                 } else {
                     cost_t cd = cost.cost_del(*j1);
                     cost_t ci = cost.cost_ins(*j2);
                     if (!allow_sub()) {
-                        output.output_del(*j1, cd);
-                        output.output_ins(*j2, ci);
+                        output.deletion(*j1, cd);
+                        output.insertion(*j2, ci);
                         C += cd+ci;
                     } else {
                         cost_t cs = allow_sub.cost_sub(cost, *j1, *j2);
                         if (cs <= cd+ci) {
-                            allow_sub.output_sub(output, *j1, *j2, cs);
+                            allow_sub.substitution(output, *j1, *j2, cs);
                             C += cs;
                         } else {
-                            output.output_del(*j1, cd);
-                            output.output_ins(*j2, ci);
+                            output.deletion(*j1, cd);
+                            output.insertion(*j2, ci);
                             C += cd+ci;
                         }
                     }
@@ -339,7 +339,7 @@ diff_type max_cost_fallback(max_cost_checker_myers<MaxCost, diff_type, diff_type
     }
 
     // output equal prefix:
-    for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
+    for (diff_type j = 0;  j < eqb;  ++j) output.equality(seq1[j], seq2[j]);
     // output any known best-path in forward direction 
     diff_type C = path(S1, r1b, S2, r2b, equal, max_cost, max_cost_exception, output, V_data);
 
@@ -351,21 +351,21 @@ diff_type max_cost_fallback(max_cost_checker_myers<MaxCost, diff_type, diff_type
             if (j2 >= r2e) {
                 break;
             } else {
-                output.output_ins(S2[j2], 1);
+                output.insertion(S2[j2], 1);
                 C += 1;
                 ++j2;
             }
         } else {
             if (j2 >= r2e) {
-                output.output_del(S1[j1], 1);
+                output.deletion(S1[j1], 1);
                 C += 1;
                 ++j1;
             } else {
                 if (equal(S1[j1], S2[j2])) {
-                    output.output_eql(S1[j1], S2[j2]);
+                    output.equality(S1[j1], S2[j2]);
                 } else {
-                    output.output_del(S1[j1], 1);
-                    output.output_ins(S2[j2], 1);
+                    output.deletion(S1[j1], 1);
+                    output.insertion(S2[j2], 1);
                     C += 2;
                 }
                 ++j1;
@@ -377,7 +377,7 @@ diff_type max_cost_fallback(max_cost_checker_myers<MaxCost, diff_type, diff_type
     // output known subsequence from reverse direction
     C += path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, equal, max_cost, max_cost_exception, output, V_data);
     // equal suffix
-    for (diff_type jj1=len1-eqe, jj2=len2-eqe; jj1 < len1; ++jj1,++jj2) output.output_eql(seq1[jj1], seq2[jj2]);
+    for (diff_type jj1=len1-eqe, jj2=len2-eqe; jj1 < len1; ++jj1,++jj2) output.equality(seq1[jj1], seq2[jj2]);
 
     return C;
 }
@@ -399,15 +399,15 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
 
     // basis case: either or both strings are empty:
     if (L1 <= 0) {
-        for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
-        for (diff_type j = 0;  j < L2;  ++j) output.output_ins(S2[j], 1);
-        for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.output_eql(seq1[j1], seq2[j2]);
+        for (diff_type j = 0;  j < eqb;  ++j) output.equality(seq1[j], seq2[j]);
+        for (diff_type j = 0;  j < L2;  ++j) output.insertion(S2[j], 1);
+        for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.equality(seq1[j1], seq2[j2]);
         return L2;
     }
     if (L2 <= 0) {
-        for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
-        for (diff_type j = 0;  j < L1;  ++j) output.output_del(S1[j], 1);
-        for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.output_eql(seq1[j1], seq2[j2]);
+        for (diff_type j = 0;  j < eqb;  ++j) output.equality(seq1[j], seq2[j]);
+        for (diff_type j = 0;  j < L1;  ++j) output.deletion(S1[j], 1);
+        for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.equality(seq1[j1], seq2[j2]);
         return L1;
     }
 
@@ -498,15 +498,15 @@ path(const itr1_t& seq1, const size_type& len1, const itr2_t& seq2, const size_t
     }
 
     // output for equal prefix:
-    for (diff_type j = 0;  j < eqb;  ++j) output.output_eql(seq1[j], seq2[j]);
+    for (diff_type j = 0;  j < eqb;  ++j) output.equality(seq1[j], seq2[j]);
     // output for path up to midpoint snake:
     path(S1, r1b, S2, r2b, equal, max_cost, max_cost_exception, output, V_data);
     // output for midpoint snake:
-    for (diff_type j1=r1b,j2=r2b; j1 < r1e;  ++j1, ++j2) output.output_eql(S1[j1], S2[j2]);
+    for (diff_type j1=r1b,j2=r2b; j1 < r1e;  ++j1, ++j2) output.equality(S1[j1], S2[j2]);
     // output for path from midpoint to end:
     path(S1+r1e, L1-r1e, S2+r2e, L2-r2e, equal, max_cost, max_cost_exception, output, V_data);
     // output for equal suffix:
-    for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.output_eql(seq1[j1], seq2[j2]);
+    for (diff_type j1=len1-eqe, j2=len2-eqe; j1 < len1; ++j1,++j2) output.equality(seq1[j1], seq2[j2]);
 
     return D;
 }

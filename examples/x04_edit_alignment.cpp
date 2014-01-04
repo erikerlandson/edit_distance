@@ -26,12 +26,12 @@ int main(int argc, char** argv) {
     // The output object 'out' processes the edit script operations in sequence
     // An output class must define types value_type and cost_type (similar to 
     // the cost function object for edit_distance), and the methods:
-    //   output_ins(v, c)        // element v inserted, with insertion cost c
-    //   output_del(v, c)        // element v deleted, with deletion cost c
-    //   output_sub(v1, v2, c)   // v1 subsituted with v2, subst cost c
-    //   output_eql(v1, v2)      // v1 == v2
+    //   insertion(v, c)        // element v inserted, with insertion cost c
+    //   deletion(v, c)        // element v deleted, with deletion cost c
+    //   substitution(v1, v2, c)   // v1 subsituted with v2, subst cost c
+    //   equality(v1, v2)      // v1 == v2
     //
-    // Defining output_sub() is optional if substitution is compile-time disabled (the default)
+    // Defining substitution() is optional if substitution is compile-time disabled (the default)
     // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
     stringstream_tuple_output<unit_cost, char const*> out;
     unsigned dist = edit_distance(str1, str2, _script = out);

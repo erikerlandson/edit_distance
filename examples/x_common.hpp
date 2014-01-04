@@ -49,16 +49,16 @@ struct stringstream_tuple_output {
         ss << boost::tuples::set_delimiter(' ');
     }
 
-    inline void output_ins(const value_type v2, const cost_type c) {
+    inline void insertion(const value_type v2, const cost_type c) {
         ss << boost::make_tuple('+', v2, c);
     }
-    inline void output_del(const value_type v1, const cost_type c) {
+    inline void deletion(const value_type v1, const cost_type c) {
         ss << boost::make_tuple('-', v1, c);
     }
-    inline void output_sub(const value_type v1, const value_type v2, const cost_type c) {
+    inline void substitution(const value_type v1, const value_type v2, const cost_type c) {
         ss << boost::make_tuple(':', v1, v2, c);
     }
-    inline void output_eql(const value_type v1, const value_type v2) {
+    inline void equality(const value_type v1, const value_type v2) {
         ss << boost::make_tuple('=', v1, v2);
     }
 

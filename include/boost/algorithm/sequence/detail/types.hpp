@@ -274,7 +274,7 @@ struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<All
     sub_checker(const bool& allow_) : allow(allow_) {}
     inline bool operator()() const { return allow; }
     template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
-    template <typename V1, typename V2> inline void output_sub(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.output_sub(v1, v2, csub); }
+    template <typename V1, typename V2> inline void substitution(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.substitution(v1, v2, csub); }
 };
 
 template <typename AllowSub, typename Cost, typename CostT, typename Output>
@@ -282,7 +282,7 @@ struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<All
     sub_checker(const AllowSub&) {}
     inline bool operator()() const { return true; }
     template <typename V1, typename V2> inline CostT cost_sub(const Cost& cost, const V1& v1, const V2& v2) const { return cost.cost_sub(v1, v2); }
-    template <typename V1, typename V2> inline void output_sub(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.output_sub(v1, v2, csub); }
+    template <typename V1, typename V2> inline void substitution(Output& out, const V1& v1, const V2& v2, const CostT& csub) const { out.substitution(v1, v2, csub); }
 };
 
 template <typename AllowSub, typename Cost, typename CostT, typename Output>
@@ -290,7 +290,7 @@ struct sub_checker<AllowSub, Cost, CostT, Output, typename enable_if<is_same<All
     sub_checker(const AllowSub&) {}
     inline bool operator()() const { return false; }
     template <typename V1, typename V2> inline CostT cost_sub(const Cost&, const V1&, const V2&) const { return 0; }
-    template <typename V1, typename V2> inline void output_sub(Output&, const V1&, const V2&, const CostT&) const {}
+    template <typename V1, typename V2> inline void substitution(Output&, const V1&, const V2&, const CostT&) const {}
 };
 
 

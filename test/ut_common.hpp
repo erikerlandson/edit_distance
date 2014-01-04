@@ -158,24 +158,24 @@ struct output_check_script {
         ss << boost::tuples::set_delimiter(' ');
     }
 
-    void output_ins(const value_type& v2, cost_type c) { 
+    void insertion(const value_type& v2, cost_type c) { 
         ss << boost::make_tuple('+', v2, c);
         if (seq2[++j2] != v2) correct=false;
         tcost += c;
     }
-    void output_del(const value_type& v1, cost_type c) { 
+    void deletion(const value_type& v1, cost_type c) { 
         ss << boost::make_tuple('-', v1, c); 
         if (seq1[++j1] != v1) correct=false; 
         tcost += c;
     }
-    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+    void substitution(const value_type& v1, const value_type& v2, cost_type c) { 
         ss << boost::make_tuple(':', v1, v2, c); 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
-        // cost should be > zero: otherwise we should be in output_eql()
+        // cost should be > zero: otherwise we should be in equality()
         if (c <= cost_type(0)) correct=false;
         tcost += c;
     }
-    void output_eql(const value_type& v1, const value_type& v2) { 
+    void equality(const value_type& v1, const value_type& v2) { 
         ss << boost::make_tuple('=', v1, v2); 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         // this condition is not necessarily true in general, since a cost function
@@ -214,17 +214,17 @@ undef_sub_output(const std::vector<value_type>& seq1_, const std::vector<value_t
         ss << boost::tuples::set_delimiter(' ');
     }
 
-    void output_ins(const value_type& v2, cost_type c) { 
+    void insertion(const value_type& v2, cost_type c) { 
         ss << boost::make_tuple('+', v2, c);
         if (seq2[++j2] != v2) correct=false;
         tcost += c;
     }
-    void output_del(const value_type& v1, cost_type c) { 
+    void deletion(const value_type& v1, cost_type c) { 
         ss << boost::make_tuple('-', v1, c); 
         if (seq1[++j1] != v1) correct=false; 
         tcost += c;
     }
-    void output_eql(const value_type& v1, const value_type& v2) { 
+    void equality(const value_type& v1, const value_type& v2) { 
         ss << boost::make_tuple('=', v1, v2); 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         if (!equal(seq1[j1],seq2[j2])) correct=false;
@@ -258,21 +258,21 @@ struct output_check_script_long_string {
     output_check_script_long_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1), tcost(0) {
     }
 
-    void output_ins(const value_type& v2, cost_type c) { 
+    void insertion(const value_type& v2, cost_type c) { 
         if (seq2[++j2] != v2) correct=false;
         tcost += c;
     }
-    void output_del(const value_type& v1, cost_type c) { 
+    void deletion(const value_type& v1, cost_type c) { 
         if (seq1[++j1] != v1) correct=false; 
         tcost += c;
     }
-    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+    void substitution(const value_type& v1, const value_type& v2, cost_type c) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
-        // cost should be > zero: otherwise we should be in output_eql()
+        // cost should be > zero: otherwise we should be in equality()
         if (c <= cost_type(0)) correct=false;
         tcost += c;
     }
-    void output_eql(const value_type& v1, const value_type& v2) { 
+    void equality(const value_type& v1, const value_type& v2) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) correct=false;
         // this condition is not necessarily true in general, since a cost function
         // can define two elements as equivalent even if they are not identical, but
@@ -314,33 +314,33 @@ struct output_check_script_string {
     output_check_script_string(const std::string& seq1_, const std::string& seq2_) : seq1(seq1_), seq2(seq2_), correct(true), j1(-1), j2(-1), tcost(0) {
     }
 
-    void output_ins(const value_type& v2, cost_type c) { 
+    void insertion(const value_type& v2, cost_type c) { 
         if (seq2[++j2] != v2) {
             std::cerr << "INS seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
         }
         tcost += c;
     }
-    void output_del(const value_type& v1, cost_type c) { 
+    void deletion(const value_type& v1, cost_type c) { 
         if (seq1[++j1] != v1) {
             std::cerr << "DEL seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 << "\n";
             correct=false; 
         }
         tcost += c;
     }
-    void output_sub(const value_type& v1, const value_type& v2, cost_type c) { 
+    void substitution(const value_type& v1, const value_type& v2, cost_type c) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
             std::cerr << "SUB seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
         }
-        // cost should be > zero: otherwise we should be in output_eql()
+        // cost should be > zero: otherwise we should be in equality()
         if (c <= cost_type(0)) {
             std::cerr << "SUB cost= " << c << "   seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
         }
         tcost += c;
     }
-    void output_eql(const value_type& v1, const value_type& v2) { 
+    void equality(const value_type& v1, const value_type& v2) { 
         if (seq1[++j1] != v1  ||  seq2[++j2] != v2) {
             std::cerr << "EQL seq1["<<j1<<"]= " << seq1[j1] << "     != " << v1 <<   "   ||   seq2["<<j2<<"]= " << seq2[j2] << "     != " << v2 << "\n";
             correct=false;
