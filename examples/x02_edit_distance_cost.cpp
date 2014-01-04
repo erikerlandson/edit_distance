@@ -36,7 +36,7 @@ struct cost_free_space {
     unsigned substitution(char c, char d) const { return 1; }
 
     // Defining substitution() is optional if substitution is compile-time disabled (the default).
-    // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
+    // To enable, pass the optional _substitution=boost::true_type(), or _substitution=<bool-value>
 };
 
 int main(int argc, char** argv) {
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     // with custom "free space" cost function, the distance should be zero:
     // here we also enable substitution
-    unsigned dist = edit_distance(str1, str2, _cost = cost_free_space(), _allow_sub = true);
+    unsigned dist = edit_distance(str1, str2, _cost = cost_free_space(), _substitution = true);
     std::cout << "The edit distance between \"" << str1 << "\" and \"" << str2 << "\" = " << dist << "\n";    
 
     return 0;

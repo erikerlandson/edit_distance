@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     //   equality(v1, v2)      // v1 == v2
     //
     // Defining substitution() is optional if substitution is compile-time disabled (the default)
-    // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
+    // To enable, pass the optional _substitution=boost::true_type(), or _substitution=<bool-value>
     stringstream_tuple_output<unit_cost, char const*> out;
     unsigned dist = edit_distance(str1, str2, _script = out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";

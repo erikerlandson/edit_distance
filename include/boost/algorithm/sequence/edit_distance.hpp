@@ -51,22 +51,22 @@ edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output
 
 BOOST_PARAMETER_FUNCTION(
 (typename cost_type<typename value_type<Args, parameter::tag::cost, unit_cost>::type,
-                    typename range_value<typename value_type<Args, parameter::tag::seq1>::type>::type>::type),
+                    typename range_value<typename value_type<Args, parameter::tag::sequence1>::type>::type>::type),
     edit_distance,
     parameter::tag,
     (required
-        (seq1, *)
-        (seq2, *))
+        (sequence1, *)
+        (sequence2, *))
     (optional
         (cost, *, unit_cost())
         (equal, *, default_equal())
         (in_out(script), *, nonconst_default<none>())
-        (allow_sub, *, false_type())
+        (substitution, *, false_type())
         (max_cost, *, none())
         (max_cost_exception, (bool), false))
 )
 {
-    return edit_distance_check(seq1, seq2, script, cost, equal, allow_sub, max_cost, max_cost_exception);
+    return edit_distance_check(sequence1, sequence2, script, cost, equal, substitution, max_cost, max_cost_exception);
 }
 
 

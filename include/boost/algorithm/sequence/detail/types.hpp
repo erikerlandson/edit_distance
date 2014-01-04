@@ -80,12 +80,12 @@ struct max_edit_cost_exception : public boost::exception {};
 
 
 namespace parameter {
-    BOOST_PARAMETER_NAME(seq1)
-    BOOST_PARAMETER_NAME(seq2)
+    BOOST_PARAMETER_NAME(sequence1)
+    BOOST_PARAMETER_NAME(sequence2)
     BOOST_PARAMETER_NAME(cost)
     BOOST_PARAMETER_NAME(equal)
     BOOST_PARAMETER_NAME(script)
-    BOOST_PARAMETER_NAME(allow_sub)
+    BOOST_PARAMETER_NAME(substitution)
     BOOST_PARAMETER_NAME(max_cost)
     BOOST_PARAMETER_NAME(max_cost_exception)
 }
