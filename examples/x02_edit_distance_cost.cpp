@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     // with custom "free space" cost function, the distance should be zero:
     // here we also enable substitution
-    unsigned dist = edit_distance(str1, str2, cost_free_space(), _allow_sub=true);
+    unsigned dist = edit_distance(str1, str2, _cost = cost_free_space(), _allow_sub = true);
     std::cout << "The edit distance between \"" << str1 << "\" and \"" << str2 << "\" = " << dist << "\n";    
 
     return 0;

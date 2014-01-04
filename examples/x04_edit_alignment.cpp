@@ -13,8 +13,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include "x_common.hpp"
 
 // get the edit_alignment() function
-#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
+#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+using boost::algorithm::sequence_alignment::edit_distance;
+using namespace boost::algorithm::sequence_alignment::parameter;
 using boost::algorithm::sequence_alignment::unit_cost;
 
 int main(int argc, char** argv) {
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
     // Defining output_sub() is optional if substitution is compile-time disabled (the default)
     // To enable, pass the optional _allow_sub=boost::true_type(), or _allow_sub=<bool-value>
     stringstream_tuple_output<unit_cost, char const*> out;
-    unsigned dist = edit_alignment(str1, str2, out);
+    unsigned dist = edit_distance(str1, str2, _script = out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 
     return 0;

@@ -12,9 +12,9 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include "x_common.hpp"
 
-// get the edit_alignment() function
-#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
+#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+using namespace boost::algorithm::sequence_alignment::parameter;
+using boost::algorithm::sequence_alignment::edit_distance;
 using boost::algorithm::sequence_alignment::unit_cost;
 
 int main(int argc, char** argv) {
@@ -24,13 +24,13 @@ int main(int argc, char** argv) {
     // Compare two null-terminated strings that differ by one substitution
     // (distance should be 2)
     stringstream_tuple_output<unit_cost, char const*> out;
-    unsigned dist = edit_alignment(str1, str2, out);
+    unsigned dist = edit_distance(str1, str2, _script = out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 
-    // As with edit_distance(), any type of sequences or range adaptors can be 
+    // Any type of sequences or range adaptors can be 
     // applied as sequence arguments (here distance should be 4: "abc" -> "cxa" (-a, -b, =c, +x, +a)
     out.ss.str("");
-    dist = edit_alignment(as_vector(str1), as_list(str2) | boost::adaptors::reversed, out);
+    dist = edit_distance(as_vector(str1), as_list(str2) | boost::adaptors::reversed, _script = out);
     std::cout << "dist= " << dist << "   edit operations= " << out.ss.str() << "\n";
 
     return 0;

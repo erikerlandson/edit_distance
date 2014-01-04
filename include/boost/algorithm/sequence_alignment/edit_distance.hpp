@@ -33,18 +33,19 @@ using detail::ForwardRangeConvertible;
 using detail::edit_cost_impl;
 using detail::cost_type;
 using detail::none;
+using detail::nonconst_default;
 using detail::default_equal;
 
 
-template <typename Sequence1, typename Sequence2, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
+template <typename Sequence1, typename Sequence2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
 inline
 BOOST_CONCEPT_REQUIRES(
     ((ForwardRangeConvertible<Sequence1>))
     ((ForwardRangeConvertible<Sequence2>))
     ((SequenceAlignmentCost<Cost, Sequence1>)),
 (typename cost_type<Cost, typename range_value<Sequence1>::type>::type))
-edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
-    return edit_cost_impl(as_literal(seq1), as_literal(seq2), cost, equal, allow_sub, max_cost, max_cost_exception);
+edit_distance_check(Sequence1 const& seq1, Sequence2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
+    return edit_cost_impl(as_literal(seq1), as_literal(seq2), output, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 
@@ -59,12 +60,13 @@ BOOST_PARAMETER_FUNCTION(
     (optional
         (cost, *, unit_cost())
         (equal, *, default_equal())
+        (in_out(script), *, nonconst_default<none>())
         (allow_sub, *, false_type())
         (max_cost, *, none())
         (max_cost_exception, (bool), false))
 )
 {
-    return edit_distance_check(seq1, seq2, cost, equal, allow_sub, max_cost, max_cost_exception);
+    return edit_distance_check(seq1, seq2, script, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 

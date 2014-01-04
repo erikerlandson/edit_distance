@@ -16,8 +16,8 @@ http://www.boost.org/LICENSE_1_0.txt
 
 
 // get the edit_alignment() function
-#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-using boost::algorithm::sequence_alignment::edit_alignment;
+#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+using boost::algorithm::sequence_alignment::edit_distance;
 using boost::algorithm::sequence_alignment::unit_cost;
 using namespace boost::algorithm::sequence_alignment::parameter;
 
@@ -44,12 +44,12 @@ int main(int argc, char** argv) {
     // Match the substring 'xxx' against the larger string, with cheap case changes,
     // identifies the correct location of 'XXX' in the larger string
     stringstream_tuple_output<cost_case_less, char const*> out;
-    float dist = edit_alignment(str1, str2, out, cost_case_less(), _allow_sub=true);
+    float dist = edit_distance(str1, str2, _script = out, _cost = cost_case_less(), _allow_sub=true);
     std::cout << "dist= " << dist << "   edit operations=  \"" << out.ss.str() << "\"\n";    
 
     // compare to the behavior with the default cost function:
     out.ss.str("");
-    dist = edit_alignment(str1, str2, out, _allow_sub=true);
+    dist = edit_distance(str1, str2, _script = out, _allow_sub=true);
     std::cout << "dist= " << dist << "   edit operations=  \"" << out.ss.str() << "\"\n";    
 
     return 0;

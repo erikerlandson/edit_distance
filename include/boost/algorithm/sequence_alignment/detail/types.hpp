@@ -82,9 +82,9 @@ struct max_edit_cost_exception : public boost::exception {};
 namespace parameter {
     BOOST_PARAMETER_NAME(seq1)
     BOOST_PARAMETER_NAME(seq2)
-    BOOST_PARAMETER_NAME(output)
     BOOST_PARAMETER_NAME(cost)
     BOOST_PARAMETER_NAME(equal)
+    BOOST_PARAMETER_NAME(script)
     BOOST_PARAMETER_NAME(allow_sub)
     BOOST_PARAMETER_NAME(max_cost)
     BOOST_PARAMETER_NAME(max_cost_exception)
@@ -111,6 +111,14 @@ template <typename X> struct invoke : public true_type {};
 
 struct none {};
 
+template <typename T> inline T& nonconst_default() {
+    static T r;
+    return r;
+}
+
+template <typename Range1, typename Range2, typename Tag> struct range_category : public
+    and_<is_same<typename std::iterator_traits<typename boost::range_iterator<Range1>::type>::iterator_category, Tag>,
+         is_same<typename std::iterator_traits<typename boost::range_iterator<Range2>::type>::iterator_category, Tag> > {};
 
 template <typename MaxCost, typename CostT, typename Node, typename Enable = void> struct max_cost_checker {};
 

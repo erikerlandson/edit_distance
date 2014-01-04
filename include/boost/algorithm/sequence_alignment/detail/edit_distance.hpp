@@ -24,6 +24,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/range/metafunctions.hpp>
 
 #include <boost/algorithm/sequence_alignment/detail/types.hpp>
+#include <boost/algorithm/sequence_alignment/detail/edit_alignment.hpp>
 
 namespace boost {
 namespace algorithm {
@@ -40,9 +41,12 @@ using boost::mpl::and_;
 using std::iterator_traits;
 using std::random_access_iterator_tag;
 
-template <typename ForwardRange1, typename ForwardRange2, typename Cost, typename Equal, typename AllowSub, typename MaxCost, typename Enabled = void>
-struct edit_cost_struct {
-
+template <typename ForwardRange1, typename ForwardRange2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
+struct edit_cost_struct<ForwardRange1, ForwardRange2, Output, Cost, Equal, AllowSub, MaxCost,
+                        typename enable_if<and_<is_same<Output, none>,
+                                                not_<and_<range_category<ForwardRange1, ForwardRange2, random_access_iterator_tag>,
+                                                          is_same<Cost, unit_cost>,
+                                                          is_same<AllowSub, boost::false_type> > > > >::type> {
 typedef typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type cost_t;
 typedef typename range_iterator<ForwardRange1 const>::type itr1_t;
 typedef typename range_iterator<ForwardRange2 const>::type itr2_t;
@@ -84,7 +88,7 @@ cost_t max_cost_fallback(max_cost_checker<MaxCost, cost_t, head_t>& max_cost_che
 
 // Default is generic edit distance algorithm based on a Dijkstra Single Source Shortest Path approach
 typename cost_type<Cost, typename boost::range_value<ForwardRange1>::type>::type
-operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception) const {
+operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, none&, const Cost& cost, const Equal& equal, const AllowSub& allowsub, const MaxCost& max_cost, const bool max_cost_exception) const {
 
     head_t* const hnull = static_cast<head_t*>(NULL);
 
@@ -165,12 +169,10 @@ operator()(ForwardRange1 const& seq1, ForwardRange2 const& seq2, const Cost& cos
 }; // edit_cost_struct
 
 
-template <typename Range1, typename Range2, typename Equal, typename MaxCost>
-struct edit_cost_struct<Range1, Range2, unit_cost, Equal, boost::false_type, MaxCost,
-                        typename enable_if<and_<is_same<typename iterator_traits<typename range_iterator<Range1>::type>::iterator_category, 
-                                                        random_access_iterator_tag>, 
-                                                is_same<typename iterator_traits<typename range_iterator<Range2>::type>::iterator_category, 
-                                                        random_access_iterator_tag> > >::type> {
+template <typename Range1, typename Range2, typename Output, typename Equal, typename MaxCost>
+struct edit_cost_struct<Range1, Range2, Output, unit_cost, Equal, boost::false_type, MaxCost,
+                        typename enable_if<and_<is_same<Output, none>,
+                                                range_category<Range1, Range2, random_access_iterator_tag> > >::type> {
 
 typedef typename range_iterator<Range1 const>::type itr1_t;
 typedef typename range_iterator<Range2 const>::type itr2_t;
@@ -281,7 +283,7 @@ diff_type max_cost_fallback(max_cost_type& max_cost_check, const bool max_cost_e
 //     by Eugene W. Myers
 //     Dept of Computer Science, University of Arizona
 typename cost_type<unit_cost, typename boost::range_value<Range1>::type>::type
-operator()(Range1 const& seq1_, Range2 const& seq2_, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception) const {
+operator()(Range1 const& seq1_, Range2 const& seq2_, none&, const unit_cost&, const Equal& equal, const boost::false_type&, const MaxCost& max_cost, const bool max_cost_exception) const {
     itr1_t seq1 = boost::begin(seq1_);
     itr2_t seq2 = boost::begin(seq2_);
     size_type len1 = distance(seq1_);
@@ -363,12 +365,12 @@ operator()(Range1 const& seq1_, Range2 const& seq2_, const unit_cost&, const Equ
 }; // edit_cost_struct
 
 
-template <typename Range1, typename Range2, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
+template <typename Range1, typename Range2, typename Output, typename Cost, typename Equal, typename AllowSub, typename MaxCost>
 inline
 typename cost_type<Cost, typename boost::range_value<Range1>::type>::type
-edit_cost_impl(Range1 const& seq1, Range2 const& seq2, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
+edit_cost_impl(Range1 const& seq1, Range2 const& seq2, Output& output, const Cost& cost, const Equal& equal, const AllowSub& allow_sub, const MaxCost& max_cost, const bool max_cost_exception) {
     // specialize the most appropriate implementation for the given parameters
-    return edit_cost_struct<Range1, Range2, Cost, Equal, AllowSub, MaxCost>()(seq1, seq2, cost, equal, allow_sub, max_cost, max_cost_exception);
+    return edit_cost_struct<Range1, Range2, Output, Cost, Equal, AllowSub, MaxCost>()(seq1, seq2, output, cost, equal, allow_sub, max_cost, max_cost_exception);
 }
 
 

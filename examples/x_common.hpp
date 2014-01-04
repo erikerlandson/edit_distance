@@ -26,8 +26,6 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/tuple/tuple_io.hpp>
 
 #include <boost/algorithm/sequence_alignment/edit_distance.hpp>
-#include <boost/algorithm/sequence_alignment/edit_alignment.hpp>
-
 
 std::list<char> as_list(char const* str) {
     std::list<char> r;
