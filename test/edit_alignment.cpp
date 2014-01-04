@@ -12,7 +12,7 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/test/unit_test.hpp>
 
-#include "ut_common.h"
+#include "ut_common.hpp"
 
 BOOST_AUTO_TEST_SUITE(edit_alignment_suite)
 

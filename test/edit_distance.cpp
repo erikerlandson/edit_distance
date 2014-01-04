@@ -13,7 +13,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include "ut_common.h"
+#include "ut_common.hpp"
 
 BOOST_AUTO_TEST_SUITE(edit_distance_suite)
 
