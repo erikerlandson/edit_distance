@@ -11,17 +11,17 @@ http://www.boost.org/LICENSE_1_0.txt
 *******/
 
 
-#if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_DISTANCE_HPP)
-#define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_EDIT_DISTANCE_HPP
+#if !defined(BOOST_ALGORITHM_SEQUENCE_EDIT_DISTANCE_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_EDIT_DISTANCE_HPP
 
 #include <boost/concept/requires.hpp>
 
-#include <boost/algorithm/sequence_alignment/detail/types.hpp>
-#include <boost/algorithm/sequence_alignment/detail/edit_distance.hpp>
+#include <boost/algorithm/sequence/detail/types.hpp>
+#include <boost/algorithm/sequence/detail/edit_distance.hpp>
 
 namespace boost {
 namespace algorithm {
-namespace sequence_alignment {
+namespace sequence {
 
 using boost::as_literal;
 using boost::parameter::value_type;
@@ -70,6 +70,6 @@ BOOST_PARAMETER_FUNCTION(
 }
 
 
-}}} // boost::algorithm::sequence_alignment
+}}} // boost::algorithm::sequence
 
 #endif

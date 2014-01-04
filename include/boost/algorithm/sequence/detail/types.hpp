@@ -10,8 +10,8 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_TYPES_HPP)
-#define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_TYPES_HPP
+#if !defined(BOOST_ALGORITHM_SEQUENCE_DETAIL_TYPES_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_DETAIL_TYPES_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -54,7 +54,7 @@ http://www.boost.org/LICENSE_1_0.txt
 
 namespace boost {
 namespace algorithm {
-namespace sequence_alignment {
+namespace sequence {
 
 struct unit_cost {
     typedef size_t cost_type;

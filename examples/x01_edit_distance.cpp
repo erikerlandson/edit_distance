@@ -13,8 +13,8 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <iostream>
 
 // get the edit_distance() function
-#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
-using boost::algorithm::sequence_alignment::edit_distance;
+#include <boost/algorithm/sequence/edit_distance.hpp>
+using boost::algorithm::sequence::edit_distance;
 
 int main(int argc, char** argv) {
     char const* str1 = "hello, world.";

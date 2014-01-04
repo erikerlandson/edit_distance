@@ -13,9 +13,9 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <iostream>
 
 // get the edit_distance() function
-#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
-using boost::algorithm::sequence_alignment::edit_distance;
-using namespace boost::algorithm::sequence_alignment::parameter;
+#include <boost/algorithm/sequence/edit_distance.hpp>
+using boost::algorithm::sequence::edit_distance;
+using namespace boost::algorithm::sequence::parameter;
 
 
 // define a custom cost function where insertion or deletion of space costs nothing

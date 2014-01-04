@@ -25,7 +25,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+#include <boost/algorithm/sequence/edit_distance.hpp>
 
 std::list<char> as_list(char const* str) {
     std::list<char> r;
@@ -38,7 +38,7 @@ std::vector<char> as_vector(char const* str) {
     return r;
 }
 
-using boost::algorithm::sequence_alignment::detail::cost_type;
+using boost::algorithm::sequence::detail::cost_type;
 
 template <typename Cost, typename Sequence>
 struct stringstream_tuple_output {

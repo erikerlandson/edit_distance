@@ -12,10 +12,10 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include "x_common.hpp"
 
-#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
-using namespace boost::algorithm::sequence_alignment::parameter;
-using boost::algorithm::sequence_alignment::edit_distance;
-using boost::algorithm::sequence_alignment::unit_cost;
+#include <boost/algorithm/sequence/edit_distance.hpp>
+using namespace boost::algorithm::sequence::parameter;
+using boost::algorithm::sequence::edit_distance;
+using boost::algorithm::sequence::unit_cost;
 
 int main(int argc, char** argv) {
     char const* str1 = "abc";

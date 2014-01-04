@@ -11,8 +11,8 @@ http://www.boost.org/LICENSE_1_0.txt
 *******/
 
 
-#if !defined(BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP)
-#define BOOST_ALGORITHM_SEQUENCE_ALIGNMENT_DETAIL_EDIT_DISTANCE_HPP
+#if !defined(BOOST_ALGORITHM_SEQUENCE_DETAIL_EDIT_DISTANCE_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_DETAIL_EDIT_DISTANCE_HPP
 
 // this requires me to link against boost system lib, which disappoints me,
 // since it prevents my algorithms from being pure-template.
@@ -23,12 +23,12 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/range/metafunctions.hpp>
 
-#include <boost/algorithm/sequence_alignment/detail/types.hpp>
-#include <boost/algorithm/sequence_alignment/detail/edit_alignment.hpp>
+#include <boost/algorithm/sequence/detail/types.hpp>
+#include <boost/algorithm/sequence/detail/edit_alignment.hpp>
 
 namespace boost {
 namespace algorithm {
-namespace sequence_alignment {
+namespace sequence {
 namespace detail {
 
 using boost::distance;

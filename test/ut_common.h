@@ -43,11 +43,11 @@ using std::string;
 using boost::true_type;
 using boost::false_type;
 
-#include <boost/algorithm/sequence_alignment/edit_distance.hpp>
+#include <boost/algorithm/sequence/edit_distance.hpp>
 
-using boost::algorithm::sequence_alignment::edit_distance;
-using namespace boost::algorithm::sequence_alignment::parameter;
-using boost::algorithm::sequence_alignment::max_edit_cost_exception;
+using boost::algorithm::sequence::edit_distance;
+using namespace boost::algorithm::sequence::parameter;
+using boost::algorithm::sequence::max_edit_cost_exception;
 
 template <typename Range>
 std::list<typename boost::range_value<Range>::type>
