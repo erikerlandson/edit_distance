@@ -1,21 +1,27 @@
 edit_distance
 =============
 
-A C++ Boost implementation of edit distance functions.
+A C++ Boost implementation of the edit distance between two sequences -- aka Levenshtein distance, aka string distance, aka string difference.
 
-The edit_distance library provides two functions:
-* edit_distance(seq1, seq2) returns the edit distance (aka string distance, aka Levenshtein distance) between two sequences, which may be any C++ range.
-* edit_alignment(seq1, seq2, out) returns the edit distance, and calls special handler methods from 'out' on the sequence of edit operations.
+The edit_distance library provides a function edit_distance():
+* edit_distance(seq1, seq2) returns the edit distance between two sequences, which may be any C++ range.
+* edit_distance(seq1, seq2, _script = out) returns the edit distance, and calls special handler methods from object 'out' on the correspondiung "script" of edit operations.
 
-These functions are based on a variation of the Dijkstra Single Source Shortest Path algorithm, optimized for the particular structure of an edit graph.  They are efficient on long sequences with localized areas of differences (e.g. computing the diff of two similar files)
+These functions are based on a variation of the Dijkstra Single Source Shortest Path algorithm, optimized for the particular structure of an edit graph.  They are efficient on long sequences with localized areas of differences (e.g. computing the diff of two similar files).  Whenever conditions permit, an even faster specialized distance algorithm is automatically applied:
+    An O(ND) Difference Algorithm and its Variations
+    by Eugene W. Myers
+    Dept of Computer Science, University of Arizona
 
 A user specified edit operation cost function can be provided:
 
-    // provide a customized cost for insertion, deletion and substitution/equal 
+    // provide a customized cost for insertion, deletion and/or substitution
     int d = edit_distance(s1, s2, _cost=my_cost_type());
+
+    // use a customized definition of element equality:
+    int d = edit_distance(s1, s2, _equal=my_equal());
 
 Sequences may be any kind of C++ range object, and may be mixed:
 
     // Any forward range can be provided to these functions.
     // Sequence element types are not required to be exactly equal, as long as they are compatible.
-    int d = edit_distance(my_vector, my_list | boost::adaptors::reversed, _cost=my_cost());
+    int d = edit_distance(my_vector, my_list | boost::adaptors::reversed);
