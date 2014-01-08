@@ -10,8 +10,8 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#if !defined(BOOST_ALGORITHM_SEQUENCE_DETAIL_TYPES_HPP)
-#define BOOST_ALGORITHM_SEQUENCE_DETAIL_TYPES_HPP
+#if !defined(BOOST_ALGORITHM_SEQUENCE_DETAIL_EDIT_DISTANCE_TYPES_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_DETAIL_EDIT_DISTANCE_TYPES_HPP
 
 #include <cstddef>
 #include <iterator>
