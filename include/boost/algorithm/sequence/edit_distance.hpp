@@ -16,7 +16,6 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/concept/requires.hpp>
 
-#include <boost/algorithm/sequence/detail/types.hpp>
 #include <boost/algorithm/sequence/detail/edit_distance.hpp>
 
 namespace boost {

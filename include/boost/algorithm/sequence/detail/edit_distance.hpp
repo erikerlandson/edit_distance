@@ -23,7 +23,7 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/range/metafunctions.hpp>
 
-#include <boost/algorithm/sequence/detail/types.hpp>
+#include <boost/algorithm/sequence/detail/edit_distance_types.hpp>
 #include <boost/algorithm/sequence/detail/edit_alignment.hpp>
 
 namespace boost {
