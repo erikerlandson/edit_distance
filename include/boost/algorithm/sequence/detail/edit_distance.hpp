@@ -24,7 +24,7 @@ http://www.boost.org/LICENSE_1_0.txt
 #include <boost/range/metafunctions.hpp>
 
 #include <boost/algorithm/sequence/detail/edit_distance_types.hpp>
-#include <boost/algorithm/sequence/detail/edit_alignment.hpp>
+#include <boost/algorithm/sequence/detail/edit_distance_script.hpp>
 
 namespace boost {
 namespace algorithm {
