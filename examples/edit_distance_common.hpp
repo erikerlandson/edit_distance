@@ -10,8 +10,8 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#if !defined(X_COMMON_HPP)
-#define X_COMMON_HPP
+#if !defined(BOOST_ALGORITHM_SEQUENCE_EXAMPLE_EDIT_DISTANCE_COMMON_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_EXAMPLE_EDIT_DISTANCE_COMMON_HPP
 
 #include <sstream>
 #include <list>

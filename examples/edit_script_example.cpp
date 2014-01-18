@@ -10,7 +10,7 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#include "x_common.hpp"
+#include "edit_distance_common.hpp"
 
 // get the edit_alignment() function
 #include <boost/algorithm/sequence/edit_distance.hpp>

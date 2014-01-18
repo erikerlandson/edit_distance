@@ -12,7 +12,7 @@ http://www.boost.org/LICENSE_1_0.txt
 
 #include <ctype.h>
 
-#include "x_common.hpp"
+#include "edit_distance_common.hpp"
 
 
 // get the edit_alignment() function
