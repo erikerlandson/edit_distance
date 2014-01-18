@@ -311,24 +311,24 @@ diff_type max_cost_fallback(max_cost_checker_myers<MaxCost, diff_type, diff_type
     diff_type r1b, r2b, r1e, r2e;
 
     diff_type k;
-    int kind;
+    remainder::kind kind;
     max_cost_check.get(k, kind);
     switch (kind) {
-        case max_cost_type::F: {
+        case remainder::forward: {
             r1b = Vf[k];
             r2b = r1b-k;
             r1e = L1;
             r2e = L2;
         }; break;
 
-        case max_cost_type::R: {
+        case remainder::reverse: {
             r1b = 0;
             r2b = 0;
             r1e = Vr[k];
             r2e = r1e-k;
         }; break;
 
-        case max_cost_type::B: {
+        case remainder::bidirectional: {
             r1b = Vf[k];
             r2b = r1b-k;
             r1e = Vr[k];

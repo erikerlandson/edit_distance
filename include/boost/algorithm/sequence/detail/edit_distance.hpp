@@ -220,10 +220,10 @@ diff_type max_cost_fallback(max_cost_type& max_cost_check, const bool max_cost_e
 
     diff_type C = 0;
     diff_type k;
-    int kind;
+    remainder::kind kind;
     max_cost_check.get(k, kind);
     switch (kind) {
-        case max_cost_type::F: {
+    case remainder::forward: {
             r1b = Vf[k];
             r2b = r1b-k;
             r1e = L1;
@@ -231,7 +231,7 @@ diff_type max_cost_fallback(max_cost_type& max_cost_check, const bool max_cost_e
             C = D;
         }; break;
 
-        case max_cost_type::R: {
+        case remainder::reverse: {
             r1b = 0;
             r2b = 0;
             r1e = Vr[k];
@@ -239,7 +239,7 @@ diff_type max_cost_fallback(max_cost_type& max_cost_check, const bool max_cost_e
             C = D;
         }; break;
 
-        case max_cost_type::B: {
+        case remainder::bidirectional: {
             r1b = Vf[k];
             r2b = r1b-k;
             r1e = Vr[k];

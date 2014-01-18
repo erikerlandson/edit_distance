@@ -165,36 +165,32 @@ struct max_cost_checker<MaxCost, CostT, Node, typename enable_if<is_arithmetic<M
     }
 };
 
+struct remainder {
+    enum kind { none, forward, reverse, bidirectional };
+};
 
 template <typename MaxCost, typename CostT, typename Pos, typename Enable = void> struct max_cost_checker_myers {};
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_same<MaxCost, none> >::type> {
-    static const int F = 1;
-    static const int R = 2;
-    static const int B = 3;
     max_cost_checker_myers(const MaxCost&) {}
     inline bool operator()(const CostT&) const { return false; }
     inline void update(const Pos&, const Pos&, const CostT&) const {}
     inline void get(Pos&, Pos&, CostT&) const {}
     template <typename Itr>
     inline void update(const Pos&, const Itr&, const Itr&, const Pos&, const Pos&, const Pos&, const Pos&) const {}
-    inline void get(Pos&, int&) const {}
+    inline void get(Pos&, remainder::kind&) const {}
 };
 
 template <typename MaxCost, typename CostT, typename Pos>
 struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithmetic<MaxCost> >::type> {
-    static const int F = 1;
-    static const int R = 2;
-    static const int B = 3;
-
     CostT max_cost;
     Pos mcmin;
     Pos mctec;
     Pos mck;
-    int kind;
+    remainder::kind kind;
 
-    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), mcmin(-1), mctec(-1), mck(0), kind(0) {}
+    max_cost_checker_myers(const MaxCost& max_cost_) : max_cost(CostT(std::abs(max_cost_))), mcmin(-1), mctec(-1), mck(0), kind(remainder::none) {}
     inline bool operator()(const CostT& c) const { return c > max_cost; }
     template <typename Itr>
     inline void update(const Pos& k, const Itr& Vf, const Itr& Vr, const Pos& delta, const Pos& L1, const Pos& L2, const Pos& D) {
@@ -216,7 +212,7 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithme
                 mctec = ttec;
                 mcmin = tmin;
                 mck = k;
-                kind = B;
+                kind = remainder::bidirectional;
             }
 
             // if a bidirectional path is available, that will be the best possible for this (k),
@@ -231,7 +227,7 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithme
                 mctec = cf;
                 mcmin = tmin;
                 mck = k;
-                kind = F;
+                kind = remainder::forward;
             }
         }
 
@@ -245,12 +241,12 @@ struct max_cost_checker_myers<MaxCost, CostT, Pos, typename enable_if<is_arithme
                 mctec = cr;
                 mcmin = tmin;
                 mck = k+delta;
-                kind = R;
+                kind = remainder::reverse;
             }    
         }
     }
 
-    inline void get(Pos& k_, int& kind_) const {
+    inline void get(Pos& k_, remainder::kind& kind_) const {
         k_ = mck;
         kind_ = kind;
     }
