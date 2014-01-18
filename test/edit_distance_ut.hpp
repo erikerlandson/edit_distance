@@ -10,8 +10,8 @@ See accompanying file LICENSE or copy at
 http://www.boost.org/LICENSE_1_0.txt
 *******/
 
-#if !defined(__ut_common_h__)
-#define __ut_common_h__ 1
+#if !defined(BOOST_ALGORITHM_SEQUENCE_TEST_EDIT_DISTANCE_UT_HPP)
+#define BOOST_ALGORITHM_SEQUENCE_TEST_EDIT_DISTANCE_UT_HPP 1
 
 #include <cstdlib>
 #include <cmath>
