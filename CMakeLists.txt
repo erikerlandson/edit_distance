@@ -21,7 +21,7 @@ endif()
 add_subdirectory(include)
 
 # tutorial examples
-add_subdirectory(examples)
+add_subdirectory(example)
 
 # testing programs
 add_subdirectory(test)
