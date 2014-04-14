@@ -1,7 +1,7 @@
 Note: I am currently doing development for edit_distance() on my fork of Boost.Algorithm:
-https://github.com/erikerlandson/algorithm/tree/edit_distance
-https://github.com/erikerlandson/algorithm/tree/order_np_alg
-http://erikerlandson.github.io/algorithm/libs/algorithm/doc/html/algorithm/Sequence.html
+* https://github.com/erikerlandson/algorithm/tree/edit_distance
+* https://github.com/erikerlandson/algorithm/tree/order_np_alg
+* http://erikerlandson.github.io/algorithm/libs/algorithm/doc/html/algorithm/Sequence.html
 
 
 edit_distance
